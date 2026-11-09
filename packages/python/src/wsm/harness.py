@@ -92,19 +92,39 @@ def _command(text):
         raise WeightlessError('invalid_command', 'Expected one command in the declared JSON grammar') from None
 
 
-def _prompt(task, context, view, last, declaration):
+def _prompt(task, context, view, last, declaration, inspections=None):
     view = copy.deepcopy(view)
     payload = {'task': task, 'context': context, 'view': view, 'previous': last,
                'limits': {k: declaration[k] for k in ('max_edits', 'max_inspect')},
-               'history_omitted': 0}
+               'history_omitted': 0, 'inspected_weights': list(inspections or [])}
     while True:
         result = _INSTRUCTIONS + '\n' + _json(payload)
         if len(result.encode()) <= _LIMIT:
             return result
-        if not view['history']:
+        if view['history']:
+            view['history'].pop(0)
+            payload['history_omitted'] += 1
+        elif payload['inspected_weights']:
+            payload['inspected_weights'].pop(0)
+        else:
             raise WeightlessError('prompt_bound', 'Public prompt exceeds its byte limit')
-        view['history'].pop(0)
-        payload['history_omitted'] += 1
+
+
+def _inspected_weights(bundle, arm, checkpoint):
+    values = {}
+    for operation in bundle['operations']:
+        if operation.get('kind') != 'inspect' or operation.get('arm') != arm:
+            continue
+        result = operation.get('result') or {}
+        if operation.get('status') != 'completed' or result.get('checkpoint') != checkpoint:
+            continue
+        for item in result.get('values', []):
+            address = (item['tensor'], item['index'])
+            values.pop(address, None)
+            values[address] = item
+            if len(values) > 4096:
+                del values[next(iter(values))]
+    return list(values.values())
 
 
 def _dispatch(session, command, view, key, arm):
@@ -221,7 +241,8 @@ def run(session, teacher, *, prompt, output, arm='teacher', context=None):
                     if not view['remaining']['teacher_requests']:
                         return _stop(session, cursor, root, reason='budget_exhausted')
                     session.remaining_seconds()
-                    text = _prompt(prompt, context, view, cursor['last'], declaration)
+                    inspections = _inspected_weights(session.export(), arm, view['base'])
+                    text = _prompt(prompt, context, view, cursor['last'], declaration, inspections)
                     pending = {'key': cursor['prefix'] + '-teacher-' + str(cursor['turn'] + 1),
                                'operation': cursor['prefix'] + '-operation-' + str(cursor['turn'] + 1),
                                'prompt': text, 'view': view, 'response': None}

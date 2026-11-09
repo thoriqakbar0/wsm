@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -31,6 +32,7 @@ assert callable(run_harness)
 assert json.loads(files('wsm').joinpath('tasks/addition.json').read_text())['format'] == 'wsm.task.v1'
 assert installed.metadata['Summary'].startswith('WSM (Weight Space Modifiers):')
 assert importlib.util.find_spec('weightless') is None
+assert '"format": "wsm.task.v1"' in files('wsm').joinpath('tasks/addition.json').read_text()
 assert all(name not in sys.modules for name in ('verifiers', 'harbor', 'torch', 'transformers'))
 fixture = json.loads(Path(sys.argv[1]).read_text())
 run = SearchRun(create_checkpoint(fixture['graph'], fixture['tensors']),
@@ -70,9 +72,12 @@ if len(sys.argv) > 2:
     external = json.loads(Path(sys.argv[2]).read_text())
     assert predict(replay(external), [-8, 3]) == [-5]
 '''
-with tempfile.TemporaryDirectory(prefix="weightless-packages-") as temporary:
+with tempfile.TemporaryDirectory(prefix="wsm-packages-") as temporary:
     root = Path(temporary)
-    subprocess.run([sys.executable, "-m", "pip", "wheel", "--no-deps", str(ROOT / "packages/python"), "--wheel-dir", str(root)], check=True)
+    clean = root / "source"
+    shutil.copytree(ROOT / "packages/python", clean,
+                    ignore=shutil.ignore_patterns("build", "*.egg-info", "__pycache__", "*.pyc"))
+    subprocess.run([sys.executable, "-m", "pip", "wheel", "--no-deps", str(clean), "--wheel-dir", str(root)], check=True)
     wheel, = root.glob("*.whl")
     assert wheel.name.startswith('wsm-'), wheel.name
     with zipfile.ZipFile(wheel) as archive:
@@ -85,7 +90,7 @@ with tempfile.TemporaryDirectory(prefix="weightless-packages-") as temporary:
     help_result = subprocess.run([sys.executable, str(root / "python/bin/wsm"), "--help"],
                                 cwd=root, env={**os.environ, "PYTHONPATH": str(root / "python")},
                                 check=True, capture_output=True, text=True)
-    assert 'Weight Space Modifiers' in help_result.stdout
+    assert 'weight-editing experiments' in help_result.stdout
     subprocess.run([sys.executable, "-S", "-c", CODE, str(ROOT / "fixtures/addition.json"), *sys.argv[1:]],
                    cwd=root, env={**os.environ, "PYTHONPATH": str(root / "python")}, check=True)
 print("Built wheel runs the WSM CLI, search, and pure replay outside the source tree without optional imports")

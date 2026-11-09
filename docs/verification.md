@@ -118,3 +118,14 @@ GitHub Actions remains disabled. The offline tutorial rendered at desktop and ph
 ## Durable client checks
 
 The standard unit suite includes session, verifier, sandbox, and no-tools transport regressions. `scripts/package_smoke.py` imports the new client from a built wheel without Torch, Transformers, Harbor, or Verifiers. The [native client guide](client.md#reproduce-the-native-checks) runs actual Docker isolation and pinned SmolLM editing. The [acceptance specification](design/agent-client-validation.md) retains broader scientific-validity and unfamiliar-agent comparisons as distinct requirements.
+
+
+## Consolidated implementation verification
+
+The [integration receipt](design/integration-verification.json) records the local combined checks and artifact hashes. The native suite ran 156 tests successfully with six optional model-runtime skips; separate model-environment runs passed 14 generic-target tests, four export tests, and 13 worker tests. Installed wheel, real PTY lifecycle, CLI interruption/resume, Rust bridge parity, and retained evidence replay passed.
+
+A fresh live teacher run initially exhausted its budget while alternating inspections. The harness now reconstructs bounded inspection memory for the current arm and checkpoint from completed session operations. The repeat run selected one edit, reached zero development loss, and passed private grading on the declared synthetic signed-addition cases. This is one live interaction check, not a general model-improvement result.
+
+The combined worker also passed a real Modal T4 smoke with finite CUDA outputs, selection, replay, and reconstruction. Sandbox termination was confirmed. The current worker, session, sandbox, and verifier hashes match that receipt. No live hosted Tinker integration is claimed.
+
+The model export tests force acceptance to isolate changed-state export and fresh-process reload. Their loss fixture is not efficacy evidence. Real measured selection is exercised separately in the CUDA smoke and live synthetic experiment.

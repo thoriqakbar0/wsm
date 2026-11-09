@@ -11,6 +11,7 @@ import uuid
 from contextlib import contextmanager
 
 from .binary64 import WeightlessError
+from .sandbox import forward_reservation
 
 
 def _json(value):
@@ -60,8 +61,14 @@ class Session:
                and len(set(arms)) == len(arms), 'invalid_declaration', 'Invalid arms')
         limits = declaration['budgets']
         _check(type(limits) is dict and {'attempts', 'evaluations', 'inspections', 'teacher_requests', 'final_evaluations'} <= set(limits)
-               and set(limits) <= {'attempts', 'evaluations', 'inspections', 'teacher_requests', 'diagnostics', 'final_evaluations'}
+               and set(limits) <= {'attempts', 'evaluations', 'inspections', 'teacher_requests', 'diagnostics', 'final_evaluations', 'forward_calls'}
                and all(type(n) is int and n >= 0 for n in limits.values()), 'invalid_declaration', 'Explicit budgets required')
+        if 'forward_calls' in limits and verifier is not None:
+            _check(type(declaration.get('final_forward_calls')) is int and declaration['final_forward_calls'] >= 0,
+                   'invalid_declaration', 'Predeclared final_forward_calls envelope required')
+        if 'final_forward_calls' in declaration:
+            _check(type(declaration['final_forward_calls']) is int and declaration['final_forward_calls'] >= 0,
+                   'invalid_declaration', 'Invalid final forward envelope')
         _check(all(type(declaration[k]) is int and 0 < declaration[k] <= 10000
                    for k in ('max_edits', 'max_inspect')), 'invalid_declaration', 'Invalid bounds')
         _check(declaration.get('selection', 'loss') == 'loss', 'unsupported', 'Only strict loss minimization is supported')
@@ -192,19 +199,28 @@ class Session:
             result['status'] = 'outcome_unknown'
         return result
 
+    def _blocking_keys(self, arm):
+        keys = []
+        for (body,) in self.db.execute('SELECT body FROM operations ORDER BY rowid'):
+            op = json.loads(body)
+            if op.get('arm') == arm and op.get('status') in ('dispatched', 'outcome_unknown'):
+                keys.append(op['key'])
+        return keys
+
     def observe(self, arm):
         with self._transaction():
             state = self._state()
             _check(arm in state['arms'], 'unauthorized', 'Unknown arm')
             record = state['arms'][arm]
+            blocking = self._blocking_keys(arm)
+            blocked = record['pending'] is not None or bool(blocking)
             actions = ['status']
             if state['phase'] == 'developing':
-                if not record['pending']:
+                if not blocked:
                     actions += ['inspect', 'submit']
                     if 'diagnostics' in state['used']:
                         actions.append('diagnose')
-                if record['loss'] is not None:
-                    actions += ['freeze', 'cancel']
+                actions += ['freeze', 'cancel']
             elif state['phase'] in ('frozen', 'finalizing', 'closed'):
                 actions.append('export')
                 if state['phase'] == 'frozen' and state['frozen']['complete']:
@@ -215,7 +231,7 @@ class Session:
                     'parameters': {k: state['manifest']['parameters'][k] for k in state['declaration']['editable']},
                     'public_cases': [{k: c[k] for k in ('id', 'input', 'prompt', 'target') if k in c} for c in state['development'][:100]],
                     'public_cases_truncated': len(state['development']) > 100,
-                    'pending': record['pending'], 'history': record['history'],
+                    'pending': record['pending'], 'blocking': blocking, 'history': record['history'],
                     'metric': {'selection': 'loss', 'behavior': 'exact generation is separate from target-conditioned loss'},
                     'remaining': {k: state['declaration']['budgets'][k] - v for k, v in state['used'].items()},
                     'retention_acceptability': 'undetermined',
@@ -276,6 +292,16 @@ class Session:
             return self.runner.execute(action, self.target, timeout=self.remaining_seconds(),
                                        on_dispatch=started, **kwargs)
 
+    def _forward_cost(self, state, cases):
+        return forward_reservation(self.target, len(cases), generate=True) if 'forward_calls' in state['used'] else None
+
+    def _evaluate_development(self, state, *, patches, cases, checkpoint):
+        limit = self._forward_cost(state, cases)
+        kwargs = {} if limit is None else {'forward_limit': limit}
+        result = self._development_execute('evaluate', patches=patches, cases=cases, generate=True, **kwargs)
+        self._validate_evaluation(result, checkpoint, len(cases), forward_limit=limit)
+        return result
+
     @contextmanager
     def _dispatch_window(self, action, phases=('developing',)):
         import fcntl
@@ -332,31 +358,34 @@ class Session:
             edits = self._edits(state, proposal['edits'])
             count = (2 if record['loss'] is None else 1) + bool(state['development_retention'])
             record['pending'] = key
-            op = self._reserve(state, key, request, {'attempts': 1, 'evaluations': count}, arm)
+            costs = {'attempts': 1, 'evaluations': count}
+            if 'forward_calls' in state['used']:
+                costs['forward_calls'] = self._forward_cost(state, state['development']) * (2 if record['loss'] is None else 1)
+                costs['forward_calls'] += self._forward_cost(state, state['development_retention'])
+            op = self._reserve(state, key, request, costs, arm)
             op['base'] = record['checkpoint']
             op['edits'] = edits
             self._put(op)
         try:
             baseline = None
             if record['loss'] is None:
-                baseline = self._development_execute('evaluate', patches=record['patches'],
-                                               cases=state['development'], generate=True)
-                self._validate_evaluation(baseline, record['checkpoint'], len(state['development']))
+                baseline = self._evaluate_development(state, patches=record['patches'],
+                                                     cases=state['development'], checkpoint=record['checkpoint'])
             materialized = self._development_execute('materialize', patches=record['patches'], edits=edits)
             _check(materialized.get('base_checkpoint') == record['checkpoint']
                    and materialized.get('target_id') == state['manifest']['target_id'],
                    'invalid_result', 'Materialization source or base changed')
-            result = self._development_execute('evaluate', patches=materialized['patches'],
-                                         cases=state['development'], generate=True)
-            self._validate_evaluation(result, materialized['checkpoint'], len(state['development']))
-            retention = None
+            result = self._evaluate_development(state, patches=materialized['patches'],
+                                                cases=state['development'], checkpoint=materialized['checkpoint'])
+            retention, retained = None, None
             if state['development_retention']:
-                retained = self._development_execute('evaluate', patches=materialized['patches'],
-                                                     cases=state['development_retention'], generate=True)
-                self._validate_evaluation(retained, materialized['checkpoint'], len(state['development_retention']))
+                retained = self._evaluate_development(state, patches=materialized['patches'],
+                                                      cases=state['development_retention'], checkpoint=materialized['checkpoint'])
                 retention = retained['metrics']['loss']
             feedback = {'retention_loss': retention, 'checkpoint': materialized['checkpoint'], 'patches': materialized['patches'],
                         'baseline': self._feedback(baseline) if baseline else None, **self._feedback(result)}
+            if retained is not None and 'usage' in retained:
+                feedback['retention_usage'] = self._feedback(retained)['usage']
             self._complete(op, feedback)
             self._select(key)
             return self.status(key, arm=arm)
@@ -368,12 +397,20 @@ class Session:
             return self._unknown(op)
 
     @staticmethod
-    def _validate_evaluation(result, checkpoint, count):
+    def _validate_evaluation(result, checkpoint, count, *, forward_limit=None):
         metrics = result.get('metrics', {})
         _check(result.get('checkpoint') == checkpoint and type(metrics.get('loss')) in (int, float)
                and math.isfinite(metrics['loss']) and type(metrics.get('exact')) is int
                and 0 <= metrics['exact'] <= count and metrics.get('count') == count,
                'invalid_result', 'Invalid bound evaluation')
+        usage = result.get('usage')
+        if forward_limit is not None or usage is not None:
+            _check(type(usage) is dict and type(usage.get('forward_calls')) is int and usage['forward_calls'] >= 0,
+                   'invalid_result', 'Missing measured forward usage')
+        if forward_limit is not None:
+            reported_limit = usage.get('forward_limit', forward_limit)
+            _check(usage['forward_calls'] <= forward_limit and type(reported_limit) is int and reported_limit == forward_limit,
+                   'invalid_result', 'Forward usage exceeds reservation or has a different limit')
 
     @staticmethod
     def _feedback(result):
@@ -385,8 +422,11 @@ class Session:
             if row['prediction_truncated']:
                 row['prediction'] = prediction[:4096]
             cases.append(row)
-        return {'metrics': {k: result['metrics'][k] for k in ('loss', 'exact', 'count')},
-                'cases': cases, 'truncated': len(result.get('cases', [])) > 100}
+        feedback = {'metrics': {k: result['metrics'][k] for k in ('loss', 'exact', 'count')},
+                    'cases': cases, 'truncated': len(result.get('cases', [])) > 100}
+        if 'usage' in result:
+            feedback['usage'] = {k: result['usage'][k] for k in ('forward_calls', 'forward_limit') if k in result['usage']}
+        return feedback
 
     def _complete(self, op, result):
         with self._transaction():
@@ -443,6 +483,9 @@ class Session:
             record['pending'] = None
             record['version'] += 1
             record['history'].append({'key': key, 'checkpoint': result['checkpoint'], 'metrics': result['metrics'], 'cases': result['cases'], 'selection': decision})
+            for field in ('usage', 'retention_usage'):
+                if field in result:
+                    record['history'][-1][field] = copy.deepcopy(result[field])
             op.update(status='committed', selection=decision)
             self._event({'type': 'selection', 'key': key, 'decision': decision})
             self._put(op)
@@ -513,6 +556,8 @@ class Session:
                                      'initial': state['manifest']['checkpoint'], 'runner': _hash(state['runner']),
                                      'criteria': state['declaration'].get('criteria', {}),
                                      'target_identity': state['target_identity'],
+                                     **({'final_forward_calls': state['declaration']['final_forward_calls']}
+                                        if 'forward_calls' in state['used'] and 'final_forward_calls' in state['declaration'] else {}),
                                      'complete': complete, 'obligations': obligations,
                                      'arms': {a: {k: r[k] for k in ('checkpoint', 'patches', 'loss')} for a, r in state['arms'].items()}})
             state['phase'] = 'frozen'
@@ -535,7 +580,12 @@ class Session:
             request = {'action': 'finalize', 'dataset': dataset, 'frozen': state['frozen']['id']}
             existing = self._existing(key, request)
             if not existing:
-                self._reserve(state, key, request, {'final_evaluations': self.verifier.evaluation_cost(dataset, state['frozen'])}, None)
+                costs = {'final_evaluations': self.verifier.evaluation_cost(dataset, state['frozen'])}
+                if 'forward_calls' in state['used']:
+                    _check('final_forward_calls' in state['frozen'], 'invalid_declaration',
+                           'Predeclared final_forward_calls envelope required')
+                    costs['forward_calls'] = state['declaration']['final_forward_calls']
+                self._reserve(state, key, request, costs, None)
             state.update(phase='finalizing', final_key=key, final_dataset=dataset)
             self._save(state)
         receipt = self.verifier.grade(state['frozen'], target=self.target, key=key, dataset=dataset, timeout=self.remaining_seconds())
@@ -574,10 +624,12 @@ class Session:
             _check(state['phase'] == 'developing' and arm in state['arms'], 'invalid_state', 'Diagnostics unavailable')
             _check('diagnostics' in state['used'], 'unsupported', 'Diagnostic budget not declared')
             record = state['arms'][arm]
-            op = self._reserve(state, key, request, {'diagnostics': 1, 'evaluations': 1}, arm)
+            costs = {'diagnostics': 1, 'evaluations': 1}
+            if 'forward_calls' in state['used']:
+                costs['forward_calls'] = self._forward_cost(state, state['development'])
+            op = self._reserve(state, key, request, costs, arm)
         try:
-            result = self._development_execute('evaluate', patches=record['patches'], cases=state['development'], generate=True)
-            self._validate_evaluation(result, record['checkpoint'], len(state['development']))
+            result = self._evaluate_development(state, patches=record['patches'], cases=state['development'], checkpoint=record['checkpoint'])
             return self._complete(op, {'checkpoint': record['checkpoint'], **self._feedback(result)})
         except WeightlessError as error:
             if error.code in ('invalid_result', 'numerical_failure', 'invalid_task', 'unsupported', 'target_failure'):
@@ -635,6 +687,9 @@ def replay_session(bundle):
     _check(frozen is not None, 'invalid_artifact', 'Frozen record required')
     sealed(frozen)
     _check(frozen.get('criteria', {}) == bundle['declaration'].get('criteria', {}), 'invalid_artifact', 'Criteria changed')
+    if 'forward_calls' in bundle['declaration']['budgets']:
+        _check(frozen.get('final_forward_calls') == bundle['declaration'].get('final_forward_calls'),
+               'invalid_artifact', 'Final forward envelope changed')
     _check(frozen['session'] == bundle['session'] and frozen['declaration'] == bundle['declaration']['id']
            and frozen['initial'] == bundle['initial'] and frozen['runner'] == bundle['runner'], 'invalid_artifact', 'Freeze binding mismatch')
     journal = bundle['journal']
@@ -644,6 +699,9 @@ def replay_session(bundle):
     used = dict.fromkeys(bundle['used'], 0)
     arms = {a: {'checkpoint': bundle['initial'], 'patches': [], 'loss': None} for a in bundle['declaration']['arms']}
     for op in bundle['operations']:
+        if op['kind'] == 'finalize' and 'forward_calls' in bundle['declaration']['budgets']:
+            _check(op['costs'].get('forward_calls') == bundle['declaration'].get('final_forward_calls'),
+                   'invalid_artifact', 'Final forward reservation differs from declaration')
         for dimension, cost in op['costs'].items():
             used[dimension] += cost
         dispatch = journal[op['dispatch_seq'] - 1]

@@ -1,0 +1,101 @@
+{
+  "recorded_utc": "2026-11-09T16:22:37.291506+00:00",
+  "main_base": "775b498a6ab1e3a61d8da280fe9fe2a483c2c679",
+  "publication": "local only; not pushed",
+  "golden_checkpoint": "sha256:1554696f55aac47c67222c16d87bd6fc22512428409cac4f4a17a5ab0246e271",
+  "checks": {
+    "native_cli": {
+      "artifact": "/tmp/wsm-integrated-final-cli/proof.json",
+      "sha256": "c9d70401533bf9ceb5e691cbbb6ebe45506a9618ec80e26f000b1466a2d6ef99",
+      "passed": true,
+      "final_exact": 4,
+      "same_key_retry_spends_no_extra_budget": true,
+      "interrupted_operation_not_resent": true
+    },
+    "native_tui": {
+      "artifact": "/tmp/wsm-integrated-final-tui/proof.json",
+      "sha256": "7c37bee59ba0c2aaa1cd91e5dbe0255adaee5e52750777e6bf94d6c1a3d3bab4",
+      "passed": true,
+      "real_terminal": true,
+      "final_exact": 4
+    },
+    "cuda": {
+      "artifact": "/tmp/wsm-integrated-cuda-review/result.json",
+      "sha256": "4ba8bec18477894de2fc8f05262d627b8e06813ca8c2c001577c44d2bb03afca",
+      "passed": true,
+      "selection_rule_verified": true,
+      "tie_rejected": true,
+      "tied_embeddings": true,
+      "teacher_requests": 0,
+      "scope": "One trusted CUDA mechanics smoke; no efficacy, autonomy, or untrusted-agent isolation claim.",
+      "cleanup": {
+        "sandbox_id": "sb-mOSJmORoHskt5UQRZO3XGE",
+        "exit_code": 0,
+        "termination_confirmed": true
+      },
+      "current_worker_session_sandbox_verifier_hashes_match": true
+    },
+    "live_teacher": {
+      "artifact": "/tmp/wsm-integrated-live-teacher-memory/run/harness/report.json",
+      "sha256": "9cfea817f127f329a6f20e4eb0e72f2194f07fb0e3898049c9f619e83cb8b525",
+      "stop": "finished",
+      "no_edit": false,
+      "development_loss": 0.0,
+      "final_conclusion": "supported",
+      "used": {
+        "attempts": 1,
+        "diagnostics": 0,
+        "evaluations": 2,
+        "final_evaluations": 2,
+        "forward_calls": 16,
+        "inspections": 6,
+        "teacher_requests": 8
+      },
+      "scope": "Declared finite cases only; lower loss alone does not establish requested behavior.",
+      "private_case_id_absent_from_requests": true,
+      "teacher_model": "gpt-6.1-sol"
+    },
+    "native_suite": {
+      "artifact": "/tmp/wsm-integrated-final-suite.log",
+      "sha256": "eb37766caa2eff8910acc73b07d5232a14a5c79739b18d18b87af48005804a25",
+      "passed": true,
+      "tests": 156,
+      "skipped": 6,
+      "skip_reason": "Optional torch cases unavailable on system Python; model cases separately exercised in the compatible model environment."
+    },
+    "model_export": {
+      "artifact": "/tmp/wsm-integrated-export-review.log",
+      "sha256": "ed4a8dff8e0c6e5ffe9343704f960b9dcd9fb2492d17a1457f00efd6b9570f67",
+      "passed": true,
+      "tests": 4
+    },
+    "generic_targets": {
+      "artifact": "/tmp/wsm-integrated-hf-review.log",
+      "sha256": "369f62fbcb2b7fca26051afd4532563c4472ef7985ee240d2e358c348fb5fed9",
+      "passed": true,
+      "tests": 14
+    },
+    "worker": {
+      "artifact": "/tmp/wsm-integrated-model-sandbox.log",
+      "sha256": "429b0e6560050fe76e6b269610fb33446e920152b8ac19bb4bb8c41215e2d2a2",
+      "passed": true,
+      "tests": 13
+    },
+    "installed_wheel": {
+      "artifact": "/tmp/wsm-integrated-wheel-review.log",
+      "sha256": "29d4be741684f4f56e7fdeb41ffdee603a900cc11363badfdc1470af7dab553d",
+      "passed": true
+    },
+    "rust_bridge": {
+      "artifact": "/tmp/wsm-integrated-rust-proof.log",
+      "sha256": "7030ea874eaff3361641db755aace28b25962ddd375ba5398c164e72dbbe3310",
+      "passed": true
+    }
+  },
+  "limits": [
+    "Model export selection fixtures force acceptance to isolate reload behavior; they do not establish efficacy.",
+    "Live teacher proof is one synthetic signed-addition experiment.",
+    "CUDA proof is trusted SmolLM mechanics, not general efficacy or untrusted-agent isolation.",
+    "No hosted Tinker integration or Claude/OpenAI Agents SDK adapters are implemented."
+  ]
+}

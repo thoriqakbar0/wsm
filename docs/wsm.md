@@ -46,7 +46,8 @@ The teacher can also request `{"action":"diagnose"}` or `{"action":"finish"}`. T
 The command prints a structured report. Inspect these files in the private run directory:
 
 - `checkpoint.json` contains the selected binary64 checkpoint, ready for `wsm.binary64.predict`.
-- `mod.json` contains the original target, selected checkpoint identity, and effective scalar patches. For SmolLM, this is a patch artifact against the pinned staged target, not a standalone Hugging Face model export.
+- `mod.json` contains the original target, selected checkpoint identity, and effective scalar patches.
+- For a model target, `selected/` is the standalone snapshot. A later process can load it without the original model directory. `mod.json` remains the patch record.
 - `harness/report.json` contains the stop reason, selected development loss, counters, unresolved operations, and receipt-derived final conclusion.
 - `harness/bundle.json` contains replayable public session evidence.
 
@@ -107,3 +108,9 @@ report = run(
 ```
 
 The output directory must be new or belong to this same session, arm, prompt, and public context. Only pass public information as `context`. Session policy, operation admission, and numerical execution remain in their existing owners. See [create and resume sessions](client.md#session-contract) for their setup.
+
+## Bound model computation
+
+`--forward-calls` limits total model forward calls, including final grading. It defaults to 10000. `--final-forward-calls` declares a private grading envelope charged against that total, defaulting to 1000. Leave enough total budget after development for that envelope. Exact private usage remains in the verifier registry.
+
+For reproducible configuration-driven runs or scripted proposals, use the [experiment driver](driver.md). Both teacher entry points call the same harness and Session.

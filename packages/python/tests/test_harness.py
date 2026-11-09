@@ -312,3 +312,16 @@ class HarnessTests(unittest.TestCase):
             server.shutdown()
             server.server_close()
             thread.join()
+
+
+class InspectionMemoryTests(unittest.TestCase):
+    def test_only_current_arm_and_checkpoint_inspections_survive(self):
+        from wsm.harness import _inspected_weights
+        def operation(arm, checkpoint, tensor, value, status='completed'):
+            return {'kind': 'inspect', 'arm': arm, 'status': status,
+                    'result': {'checkpoint': checkpoint, 'values': [{'tensor': tensor, 'index': 0, 'value': value}]}}
+        operations = [operation('teacher', 'base', 'hidden', 1), operation('teacher', 'base', 'output', 2),
+                      operation('control', 'base', 'private', 9), operation('teacher', 'old', 'stale', 8),
+                      operation('teacher', 'base', 'unknown', 7, 'outcome_unknown')]
+        self.assertEqual(_inspected_weights({'operations': operations}, 'teacher', 'base'),
+                         [{'tensor': 'hidden', 'index': 0, 'value': 1}, {'tensor': 'output', 'index': 0, 'value': 2}])
