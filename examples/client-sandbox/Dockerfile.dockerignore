@@ -2,6 +2,6 @@
 !packages/
 !packages/python/
 !packages/python/src/
-!packages/python/src/weightless/
-!packages/python/src/weightless/binary64.py
-!packages/python/src/weightless/target_worker.py
+!packages/python/src/wsm/
+!packages/python/src/wsm/binary64.py
+!packages/python/src/wsm/target_worker.py

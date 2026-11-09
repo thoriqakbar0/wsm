@@ -14,7 +14,7 @@ import uuid
 from .sandbox import _MAX_INPUT, _MAX_OUTPUT, _WorkerRunner, _error
 
 _READY = b'weightless.sandbox.ready.v1\n'
-_WORKER = "import runpy,sys;sys.path.insert(0,'/opt/weightless');runpy.run_module('weightless.target_worker',run_name='__main__')"
+_WORKER = "import runpy,sys;sys.path.insert(0,'/opt/weightless');runpy.run_module('wsm.target_worker',run_name='__main__')"
 
 
 class BubblewrapRunner(_WorkerRunner):
@@ -120,7 +120,7 @@ class BubblewrapRunner(_WorkerRunner):
         unit = 'weightless-local-' + uuid.uuid4().hex + '.service'
         boundary = command.index('--')
         program = command[boundary + 1:]
-        if program == ['python', '-m', 'weightless.target_worker']:
+        if program == ['python', '-m', 'wsm.target_worker']:
             program = [self._python, '-I', '-c', _WORKER]
         else:
             program = [self._python, *program[1:]]
@@ -143,7 +143,7 @@ class BubblewrapRunner(_WorkerRunner):
         proc = None
         cleanup_result = None
         with tempfile.TemporaryDirectory(prefix='weightless-worker-') as staging:
-            package = Path(staging) / 'weightless'
+            package = Path(staging) / 'wsm'
             package.mkdir(mode=0o755)
             for name, value in self._worker.items():
                 (package / name).write_bytes(value)

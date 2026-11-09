@@ -2,8 +2,8 @@ import argparse
 import json
 from pathlib import Path
 
-from weightless import MetricPolicy, NumericalEvaluation, SearchRun
-from weightless.binary64 import create_checkpoint
+from wsm import MetricPolicy, NumericalEvaluation, SearchRun
+from wsm.binary64 import create_checkpoint
 
 parser = argparse.ArgumentParser(description="Offline scripted teacher. No model call is made.")
 parser.add_argument("--fixture", type=Path, default=Path(__file__).resolve().parents[1] / "fixtures/addition.json")

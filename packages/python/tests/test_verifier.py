@@ -2,9 +2,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from weightless.binary64 import WeightlessError
-from weightless.session import Session
-from weightless.verifier import Verifier
+from wsm.binary64 import WeightlessError
+from wsm.session import Session
+from wsm.verifier import Verifier
 from test_session import Runner, declaration, proposal
 
 

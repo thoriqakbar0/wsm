@@ -1,27 +1,39 @@
-# Weightless
+# WSM (Weight Space Mods)
 
-Weightless lets an external teacher propose explicit numerical edits to a fixed neural network. A Python run owns copied candidates and bound evaluation evidence, then selects strict improvements by a declared metric policy. Numerical access lives in a lower-level backend. The evaluator can use local arithmetic or the actual Verifiers Harbor adapter in Docker.
+WSM lets an external teacher propose numerical weight edits to a fixed neural network. The Python SDK evaluates copied candidates and keeps only strict improvements under a declared metric policy. Each run records proposals, evaluation evidence, and selection decisions for replay.
 
-The signed-addition example uses a fixed affine/ReLU network and an offline scripted teacher. It makes no model call and claims no paper result. Read the [offline interactive tutorial](docs/tutorial.html), [architecture](docs/architecture.md), [shared contract](docs/contract.md), and [research scope](docs/research.md).
+Install the Python distribution as `wsm` and import it as `wsm`. This replaces the former `weightless-sdk` distribution and `weightless` namespace without an import alias. For an existing environment, uninstall `weightless-sdk` before installing from this checkout, then update your imports to `wsm`. Serialized `weightless.*` format identifiers and hashes, `WeightlessError`, environment variables, and Docker image names keep their existing spelling.
 
-The [durable local client](docs/client.md) adds resumable sessions, a separate private verifier, and enforced execution for binary64 and pinned SmolLM2 targets. The [local sandbox](docs/sandbox.md) runs on Linux with bubblewrap and systemd, without Docker or KVM. The [client design and validation specification](docs/design/agent-client.md) describes the broader acceptance program.
+## Run the offline example
 
-## Run the example
+From the repository root, use Python 3.12 or later with `venv` and pip available. On Debian or Ubuntu, install the matching `python3-venv` package if environment creation reports that `ensurepip` is unavailable. The core SDK has no third-party runtime dependencies.
 
-Python 3.12 or later is required. The core SDK has no runtime dependencies.
+The example edits a fixed affine/ReLU network to compute signed addition. Its scripted teacher makes no model call. Docker, model downloads, and credentials are not required.
 
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -e packages/python
-.venv/bin/python examples/demo.py --output /tmp/weightless-run.json
+.venv/bin/python examples/demo.py --output /tmp/wsm-run.json
 ```
 
-The decisions are `not_improved`, `improved`, and `not_improved`. The retained checkpoint computes signed addition. Replace `examples/teacher-proposals.json` and pass `--proposals /path/to/proposals.json` to supply other explicit edit batches.
+Expected output:
+
+```json
+{"accepted": false, "reason": "not_improved"}
+{"accepted": true, "reason": "improved"}
+{"accepted": false, "reason": "not_improved"}
+```
+
+The frozen run is saved to `/tmp/wsm-run.json`. The retained checkpoint computes signed addition on the synthetic example. Pass `--proposals /path/to/proposals.json` to supply your own edit batches in the format used by `examples/teacher-proposals.json`.
+
+## Submit edits through the SDK
+
+Run this example from the repository root using the installed environment:
 
 ```python
 import json
-from weightless import MetricPolicy, NumericalEvaluation, SearchRun, replay
-from weightless.binary64 import create_checkpoint, predict
+from wsm import MetricPolicy, NumericalEvaluation, SearchRun, replay
+from wsm.binary64 import create_checkpoint, predict
 
 with open("fixtures/addition.json") as file:
     fixture = json.load(file)
@@ -50,7 +62,11 @@ Construction performs no evaluation. The first evaluation retains a separately b
 
 Selection compares the configured metric paths in order. This example minimizes development loss and then training loss. Exact ties retain the incumbent. A genuine graded-zero reward remains valid feedback. Task failures, invalid responses, and infrastructure failures remain distinct evidence and cannot win. A failed baseline stays inspectable and prevents selection.
 
-## Use native Harbor development feedback
+## Choose optional execution and grading
+
+The [durable local client](docs/client.md) adds resumable `Session` experiments, a separate private `Verifier`, and explicit teacher transport through `ResponsesTeacher`. Its execution targets are binary64 checkpoints and a pinned SmolLM2 checkpoint. The [local sandbox guide](docs/sandbox.md) covers Docker-free Linux execution through `BubblewrapRunner`, bubblewrap, and systemd. `DockerRunner` is also available. These paths require host setup beyond the offline example.
+
+For native Harbor development feedback, use the optional Verifiers adapter on a Docker host.
 
 Install the optional integration packages, prepare trusted purpose-specific tasks, and build the agent image on a Docker host.
 
@@ -63,7 +79,7 @@ docker build -t weightless-signed-addition:local examples/harbor/signed-addition
 Replace only the evaluator in the same teacher loop:
 
 ```python
-from weightless.harbor import HarborEvaluation, resolve_image
+from wsm.harbor import HarborEvaluation, resolve_image
 
 image = resolve_image("weightless-signed-addition:local")
 evaluator = HarborEvaluation(task_dir="/tmp/weightless-development", image=image)
@@ -82,17 +98,24 @@ The adapter is synchronous and serial. Call it outside an active asynchronous ev
 
 ## Verify the boundaries
 
+Run the core checks and installed-wheel smoke without optional integrations:
+
 ```sh
-INTEGRATION_PYTHON="$PWD/.venv/bin/python" bash scripts/verify.sh
-python3 scripts/package_smoke.py
-.venv/bin/python scripts/harbor_native.py --failures --output /tmp/weightless-native-proof
-.venv/bin/harbor run --path examples/harbor/signed-addition --agent oracle --env docker \
-  --force-build --jobs-dir /tmp/weightless-jobs --job-name oracle
-python3 scripts/check_harbor_reward.py /tmp/weightless-jobs/oracle
+.venv/bin/python scripts/golden_identity.py
+.venv/bin/python -m unittest discover -s packages/python/tests -v
+.venv/bin/python scripts/package_smoke.py
 ```
 
-The first command checks independent golden bytes, unit behavior, schema, upstream task loading, and local trusted verifier scripts. The package smoke builds and installs the wheel outside the source tree. The native adapter command requires Docker and proves development decisions plus independent final grading through Verifiers. The Harbor CLI command separately proves the native task. [Verification details](docs/verification.md) distinguish each result. GitHub Actions remains disabled.
+These commands check independent golden bytes, unit behavior, and installation and replay from a built wheel outside the source tree. Native bubblewrap tests skip unless explicitly enabled on a configured Linux host. A skipped test does not prove isolation.
 
-The [JSON Schema](schemas/v1.json) validates structural wire records. The SDK additionally checks identities, graph relationships, patch addresses, result bindings, budget accounting, and policy decisions. Numerical `create_checkpoint`, `parse_checkpoint`, `predict`, `evaluate`, and patch operations belong to `weightless.binary64`.
+After installing the integration extras above, run `INTEGRATION_PYTHON="$PWD/.venv/bin/python" bash scripts/verify.sh` for additional schema, upstream task-loading, and trusted verifier checks. The [verification guide](docs/verification.md) gives separate commands and prerequisites for native Harbor and sandbox execution. GitHub Actions remains disabled.
+
+The [JSON Schema](schemas/v1.json) validates structural wire records. The SDK additionally checks identities, graph relationships, patch addresses, result bindings, budget accounting, and policy decisions. Numerical `create_checkpoint`, `parse_checkpoint`, `predict`, `evaluate`, and patch operations belong to `wsm.binary64`.
 
 `replay(frozen)` reconstructs weights and checks recorded evidence and decisions without invoking any evaluator. It can replay Harbor-produced runs with no optional dependencies installed. Unsigned hashes prove internal consistency, not external score authenticity or live teacher behavior. Independent heldout grading is the correctness check. Checkpoint v1 bytes remain unchanged. Frozen runs use the new v2 format, with no old API shims.
+
+## Scope and further reading
+
+The offline example demonstrates explicit weight edits, strict selection, and replay on a synthetic addition task. It does not reproduce a paper result or establish optimizer superiority, general extrapolation, or useful language-model weight discovery. The binary64 backend uses scalar arithmetic, which need not match every accelerated numerical runtime. The [research scope](docs/research.md) records the source inspiration and untested claims.
+
+Use the [offline interactive tutorial](docs/tutorial.html) for a walkthrough, the [architecture](docs/architecture.md) for ownership boundaries, and the [shared contract](docs/contract.md) for wire records and validation. The [client design and validation specification](docs/design/agent-client.md) describes the broader acceptance program. Its requirements are separate from demonstrated results in the verification guide.

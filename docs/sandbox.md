@@ -48,7 +48,7 @@ apt-get install bubblewrap
 Construct the runner without a container image.
 
 ```python
-from weightless import BubblewrapRunner
+from wsm import BubblewrapRunner
 
 runner = BubblewrapRunner(timeout=60, cpus=2, memory_bytes=2 * 1024**3)
 print(runner.probe("print('isolated')"))

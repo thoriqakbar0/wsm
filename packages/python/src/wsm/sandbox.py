@@ -64,7 +64,7 @@ class _WorkerRunner:
             payload = json.dumps(request, allow_nan=False, separators=(",", ":")).encode()
         except (ValueError, TypeError, RecursionError):
             _error("invalid_request", "Request is not finite JSON")
-        raw = self._run(self._command(mount) + ["python", "-m", "weightless.target_worker"], payload, timeout, on_dispatch)
+        raw = self._run(self._command(mount) + ["python", "-m", "wsm.target_worker"], payload, timeout, on_dispatch)
         try:
             response = json.loads(raw)
             if type(response) is not dict or set(response) not in ({"result"}, {"error"}):
