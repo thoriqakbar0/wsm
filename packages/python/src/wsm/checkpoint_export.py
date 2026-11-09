@@ -1,7 +1,13 @@
 """Write the selected numerical state as a standalone artifact."""
+import ctypes
+import errno
+import hashlib
+from importlib.metadata import version
 import json
 import os
 import shutil
+import sys
+import tempfile
 from pathlib import Path
 
 from .binary64 import WeightlessError, apply_patch, parse_checkpoint
@@ -14,7 +20,12 @@ def _fail(code, message):
 
 
 def _selected(bundle, target, arm):
-    frozen = replay_session(bundle)
+    try:
+        frozen = replay_session(bundle)
+    except WeightlessError:
+        raise
+    except (KeyError, IndexError, TypeError, ValueError, RecursionError):
+        _fail("invalid_artifact", "Malformed session evidence")
     if frozen.get("complete") is not True:
         _fail("incomplete_freeze", "Complete freeze required")
     arms = frozen.get("arms")
@@ -97,8 +108,10 @@ def _rewrite_weights(snapshot, model, max_bytes):
         _fail("invalid_artifact", "Selected parameters are not in the snapshot weights")
 
 
-def _export_model(target, checkpoint, patches, destination, device, max_bytes):
+def _export_model(target, initial, checkpoint, patches, destination, device, max_bytes):
     model = ModelTarget(target, device=device)
+    if model.identity() != initial:
+        _fail("identity_mismatch", "Loaded target does not match the initial checkpoint")
     for item in patches:
         model.set(item["tensor"], item["index"], item["value"])
     if model.identity() != checkpoint:
@@ -125,6 +138,32 @@ def _export_model(target, checkpoint, patches, destination, device, max_bytes):
     return checkpoint
 
 
+def _publish(source, destination):
+    rename = getattr(ctypes.CDLL(None, use_errno=True), "renameat2", None)
+    if rename is None:
+        _fail("unsupported_platform", "Atomic exclusive export requires renameat2")
+    rename.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+    rename.restype = ctypes.c_int
+    if rename(-100, os.fsencode(source), -100, os.fsencode(destination), 1) != 0:
+        code = ctypes.get_errno()
+        if code in (errno.EEXIST, errno.ENOTEMPTY):
+            _fail("export_exists", "Destination already exists")
+        raise OSError(code, os.strerror(code), str(destination))
+
+
+def _file_hashes(root):
+    records = []
+    for path in sorted(root.rglob("*")):
+        if path.is_symlink():
+            _fail("invalid_artifact", "Export produced a symlink")
+        if path.is_file():
+            with path.open("rb") as stream:
+                digest = hashlib.file_digest(stream, "sha256").hexdigest()
+            records.append({"path": path.relative_to(root).as_posix(), "bytes": path.stat().st_size,
+                            "sha256": "sha256:" + digest})
+    return records
+
+
 def export_checkpoint(bundle, *, target, arm, destination, max_bytes, device="cpu"):
     """Write one selected arm so a later process can load it without the original source."""
     if type(max_bytes) is not int or max_bytes < 1:
@@ -133,25 +172,40 @@ def export_checkpoint(bundle, *, target, arm, destination, max_bytes, device="cp
         _fail("invalid_target", "Invalid target")
     checkpoint, patches = _selected(bundle, target, arm)
     destination = Path(destination).absolute()
+    if destination.exists() or destination.is_symlink():
+        _fail("export_exists", "Export destination must be unused")
     if target.get("kind") in ("smollm", "huggingface"):
+        snapshot = snapshot_directory(target)
         source = Path(target["source"]).resolve()
         if destination.resolve().is_relative_to(source):
             _fail("invalid_artifact", "Export destination must be outside the source model tree")
-        _bounded(snapshot_directory(target), max_bytes)
-    if destination.exists() or destination.is_symlink():
-        _fail("invalid_artifact", "Export destination must be unused")
-    destination.mkdir(parents=True)
+        _bounded(snapshot, max_bytes)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    staged = Path(tempfile.mkdtemp(prefix=".wsm-export-", dir=destination.parent))
     try:
         kind = target.get("kind")
         if kind == "binary64":
-            checkpoint = _export_binary(target, checkpoint, patches, destination, max_bytes)
+            if parse_checkpoint(target["checkpoint"])["id"] != bundle["initial"]:
+                _fail("identity_mismatch", "Loaded target does not match the initial checkpoint")
+            checkpoint = _export_binary(target, checkpoint, patches, staged, max_bytes)
         elif kind in ("smollm", "huggingface"):
-            checkpoint = _export_model(target, checkpoint, patches, destination, device, max_bytes)
+            checkpoint = _export_model(target, bundle["initial"], checkpoint, patches, staged, device, max_bytes)
         else:
             _fail("unsupported_target", "Unsupported target")
-        total, count = _bounded(destination, max_bytes)
-    except BaseException:
-        shutil.rmtree(destination, ignore_errors=True)
-        raise
-    return {"format": "wsm.checkpoint-export.v1", "arm": arm, "checkpoint": checkpoint,
-            "bytes": total, "files": count}
+        total, count = _bounded(staged, max_bytes)
+        runtime = {"python": sys.version.split()[0]}
+        if kind != "binary64":
+            runtime.update({name: version(name) for name in ("torch", "transformers", "safetensors")})
+        receipt = {"format": "wsm.checkpoint-export.v1", "arm": arm, "checkpoint": checkpoint,
+                   "bytes": total, "files": count, "selected": checkpoint, "initial": bundle["initial"],
+                   "evidence": bundle["id"], "frozen": bundle["frozen"]["id"], "runner": bundle["runner"],
+                   "serialization": "weightless.checkpoint.v1" if kind == "binary64" else "huggingface-snapshot",
+                   "total_bytes": total, "file_hashes": _file_hashes(staged), "runtime": runtime,
+                   "target": {key: target[key] for key in ("kind", "model", "revision", "dtype") if key in target}}
+        (staged / "receipt.json").write_text(json.dumps(receipt, indent=2, sort_keys=True, allow_nan=False) + "\n")
+        _bounded(staged, max_bytes)
+        _publish(staged, destination)
+        return receipt
+    finally:
+        if staged.exists():
+            shutil.rmtree(staged)

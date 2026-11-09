@@ -22,6 +22,16 @@ This profile trusts the host administrator, Docker daemon, image, and numerical 
 
 A declaration contains `hypothesis`, `arms`, canonical `editable` tensor names, `max_edits`, `max_inspect`, positive `wall_seconds`, and integer `budgets`. Budget names are `attempts`, `evaluations`, `inspections`, `teacher_requests`, and `final_evaluations`. Optional `diagnostics` also consumes the evaluation budget. Optional `forward_calls` reserves a conservative generation cost before dispatch. When that budget is declared, `final_forward_calls` is required and remains in the public receipt. Measured forward usage stays out of that receipt. The current selection policy minimizes development loss strictly. Optional `development_retention_loss_max` requires public retention cases. Model families, resource ceilings, and acceptable regressions remain operator choices within the implemented profile.
 
+### Bound target forward calls
+
+The optional `budgets.forward_calls` dimension bounds target execution separately from evaluation requests. A model forward call means one top-level target model invocation. One loss evaluation uses one call per case; greedy generation can use up to one more per generated token. The worker measures those invocations with a scoped hook and checks its assigned limit before each call. Binary64 counts one network prediction per case.
+
+Session evaluations use a fixed 16-token generation cap. A budgeted SmolLM evaluation therefore reserves 17 calls per case before dispatch, including the first unchanged baseline, candidate, public retention, and diagnostics. Binary64 reserves one call per case. Unused allowance is not refunded. `used.forward_calls` is the reserved total. Successful public feedback records measured `usage.forward_calls` and the assigned `usage.forward_limit` separately. Public retention usage appears in `retention_usage`. Failed or uncertain execution retains its whole reservation; absence of an observed count does not mean zero calls.
+
+A budgeted session with a private verifier also requires a nonnegative `declaration.final_forward_calls`. This is an operator-chosen padded envelope for all final task and retention evaluations across all arms. Finalization reserves it once before execution. The verifier rejects an insufficient envelope before private dispatch and checks each numerical result against its own bound. Exact private measured counts remain in the verifier database and do not enter agent feedback or the public evidence bundle. A failed preflight retains the reservation, and retrying its idempotency key does not charge it again.
+
+These units differ from the batched evaluation budgets in the research. They do not measure tokens, FLOPs, cost, or provider billing. Token-length, CPU, memory, and wall-time limits still apply. Describe, inspect, materialize, and checkpoint serialization consume no target forward calls but still use compute resources. Post-freeze reload checks and independent regrading must disclose their own execution separately from the closed development budget.
+
 `observe(arm)` returns current identity fields, permitted parameter metadata, public cases, history, remaining counts, and phase-appropriate actions. `inspect` requires a checkpoint, tensor, and bounded index list. A submission contains exactly `session`, `arm`, `declaration`, `observation`, `base`, and `edits`. Each edit contains `tensor`, `index`, and finite `value`. Every numerical operation has an idempotency key. Repeating the same key and request returns the same outcome. Changing a request under an existing key is an error. A stale checkpoint or observation is rejected before candidate evaluation.
 
 The first submission establishes an unchanged baseline. Candidate materialization verifies the base identity before evaluation. Effective float32 replacements are recorded after rounding, so replay reproduces the resulting weights. Each candidate starts from copied base weights. Rejected edits never replace the selected checkpoint. Failures and uncertain outcomes remain in the journal. An uncertain external operation is never silently resent.
@@ -37,6 +47,48 @@ Target-conditioned language loss and exact free generation are different measure
 An exploratory declaration leaves criteria unset and produces an inconclusive efficacy conclusion. A confirmatory declaration requires both `criteria.final_exact_min` and `criteria.retention_loss_max`. The verifier checks both on the frozen finite cases. Its supported or bounded-negative conclusion applies only to that declared experiment. It does not establish general weight-space programming or authenticate the runtime's arithmetic.
 
 `replay_session(bundle)` checks journal consistency and reconstructs selection without executing a model. `verify_session(bundle, runner=..., target=...)` independently rematerializes candidate checkpoints and checks numerical identities. It does not independently re-evaluate every recorded score. Hashes detect inconsistency; they do not authenticate a producer. A separate operator can regrade fresh private cases with a trusted runtime.
+
+## Export the selected model
+
+Session evidence and model checkpoints are separate artifacts. `Session.export()` retains the declaration, journal, selected patches, and final receipt. A patch recipe still needs the original base model. Checkpoint export must include the selected numerical model and its tokenizer metadata so another process can load it without the original cache.
+
+Checkpoint export is a trusted operator operation. It is outside `Session.dispatch` and does not give the editing AI a writable host directory. When using a host Python process, its model libraries and filesystem access are trusted. To preserve process isolation, run the operator exporter in a separately limited container with the source mounted read-only and a dedicated output directory. The live editing workers retain their existing read-only model mounts.
+
+Only a complete frozen arm is eligible. Export must check the supplied base identity, apply the selected effective patches, and check the selected identity. Its provenance belongs outside the model snapshot because the numerical identity also binds runtime versions and metadata bytes. A matching set of weight values with different tokenizer or model metadata is not the same WSM checkpoint. Rejected candidates must never replace the selected artifact.
+
+Choose explicit export byte and execution limits. Serialization and reload checks are operator verification work, separate from the frozen development budget. A receipt with file hashes establishes consistency; an independent offline reload and matched evaluation establish that the files can execute. Neither proves a fresh editing AI discovered the patch or that the patch improves general capability.
+
+Use the operator API with the same trusted target descriptor supplied to the session:
+
+```python
+from wsm import export_checkpoint
+
+receipt = export_checkpoint(bundle, target=target, arm="editor",
+                            destination="/trusted/output/selected", max_bytes=1024**3)
+```
+
+The unused destination receives `receipt.json` and either `checkpoint.json` for binary64 or a self-contained `snapshots/<revision>/` Hugging Face model directory. The receipt retains the shared export API's `checkpoint`, `bytes`, and file count and adds the selected identity, evidence, frozen arm, runner hash, runtime versions, and `file_hashes`. Its `total_bytes` sums model files; the size check also includes the receipt. Source paths, private cases, and credentials are excluded. Load a Hugging Face export directly from its snapshot directory with offline loading and `trust_remote_code=False`.
+
+The exporter preserves the original metadata bytes, applies alias-aware patches, and reloads the serialized model before publication. Source metadata and runtime versions affect WSM identities, so use the same numerical runtime as the experiment. The current atomic no-overwrite publication requires Linux `renameat2`. An existing destination is preserved, including one created concurrently. Failed exports remove only their own temporary directory.
+
+`max_bytes` bounds the completed directory, including the receipt. Copying is bounded, and rewritten weight shards are size-checked before writing. The exporter uses the shared model backend for CPU or explicit CUDA execution and preserves the original metadata and unchanged weight storage. It does not enforce a process-wide memory, wall-time, or aggregate temporary-disk quota. Set those limits in the operator's supervisor. The native verification script uses explicit Docker limits and an independent source-free reload.
+
+## Run a configured experiment
+
+Start with [examples/drive-session.json](../examples/drive-session.json). Run it with `python3 scripts/drive_session.py CONFIG.json` from the repository root after installing WSM. Paths are relative to that working directory. The command creates a new output directory and writes `evidence.json`, `target.json`, and `driver.json` beside the session database. An existing output directory is rejected.
+
+Declare exactly one arm for this driver. Use the Session API directly for multi-arm comparisons. Required configuration fields are `target`, `runner`, `declaration`, `development`, `output`, `arm`, and `max_new_tokens`. The current Session profile requires `max_new_tokens: 16`, `selection: "loss"`, an explicit `claim`, and `budgets.forward_calls`. Supported targets are binary64, the pinned SmolLM profile, and staged Hugging Face snapshots accepted by the shared backend. The initial target and model provider are explicit inputs, with no fallback.
+
+Choose one proposal source:
+
+- `proposals` contains objects with `key` and explicit `edits`. Reports label these runs `scripted_plumbing`.
+- `teacher` contains the behavioral `instructions`, `endpoint`, public `model` ID, `api_key_env`, `directory`, `timeout`, and `max_output_tokens`. The environment variable supplies the credential. Alternatively, replace endpoint/model/environment fields with a `credentials` path in the existing teacher-file format. Reports label these runs `fresh_agent`.
+
+The driver delegates teacher turns to the installed `wsm.harness.run` loop. The shared grammar has `inspect`, `edit`, `diagnose`, and `finish` commands. The host owns operation keys and checkpoint bindings, so the teacher cannot collide with driver or transport keys. The next prompt receives the literal permitted result and retained checkpoint-specific inspection values. Invalid replies receive bounded feedback and consume their already charged teacher request. `finish` freezes selection and requests configured private grading without reopening development. See [the shared harness guide](wsm.md).
+
+Optional `development_retention` contains public retention cases. A private `verifier` object supplies `database`, `dataset`, and a `cases` file path. The case file contains either a task list or an object with `task` and `retention` lists. Keep verifier files and teacher artifacts outside the output directory. Output and private files must also stay outside the public model mount. Private case text never enters teacher prompts. A budgeted verifier requires the predeclared `final_forward_calls` envelope.
+
+The CLI exits nonzero if freezing is incomplete or a configured final verification does not complete. Its partial evidence remains available. A completed exploratory run can still have an inconclusive efficacy result. The driver does not automatically claim an improvement, and a protocol test with a scripted HTTP responder is not a live editing-AI observation.
 
 ## Teacher transport
 

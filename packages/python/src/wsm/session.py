@@ -733,6 +733,21 @@ def replay_session(bundle):
     _check(all(e['key'] in selected_keys for e in journal if e['type'] == 'selection'),
            'invalid_artifact', 'Unowned selection event')
     _check(arms == frozen['arms'], 'invalid_artifact', 'Frozen selection mismatch')
+    pending = {op['key']: 'dispatched' for op in bundle['operations']
+               if op['kind'] != 'freeze' and op['dispatch_seq'] < frozen['cutoff']}
+    for event in journal[:frozen['cutoff'] - 1]:
+        key = event.get('key')
+        if key in pending:
+            if event['type'] == 'result':
+                pending[key] = 'completed'
+            elif event['type'] == 'failure':
+                pending[key] = event['status']
+            elif event['type'] == 'unknown':
+                pending[key] = 'outcome_unknown'
+    obligations = [key for key, status in pending.items() if status in ('dispatched', 'outcome_unknown')]
+    complete = not obligations and all(record['loss'] is not None for record in arms.values())
+    _check(frozen.get('obligations') == obligations and type(frozen.get('complete')) is bool
+           and frozen['complete'] == complete, 'invalid_artifact', 'Freeze completeness differs from recorded execution')
     return frozen
 
 

@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 from wsm import binary64
 from wsm.checkpoint_export import export_checkpoint
-from wsm.session import Session
+from wsm.session import Session, _hash
 from wsm.target_worker import run
 
 
@@ -201,6 +201,68 @@ if __name__ == "__main__":
 
 
 class ExportBoundaryTests(unittest.TestCase):
+    def test_publication_keeps_a_concurrently_created_empty_destination(self):
+        import wsm.checkpoint_export as exporter
+        graph = {"inputSize": 1, "nodes": [{"id": "out", "op": "affine", "input": "input", "weight": "w", "bias": "b"}], "output": "out"}
+        target = {"kind": "binary64", "checkpoint": binary64.create_checkpoint(graph, {
+            "w": {"shape": [1, 1], "values": [0]}, "b": {"shape": [1], "values": [0]}})}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bundle, selected, _ = _selected_bundle(root, target, tensor="w", index=0, value=2,
+                                                   cases=[{"id": "one", "input": [2], "target": [4]}])
+            destination = root / "selected"
+            publish = exporter._publish
+            inode = []
+            def concurrent_publish(staged, final):
+                destination.mkdir()
+                inode.append(destination.stat().st_ino)
+                publish(staged, final)
+            with patch.object(exporter, "_publish", side_effect=concurrent_publish):
+                with self.assertRaises(binary64.WeightlessError) as error:
+                    export_checkpoint(bundle, target=target, arm="editor", destination=destination, max_bytes=100000)
+            self.assertEqual(error.exception.code, "export_exists")
+            self.assertEqual(destination.stat().st_ino, inode[0])
+            self.assertEqual(list(destination.iterdir()), [])
+            self.assertFalse(list(root.glob(".wsm-export-*")))
+            destination.rmdir()
+            receipt = export_checkpoint(bundle, target=target, arm="editor", destination=destination, max_bytes=100000)
+            self.assertEqual(receipt["checkpoint"], selected)
+            self.assertEqual(receipt["selected"], selected)
+            self.assertEqual(receipt["evidence"], bundle["id"])
+            self.assertEqual(receipt["runtime"]["python"], sys.version.split()[0])
+            for record in receipt["file_hashes"]:
+                import hashlib
+                data = (destination / record["path"]).read_bytes()
+                self.assertEqual(record["bytes"], len(data))
+                self.assertEqual(record["sha256"], "sha256:" + hashlib.sha256(data).hexdigest())
+
+    def test_false_completeness_and_malformed_bundles_are_rejected(self):
+        def seal(value):
+            value = {k: v for k, v in value.items() if k != 'id'}
+            return {**value, 'id': _hash(value)}
+        graph = {"inputSize": 1, "nodes": [{"id": "out", "op": "affine", "input": "input", "weight": "w", "bias": "b"}], "output": "out"}
+        target = {"kind": "binary64", "checkpoint": binary64.create_checkpoint(graph, {
+            "w": {"shape": [1, 1], "values": [0]}, "b": {"shape": [1], "values": [0]}})}
+        declaration = {'hypothesis': 'Incomplete experiment', 'arms': ['editor'], 'editable': ['w'],
+                       'max_edits': 1, 'max_inspect': 1, 'wall_seconds': 60,
+                       'budgets': {'attempts': 1, 'evaluations': 2, 'inspections': 0,
+                                   'teacher_requests': 0, 'final_evaluations': 0}}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            session = Session.create(root / 'session.db', runner=ControlledSelectionRunner(), target=target,
+                                     declaration=declaration, development=[{'id': 'one', 'input': [1], 'target': [1]}])
+            try:
+                session.freeze(key='freeze')
+                bundle = session.export()
+            finally:
+                session.close()
+            bundle['frozen'] = seal({**bundle['frozen'], 'complete': True})
+            for evidence in (seal(bundle), seal({})):
+                with self.subTest(evidence=evidence), self.assertRaises(binary64.WeightlessError) as error:
+                    export_checkpoint(evidence, target=target, arm='editor', destination=root / 'invalid', max_bytes=100000)
+                self.assertEqual(error.exception.code, 'invalid_artifact')
+                self.assertFalse((root / 'invalid').exists())
+
     def test_source_containment_and_size_reject_before_model_load(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -10,4 +10,12 @@ from .client import Experiment, addition_config, create_example_verifier
 __all__ = ["MetricPolicy", "NumericalEvaluation", "SearchRun", "WeightlessError",
            "evaluation_result", "evaluator_config", "replay", "Session", "Verifier",
            "DockerRunner", "BubblewrapRunner", "stage_model", "stage_smollm", "ResponsesTeacher",
-           "Experiment", "addition_config", "create_example_verifier", "replay_session", "verify_session"]
+           "Experiment", "addition_config", "create_example_verifier", "replay_session", "verify_session",
+           "export_checkpoint"]
+
+
+def __getattr__(name):
+    if name == "export_checkpoint":
+        from .checkpoint_export import export_checkpoint
+        return export_checkpoint
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

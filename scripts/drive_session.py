@@ -174,8 +174,8 @@ def _parse(config):
     if type(config["arm"]) is not str or not config["arm"]:
         _fail("invalid_request", "Arm is required")
     arms = declaration.get("arms")
-    if type(arms) is list and config["arm"] not in arms:
-        _fail("invalid_request", "Arm is not in the declaration")
+    if arms != [config["arm"]]:
+        _fail("unsupported", "This driver requires exactly one declared arm")
     spec = {"target": config["target"], "runner": config["runner"], "declaration": declaration,
             "development": config["development"], "output": _resolve(config["output"]), "arm": config["arm"],
             "retention": config.get("development_retention"), "mode": "scripted_plumbing" if "proposals" in config else "fresh_agent"}
@@ -217,6 +217,8 @@ def _parse(config):
             _fail("invalid_request", "Keep run output, teacher files, and private verifier files outside the model mount")
     if "teacher" in spec and spec["teacher"]["directory"].is_relative_to(spec["output"]):
         _fail("invalid_request", "Keep private teacher artifacts outside the exported run")
+    if "teacher" in spec and spec["output"].is_relative_to(spec["teacher"]["directory"]):
+        _fail("invalid_request", "Teacher artifacts and output must use separate directories")
     if "teacher" in spec and spec["teacher"]["credential"][0] == "file":
         if spec["teacher"]["credential"][1].is_relative_to(spec["output"]):
             _fail("invalid_request", "Keep teacher credentials outside the exported run")
@@ -377,6 +379,7 @@ def drive(config):
                       "Model targets use the same offline float32 backend as the installed wsm command.",
                       "This command writes evidence. Checkpoint files are a separate operator export.",
                       "Private verifier cases are not placed in teacher prompts."]}
+        report["completed"] = report["frozen_complete"] and (dataset is None or report["final_status"] == "completed")
         _write(spec["output"] / "driver.json", report)
         return report
     finally:
@@ -401,7 +404,7 @@ def main(argv=None):
         return 1
     summary = {key: report[key] for key in ("mode", "efficacy_claim", "frozen_complete", "evidence")}
     sys.stdout.write(json.dumps(summary, sort_keys=True) + "\n")
-    return 0
+    return 0 if report["completed"] else 1
 
 
 if __name__ == "__main__":

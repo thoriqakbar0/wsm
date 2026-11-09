@@ -17,7 +17,7 @@ import wsm
 from importlib.metadata import distribution
 from wsm import (MetricPolicy, NumericalEvaluation, SearchRun, replay, Session,
                         Verifier, DockerRunner, BubblewrapRunner, ResponsesTeacher, replay_session,
-                        verify_session, stage_smollm)
+                        verify_session, stage_smollm, export_checkpoint)
 from wsm.binary64 import create_checkpoint, predict
 from wsm.harness import run as run_harness
 from importlib.resources import files
@@ -29,6 +29,7 @@ assert Path(installed.locate_file('')).resolve() == Path('python').resolve()
 assert any(entry.name == 'wsm' and entry.value == 'wsm.cli:main'
            for entry in installed.entry_points if entry.group == 'console_scripts')
 assert callable(run_harness)
+assert callable(export_checkpoint)
 assert json.loads(files('wsm').joinpath('tasks/addition.json').read_text())['format'] == 'wsm.task.v1'
 assert installed.metadata['Summary'].startswith('WSM (Weight Space Modifiers):')
 assert importlib.util.find_spec('weightless') is None

@@ -48,7 +48,8 @@ with tempfile.TemporaryDirectory(prefix="weightless-harbor-") as temporary:
                      if path.is_file() and "__pycache__" not in path.parts}
         expected_modules = {"__init__.py", "binary64.py", "core.py", "harbor.py", "session.py",
                             "verifier.py", "sandbox.py", "local_sandbox.py", "target_worker.py", "teacher.py",
-                            "cli.py", "harness.py", "tasks/addition.json"}
+                            "__main__.py", "cli.py", "client.py", "broker.py", "tui.py",
+                            "checkpoint_export.py", "harness.py", "tasks/addition.json"}
         assert inventory == {"public.json", *["wsm/" + name for name in expected_modules]}, inventory
         assert not any(name in inventory for name in ("heldout.json", "grade.py", "solve.sh"))
     assert not (development / "tests/heldout.json").exists()

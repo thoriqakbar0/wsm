@@ -134,13 +134,25 @@ class DriveTests(unittest.TestCase):
                 payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
                 requests.append(payload)
                 view = json.loads(payload["input"][0]["content"].splitlines()[-1])["view"]
-                if len(requests) == 1:
+                turn = len(requests)
+                if turn == 2:
+                    command = {"action": "inspect", "tensor": [], "indices": [0]}
+                elif turn == 4:
+                    command = {"action": "inspect", "tensor": "w", "indices": [0]}
+                elif turn == 5:
+                    command = {"action": "diagnose"}
+                elif turn == 6:
                     command = {"action": "edit", "edits": [{"tensor": "w", "index": 0, "value": 2},
                                                              {"tensor": "b", "index": 0, "value": 3}]}
                 else:
                     command = {"action": "finish"}
+                text = json.dumps(command)
+                if turn == 1:
+                    text = "[]"
+                elif turn == 3:
+                    text = '{"action":"finish","action":"diagnose"}'
                 event = {"type": "response.completed", "response": {"status": "completed", "model": payload["model"],
-                         "tools": [], "tool_choice": "none", "output": [{"type": "message", "content": [{"type": "output_text", "text": json.dumps(command)}]}],
+                         "tools": [], "tool_choice": "none", "output": [{"type": "message", "content": [{"type": "output_text", "text": text}]}],
                          "usage": {"input_tokens": 3, "output_tokens": 8, "total_tokens": 11}}}
                 self.send_response(200)
                 self.send_header("Content-Type", "text/event-stream")
@@ -157,9 +169,9 @@ class DriveTests(unittest.TestCase):
                 "retention": [{"id": canary + "-retention", "input": [1], "target": [0]}]}))
             config = self.example()
             config["output"] = str(self.root / "teacher-run")
-            config["declaration"]["budgets"]["teacher_requests"] = 2
+            config["declaration"]["budgets"].update(teacher_requests=7, inspections=1, diagnostics=1)
             config["declaration"]["budgets"]["final_evaluations"] = 2
-            config["declaration"]["budgets"]["forward_calls"] = 16
+            config["declaration"]["budgets"]["forward_calls"] = 24
             config["declaration"]["final_forward_calls"] = 8
             config["verifier"] = {"database": str(private / "verifier.db"), "dataset": "holdout", "cases": str(private / "cases.json")}
             del config["proposals"]
@@ -178,15 +190,76 @@ class DriveTests(unittest.TestCase):
         self.assertIs(report["efficacy_claim"], False)
         self.assertTrue(report["frozen_complete"])
         self.assertEqual(report["final_status"], "completed")
-        self.assertEqual(len(requests), 2)
+        self.assertEqual(len(requests), 7)
+        contexts = [json.loads(request["input"][0]["content"].splitlines()[-1]) for request in requests]
+        for context in contexts[1:4]:
+            self.assertEqual(context["previous"]["error"], "invalid_command")
+        self.assertEqual(contexts[4]["previous"]["feedback"]["result"]["values"][0]["value"], 0)
+        self.assertGreater(contexts[5]["previous"]["feedback"]["result"]["metrics"]["loss"], 0)
         published = "\n".join(path.read_text(errors="replace") for path in (self.root / "teacher-run").rglob("*") if path.is_file())
         published += "\n".join(json.dumps(item) for item in requests)
         published += "\n".join(path.read_text(errors="replace") for path in (self.root / "teacher-private").rglob("*") if path.is_file())
         self.assertNotIn(canary, published)
         self.assertNotIn(secret, published)
         bundle = json.loads((self.root / "teacher-run" / "evidence.json").read_text())
+        self.assertEqual(replay_session(bundle), bundle["frozen"])
         self.assertEqual(bundle["frozen"]["arms"]["solver"]["checkpoint"], solved_id())
         self.assertEqual(bundle["final"]["arms"]["solver"]["conclusion"], "inconclusive")
+
+
+    def test_creates_a_new_output_hierarchy(self):
+        config = self.example()
+        config["output"] = str(self.root / "new-parent/run")
+        self.assertTrue(self.drive.drive(config)["completed"])
+        self.assertTrue((self.root / "new-parent/run/evidence.json").is_file())
+
+    def test_incomplete_cli_keeps_evidence_and_exits_with_failure(self):
+        config = self.example()
+        config["proposals"] = []
+        path = self.root / "config.json"
+        path.write_text(json.dumps(config))
+        result = subprocess.run([sys.executable, str(ROOT / "scripts/drive_session.py"), str(path)],
+                                env={**os.environ, "PYTHONPATH": str(ROOT / "packages/python/src")},
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertTrue((self.root / "run/evidence.json").is_file())
+        report = json.loads((self.root / "run/driver.json").read_text())
+        self.assertFalse(report["completed"])
+        self.assertFalse(report["frozen_complete"])
+
+    def test_rejects_unserved_arms_and_private_path_collisions_before_writing(self):
+        cases = []
+        multiple = self.example()
+        multiple["declaration"]["arms"].append("control")
+        cases.append(multiple)
+        private = self.example()
+        private["declaration"]["final_forward_calls"] = 8
+        private["verifier"] = {"database": str(self.root / "run/session.db"), "dataset": "heldout",
+                               "cases": str(self.root / "private-cases.json")}
+        cases.append(private)
+        teacher = self.example()
+        del teacher["proposals"]
+        teacher["teacher"] = {"instructions": "Edit.", "timeout": 5, "max_output_tokens": 64,
+                              "directory": teacher["output"], "endpoint": "http://127.0.0.1/v1",
+                              "model": "explicit-test-model", "api_key_env": "WSM_TEST_KEY"}
+        cases.append(teacher)
+        mounted_private = self.example()
+        mounted_private["target"] = {"kind": "smollm", "source": str(self.root / "model"),
+                                     "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+                                     "model": "HuggingFaceTB/SmolLM2-135M-Instruct", "dtype": "float32"}
+        mounted_private["declaration"]["final_forward_calls"] = 8
+        mounted_private["verifier"] = {"database": str(self.root / "model/private.db"), "dataset": "heldout",
+                                      "cases": str(self.root / "private-cases.json")}
+        with self.assertRaises(WeightlessError) as private_error:
+            self.drive.drive(mounted_private)
+        self.assertEqual(private_error.exception.code, "invalid_request")
+        for config in cases:
+            with self.subTest(config=config):
+                with self.assertRaises(WeightlessError):
+                    self.drive.drive(config)
+                self.assertFalse((self.root / "run").exists())
+
+
 
 
 if __name__ == "__main__":

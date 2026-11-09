@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Preserve atomic no-overwrite checkpoint publication, export provenance, failed-run CLI status, and replay validation while integrating the shared harness and generic model backend.
+
 - Preserve checkpoint-specific inspection feedback across teacher turns so the agent can combine observations without repeatedly reading the same tensors.
 
 - Integrate the configuration-driven experiment and export scripts with the shared teacher harness; enforce export size and source boundaries and preserve explicit workspace routing.
