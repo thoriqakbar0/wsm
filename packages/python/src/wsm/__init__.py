@@ -8,4 +8,12 @@ from .teacher import ResponsesTeacher
 
 __all__ = ["MetricPolicy", "NumericalEvaluation", "SearchRun", "WeightlessError",
            "evaluation_result", "evaluator_config", "replay", "Session", "Verifier",
-           "DockerRunner", "BubblewrapRunner", "stage_smollm", "ResponsesTeacher", "replay_session", "verify_session"]
+           "DockerRunner", "BubblewrapRunner", "stage_smollm", "ResponsesTeacher", "replay_session", "verify_session",
+           "export_checkpoint"]
+
+
+def __getattr__(name):
+    if name == "export_checkpoint":
+        from .checkpoint_export import export_checkpoint
+        return export_checkpoint
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
