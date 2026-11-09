@@ -3,8 +3,9 @@ from .core import MetricPolicy, SearchRun, evaluation_result, evaluator_config, 
 from .session import Session, replay_session, verify_session
 from .verifier import Verifier
 from .sandbox import DockerRunner, stage_smollm
+from .local_sandbox import BubblewrapRunner
 from .teacher import ResponsesTeacher
 
 __all__ = ["MetricPolicy", "NumericalEvaluation", "SearchRun", "WeightlessError",
            "evaluation_result", "evaluator_config", "replay", "Session", "Verifier",
-           "DockerRunner", "stage_smollm", "ResponsesTeacher", "replay_session", "verify_session"]
+           "DockerRunner", "BubblewrapRunner", "stage_smollm", "ResponsesTeacher", "replay_session", "verify_session"]

@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 import sys
 from weightless import (MetricPolicy, NumericalEvaluation, SearchRun, replay, Session,
-                        Verifier, DockerRunner, ResponsesTeacher, replay_session,
+                        Verifier, DockerRunner, BubblewrapRunner, ResponsesTeacher, replay_session,
                         verify_session, stage_smollm)
 from weightless.binary64 import create_checkpoint, predict
 assert all(name not in sys.modules for name in ('verifiers', 'harbor', 'torch', 'transformers'))

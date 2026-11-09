@@ -1,4 +1,4 @@
-"""Enforced, one-shot Docker execution for trusted numerical workers."""
+"""Shared numerical-worker protocol and one-shot Docker execution."""
 import copy
 import json
 import math
@@ -35,7 +35,63 @@ def stage_smollm(source, destination):
             "model": "HuggingFaceTB/SmolLM2-135M-Instruct", "dtype": "float32"}
 
 
-class DockerRunner:
+class _WorkerRunner:
+    def execute(self, action, target, *, patches=None, edits=None, cases=None, query=None,
+                generate=False, purpose="development", timeout=None, on_dispatch=None):
+        if action not in ("describe", "inspect", "materialize", "evaluate") or purpose not in ("development", "final") or type(generate) is not bool:
+            _error("invalid_request", "Unsupported sandbox operation")
+        if type(target) is not dict:
+            _error("invalid_target", "Invalid target")
+        target = copy.deepcopy(target)
+        mount = None
+        if target.get("kind") == "smollm":
+            if (set(target) != {"kind", "source", "revision", "model", "dtype"}
+                    or target["revision"] != _REVISION or target["model"] != "HuggingFaceTB/SmolLM2-135M-Instruct"
+                    or target["dtype"] != "float32" or type(target["source"]) is not str):
+                _error("invalid_target", "Unsupported model configuration")
+            source = target.pop("source")
+            if not os.path.isabs(source):
+                _error("invalid_target", "Model source must be absolute")
+            mount = os.path.realpath(source)
+            if not os.path.isabs(mount) or not os.path.isdir(mount) or "," in mount:
+                _error("invalid_target", "Invalid model source")
+            target["source"] = "/target"
+        elif target.get("kind") != "binary64" or set(target) != {"kind", "checkpoint"}:
+            _error("invalid_target", "Unsupported target")
+        request = {"action": action, "target": target, "patches": [] if patches is None else patches, "edits": [] if edits is None else edits,
+                   "cases": cases, "query": query, "generate": generate, "purpose": purpose}
+        try:
+            payload = json.dumps(request, allow_nan=False, separators=(",", ":")).encode()
+        except (ValueError, TypeError, RecursionError):
+            _error("invalid_request", "Request is not finite JSON")
+        raw = self._run(self._command(mount) + ["python", "-m", "weightless.target_worker"], payload, timeout, on_dispatch)
+        try:
+            response = json.loads(raw)
+            if type(response) is not dict or set(response) not in ({"result"}, {"error"}):
+                raise ValueError()
+            if "error" in response:
+                error = response["error"]
+                if type(error) is not dict or type(error.get("code")) is not str or type(error.get("message")) is not str:
+                    raise ValueError()
+                _error(error["code"][:64], error["message"][:256])
+            if type(response["result"]) is not dict:
+                raise ValueError()
+            return response["result"]
+        except WeightlessError:
+            raise
+        except (ValueError, TypeError, UnicodeDecodeError):
+            _error("sandbox_invalid_response", "Sandbox returned invalid JSON")
+
+    def probe(self, source, *, timeout=None, input_data=b""):
+        """Run a restricted Python probe without target or private mounts."""
+        if type(source) is not str or len(source.encode()) > 65536:
+            _error("invalid_request", "Invalid probe")
+        if type(input_data) is not bytes:
+            _error("invalid_request", "Probe input must be bytes")
+        return self._run(self._command() + ["python", "-I", "-c", source], input_data, timeout).decode("utf-8", "replace")
+
+
+class DockerRunner(_WorkerRunner):
     def __init__(self, image, *, docker="docker", host=None, timeout=60, cpus=2, memory="2g"):
         if (not isinstance(image, str) or not image or not isinstance(docker, str) or not docker
                 or (host is not None and (not isinstance(host, str) or not host))
@@ -145,57 +201,3 @@ class DockerRunner:
         if mount:
             args += ["--mount", "type=bind,src=" + mount + ",dst=/target,readonly"]
         return args + [self._config["image"]]
-
-    def execute(self, action, target, *, patches=None, edits=None, cases=None, query=None,
-                generate=False, purpose="development", timeout=None, on_dispatch=None):
-        if action not in ("describe", "inspect", "materialize", "evaluate") or purpose not in ("development", "final") or type(generate) is not bool:
-            _error("invalid_request", "Unsupported sandbox operation")
-        if type(target) is not dict:
-            _error("invalid_target", "Invalid target")
-        target = copy.deepcopy(target)
-        mount = None
-        if target.get("kind") == "smollm":
-            if (set(target) != {"kind", "source", "revision", "model", "dtype"}
-                    or target["revision"] != _REVISION or target["model"] != "HuggingFaceTB/SmolLM2-135M-Instruct"
-                    or target["dtype"] != "float32" or type(target["source"]) is not str):
-                _error("invalid_target", "Unsupported model configuration")
-            source = target.pop("source")
-            if not os.path.isabs(source):
-                _error("invalid_target", "Model source must be absolute")
-            mount = os.path.realpath(source)
-            if not os.path.isabs(mount) or not os.path.isdir(mount) or "," in mount:
-                _error("invalid_target", "Invalid model source")
-            target["source"] = "/target"
-        elif target.get("kind") != "binary64" or set(target) != {"kind", "checkpoint"}:
-            _error("invalid_target", "Unsupported target")
-        request = {"action": action, "target": target, "patches": [] if patches is None else patches, "edits": [] if edits is None else edits,
-                   "cases": cases, "query": query, "generate": generate, "purpose": purpose}
-        try:
-            payload = json.dumps(request, allow_nan=False, separators=(",", ":")).encode()
-        except (ValueError, TypeError, RecursionError):
-            _error("invalid_request", "Request is not finite JSON")
-        raw = self._run(self._command(mount) + ["python", "-m", "weightless.target_worker"], payload, timeout, on_dispatch)
-        try:
-            response = json.loads(raw)
-            if type(response) is not dict or set(response) not in ({"result"}, {"error"}):
-                raise ValueError()
-            if "error" in response:
-                error = response["error"]
-                if type(error) is not dict or type(error.get("code")) is not str or type(error.get("message")) is not str:
-                    raise ValueError()
-                _error(error["code"][:64], error["message"][:256])
-            if type(response["result"]) is not dict:
-                raise ValueError()
-            return response["result"]
-        except WeightlessError:
-            raise
-        except (ValueError, TypeError, UnicodeDecodeError):
-            _error("sandbox_invalid_response", "Sandbox returned invalid JSON")
-
-    def probe(self, source, *, timeout=None, input_data=b""):
-        """Run a restricted Python probe without target or private mounts."""
-        if type(source) is not str or len(source.encode()) > 65536:
-            _error("invalid_request", "Invalid probe")
-        if type(input_data) is not bytes:
-            _error("invalid_request", "Probe input must be bytes")
-        return self._run(self._command() + ["python", "-I", "-c", source], input_data, timeout).decode("utf-8", "replace")
