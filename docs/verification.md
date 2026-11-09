@@ -1,8 +1,44 @@
 # Verify the experiment and grading boundaries
 
+## Python package migration
+
+The Python distribution and source package are now `wsm`. No `weightless` import shim is included. Checkpoint and evidence format names, hash-domain inputs, and `WeightlessError` remain unchanged.
+
+All 95 tests passed with `WEIGHTLESS_LOCAL_SANDBOX=1` after the move. The installed wheel was checked outside the source tree for `import wsm`, the installed CLI, bundled task loading, and a real bubblewrap session that accepted an edit, froze, replayed, and reconstructed the selected checkpoint. Its archive contains `wsm/` and no `weightless/` package. After the distribution rename, the same wheel smoke passed with `wsm-0.1.0-py3-none-any.whl`; installed metadata reports the name `wsm`, the SDK version, and the `wsm.cli:main` console entry point.
+
+```sh
+WEIGHTLESS_LOCAL_SANDBOX=1 PYTHONPATH=packages/python/src \
+  python3 -m unittest discover -s packages/python/tests -q
+WEIGHTLESS_LOCAL_SANDBOX=1 python3 scripts/package_smoke.py
+PYTHONPATH=packages/python/src python3 scripts/golden_identity.py
+```
+
+A frozen run captured before the move replayed after it to the identical checkpoint. Fresh runs before and after the move had identical selected tensors, evaluator configuration, policy, metrics, and reject/accept/reject decisions. Golden checkpoint identity is unchanged. Comparing the moved source against the uncommitted pre-migration snapshot found only resource lookup and sandbox package-path changes in `cli.py`, `local_sandbox.py`, and `sandbox.py`; the existing harness implementation was preserved.
+
+Prepared Harbor packages now contain `wsm/`. Their oracle and trusted grading scripts ran locally with only the generated package on `PYTHONPATH`. Development grading returned reward one, and independent final grading passed all six heldout examples. This verifies package transfer and grader imports, not Docker or native Harbor execution. The optional Harbor dependency remains unavailable on this host.
+
+## Prompt-first WSM harness
+
+On 2026-11-09, all 95 tests passed with `WEIGHTLESS_LOCAL_SANDBOX=1`. This includes the prompt-first CLI experiment through real bubblewrap and systemd execution. Its teacher endpoint was a local scripted Responses server, not a live language model. The experiment inspected coefficients, rejected a worse candidate, accepted an improvement, graded private task and retention cases, reconstructed a standalone binary64 checkpoint, and replayed the evidence. Resume made no extra teacher requests or numerical evaluations. Changing private final data was rejected.
+
+```sh
+WEIGHTLESS_LOCAL_SANDBOX=1 PYTHONPATH=packages/python/src \
+  python3 -m unittest discover -s packages/python/tests -v
+python3 scripts/package_smoke.py
+PYTHONPATH=packages/python/src python3 scripts/golden_identity.py
+```
+
+Harness tests also cover malformed commands, private-data exclusion, stale observation rejection, exhausted limits, unknown teacher and target outcomes, saved-response recovery, committed-edit recovery, incomplete freezes, uncertain final grading, and restoration of missing terminal artifacts. A CLI regression reproduces a failed initial metadata request leaving an empty session database and proves that resume can initialize it without a development evaluation. Failed session construction now closes its database connection.
+
+The wheel check passed outside the source tree. It exercised the installed `wsm` command, the packaged addition profile, and the existing SDK and replay checks without optional imports. Golden checkpoint identity is unchanged. The optional Harbor smoke check remains blocked by `ModuleNotFoundError: No module named 'harbor'` on this host. This change does not claim a live teacher run, new SmolLM validation, or a hosted service.
+
+## Earlier client and grading checks
+
 The migration checks passed locally on 2026-11-09. Core checks used Python 3.12.3. Integration checks used Python 3.13.11 with Harbor 0.25.0, Verifiers 0.4.1, and JSON Schema 4.26.0. These are synthetic signed-addition results, not research or model-discovery results.
 
 ## Direct-editing checkpoint round trip
+
+PR #6's update onto `main` retained the consolidated prompt harness, installed CLI, generic Hugging Face backend, and explicit CUDA path. Atomic checkpoint publication, receipt provenance, incomplete-run exit status, and replay completeness checks were carried forward onto that shared implementation. Merge validation passed 161 Python tests with native sandbox checks enabled and six environment-dependent skips. All six exporter tests passed separately in the model-runtime container, including generic-model and cached SmolLM source-free reloads. The installed-wheel/CLI smoke, stale-build packaging regression, Rust client build, golden identity check, and Harbor schema/task-loading/local-grading smoke also passed. CUDA hardware execution and live hosted providers were not rerun.
 
 On 2026-11-09, `scripts/harness_native.py` completed a real CPU SmolLM2-135M experiment with a scripted scalar edit and an unchanged control. The model revision was `12fd25f77366fa6b3b4b768ec3050bf629380bac`. The numerical image used Python 3.12.16, Torch 2.15.0+cpu, Transformers 5.22.2, and Safetensors 0.8.0. Host orchestration used Python 3.12.3.
 
@@ -112,3 +148,14 @@ GitHub Actions remains disabled. The offline tutorial rendered at desktop and ph
 ## Durable client checks
 
 The standard unit suite includes session, verifier, sandbox, and no-tools transport regressions. `scripts/package_smoke.py` imports the new client from a built wheel without Torch, Transformers, Harbor, or Verifiers. The [native client guide](client.md#reproduce-the-native-checks) runs actual Docker isolation and pinned SmolLM editing. The [acceptance specification](design/agent-client-validation.md) retains broader scientific-validity and unfamiliar-agent comparisons as distinct requirements.
+
+
+## Consolidated implementation verification
+
+The [integration receipt](design/integration-verification.json) records the local combined checks and artifact hashes. The native suite ran 156 tests successfully with six optional model-runtime skips; separate model-environment runs passed 14 generic-target tests, four export tests, and 13 worker tests. Installed wheel, real PTY lifecycle, CLI interruption/resume, Rust bridge parity, and retained evidence replay passed.
+
+A fresh live teacher run initially exhausted its budget while alternating inspections. The harness now reconstructs bounded inspection memory for the current arm and checkpoint from completed session operations. The repeat run selected one edit, reached zero development loss, and passed private grading on the declared synthetic signed-addition cases. This is one live interaction check, not a general model-improvement result.
+
+The combined worker also passed a real Modal T4 smoke with finite CUDA outputs, selection, replay, and reconstruction. Sandbox termination was confirmed. The current worker, session, sandbox, and verifier hashes match that receipt. No live hosted Tinker integration is claimed.
+
+The model export tests force acceptance to isolate changed-state export and fresh-process reload. Their loss fixture is not efficacy evidence. Real measured selection is exercised separately in the CUDA smoke and live synthetic experiment.

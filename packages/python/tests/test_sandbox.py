@@ -90,6 +90,7 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(forward_reservation({'kind': 'smollm'}, 2, generate=True, max_new_tokens=3), 8)
         self.assertEqual(forward_reservation({'kind': 'smollm'}, 2), 2)
         self.assertEqual(forward_reservation({'kind': 'binary64'}, 2, generate=True), 2)
+        self.assertEqual(forward_reservation({'kind': 'huggingface'}, 2, generate=True), 34)
 
 
 class RunnerTests(unittest.TestCase):
@@ -147,6 +148,21 @@ class RunnerTests(unittest.TestCase):
             with self.assertRaises(binary64.WeightlessError) as error:
                 runner._run(['docker', 'run', '--name', 'owned-container'], b'{}')
         self.assertEqual(error.exception.code, 'sandbox_cleanup_unknown')
+
+
+class DeviceTests(unittest.TestCase):
+    def test_execution_device_is_explicit(self):
+        from wsm.target_worker import ModelTarget
+
+        with self.assertRaises(binary64.WeightlessError) as automatic:
+            ModelTarget({}, device='automatic')
+        self.assertEqual(automatic.exception.code, 'unsupported_target')
+        torch = Mock()
+        torch.cuda.is_available.return_value = False
+        with patch.dict(sys.modules, {'torch': torch}):
+            with self.assertRaises(binary64.WeightlessError) as missing:
+                ModelTarget({}, device='cuda')
+        self.assertEqual(missing.exception.code, 'unsupported_target')
 
 
 if __name__ == '__main__':

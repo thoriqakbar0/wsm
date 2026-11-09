@@ -22,6 +22,7 @@ class Verifier:
         self.db.execute('''CREATE TABLE IF NOT EXISTS claims (
             dataset TEXT PRIMARY KEY, body TEXT NOT NULL)''')
         self.db.execute('CREATE TABLE IF NOT EXISTS authority (id INTEGER PRIMARY KEY CHECK(id=1), secret BLOB NOT NULL)')
+        self.db.execute('CREATE TABLE IF NOT EXISTS session_bindings (session TEXT PRIMARY KEY, identity TEXT NOT NULL)')
         self.db.execute('INSERT OR IGNORE INTO authority VALUES (1,?)', (os.urandom(32),))
         self._secret = self.db.execute('SELECT secret FROM authority WHERE id=1').fetchone()[0]
 
@@ -30,6 +31,16 @@ class Verifier:
 
     def close(self):
         self.db.close()
+
+    def bind_session(self, session, dataset, *, create=False):
+        """Pin a workspace's final authority and cases without publishing their digest."""
+        _check(dataset in self.datasets, 'unknown_dataset', 'Dataset unavailable')
+        identity = self._identity({'dataset': dataset, 'cases': self.datasets[dataset]})
+        if create:
+            self.db.execute('INSERT OR IGNORE INTO session_bindings VALUES (?,?)', (session, identity))
+        row = self.db.execute('SELECT identity FROM session_bindings WHERE session=?', (session,)).fetchone()
+        _check(row is not None and hmac.compare_digest(row[0], identity),
+               'verifier_mismatch', 'Reopen with the verifier authority, dataset, and cases bound at workspace creation')
 
     def _read(self, identity):
         row = self.db.execute('SELECT body FROM claims WHERE dataset=?', (identity,)).fetchone()

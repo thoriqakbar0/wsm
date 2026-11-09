@@ -42,3 +42,9 @@ The interpreter uses binary64 scalar arithmetic. Agreement on synthetic fixtures
 ## Held-out evaluation
 
 The teacher receives only training and development examples and their feedback. Final grading takes a frozen artifact and evaluator-owned test data. A local library cannot prevent an unrestricted host process from reading other host files. Harbor must isolate the agent environment from the final verifier and transfer only declared output artifacts.
+
+## Terminal-bench distinction
+
+A handwritten consolidation program for the checkpoint task passed its verifier. The receipt value is `1`, and the CTRF report records 4 passed tests and 0 failures. That result is a written program, not a weight edit.
+
+The weight-editing run is separate and unsolved. Its summary records `task_solved: false`, completed verifiers, reward `0.0`, and `sandbox_timeout` stops. The recorded conclusion is that the run is inconclusive because the terminal-agent runtime hit a generation deadline. Native zero rewards do not establish a bounded negative for weight editing. This repository does not copy that run's model files or teacher transcripts, and it does not claim efficacy from either result.

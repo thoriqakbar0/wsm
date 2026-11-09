@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introducing Weight Space Modifiers</title>
+<style>
+:root {
+  --white: #ffffff;
+  --pale: #eef5fb;
+  --ink: #18364a;
+  --blue: #185ab0;
+  --muted: #526577;
+  --border: #d5e0e9;
+  --sans: "Segoe UI", Candara, Calibri, "Noto Sans", "Liberation Sans", sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "Liberation Mono", Consolas, monospace;
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--white); }
+body {
+  margin: 0;
+  background: var(--white);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+:focus { outline: 3px solid var(--blue); outline-offset: 3px; }
+:focus:not(:focus-visible) { outline: none; }
+.skip {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.skip:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0.5rem;
+  padding: 0.45rem 0.7rem;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+  background: var(--pale);
+}
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.35rem;
+  justify-content: start;
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0.75rem 0.75rem 2.75rem;
+}
+nav ul {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+nav a { text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+nav .home {
+  display: inline-block;
+  margin: 0 0 0.7rem;
+  color: var(--ink);
+  font-weight: 600;
+}
+main { min-width: 0; }
+article, footer { max-width: 38rem; }
+h1, h2 { font-weight: 600; line-height: 1.2; }
+h1 { margin: 0; font-size: clamp(2rem, 5vw, 2.6rem); }
+h2 { margin: 0; font-size: 1.35rem; }
+p, ol, ul, pre, dl { margin: 0.85rem 0 0; }
+.lead { margin-top: 0.9rem; font-size: 1.2rem; line-height: 1.45; }
+a { color: var(--blue); text-underline-offset: 0.14em; }
+a:hover { color: var(--ink); }
+code { font-family: var(--mono); font-size: 0.92em; }
+:not(pre) > code { overflow-wrap: anywhere; }
+pre {
+  max-width: 100%;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  background: var(--pale);
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+pre code { font-size: inherit; }
+ol, ul { padding-left: 1.2rem; }
+li + li { margin-top: 0.45rem; }
+dt { margin-top: 1rem; font-weight: 600; }
+dd { margin: 0.2rem 0 0; }
+section, footer {
+  margin-top: 2.4rem;
+  padding-top: 1.35rem;
+  border-top: 1px solid var(--border);
+  scroll-margin-top: 1rem;
+}
+section:target, footer:target {
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--blue);
+}
+.edit {
+  margin: 1.5rem 0 0;
+  padding: 1.1rem 1.15rem 1rem;
+  border: 1px solid var(--border);
+  background: var(--pale);
+}
+.tensor {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.95rem;
+}
+.change {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.8rem;
+  margin: 0.35rem 0 0;
+}
+.before, .after {
+  font-family: var(--mono);
+  line-height: 0.95;
+  white-space: nowrap;
+}
+.before {
+  color: var(--muted);
+  font-size: clamp(1.45rem, 4vw, 2rem);
+}
+.verb { color: var(--muted); font-size: 1rem; }
+.after {
+  color: var(--ink);
+  font-size: clamp(2.5rem, 11vw, 5rem);
+}
+figcaption { margin: 0.95rem 0 0; max-width: 36rem; }
+@media (min-width: 52rem) {
+  .shell {
+    grid-template-columns: 15rem minmax(0, 38rem);
+    column-gap: 2.75rem;
+    align-items: start;
+    padding: 1.75rem 1.5rem 4rem;
+  }
+  nav { position: sticky; top: 1.25rem; padding-right: 1.15rem; border-right: 1px solid var(--border); }
+  nav ul { flex-direction: column; gap: 0.4rem; }
+}
+@media print {
+  .skip { display: none; }
+  body { background: var(--white); color: var(--ink); font-size: 11pt; }
+  .shell { display: block; max-width: none; padding: 0; }
+  nav { position: static; border: 0; padding: 0; }
+  a { color: var(--ink); }
+  pre, .edit { break-inside: avoid; }
+  pre { overflow: visible; white-space: pre-wrap; }
+  section:target, footer:target { border-left: 0; padding-left: 0; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#content">Skip to the article</a>
+<div class="shell">
+<nav aria-label="On this page">
+<a class="home" href="#top">WSM</a>
+<ul>
+<li><a href="#loop">The core loop</a></li>
+<li><a href="#roles">Roles in one run</a></li>
+<li><a href="#proposal">One accepted proposal</a></li>
+<li><a href="#network">Positive and negative branches</a></li>
+<li><a href="#decisions">Three scripted decisions</a></li>
+<li><a href="#selection">Strict selection</a></li>
+<li><a href="#finish">Finish and replay</a></li>
+<li><a href="#demo">What the demo shows</a></li>
+<li><a href="#run">Run the example</a></li>
+<li><a href="#reference">Reference notes</a></li>
+</ul>
+</nav>
+<main id="content" tabindex="-1">
+<article>
+<header id="top">
+<h1>Introducing Weight Space Modifiers</h1>
+<p class="lead">Can a teacher improve a neural network by changing its weights directly?</p>
+<p>WSM gives you a way to test that idea. A teacher suggests new numbers. WSM tests them and keeps the change only if it improves the result. The network's structure stays the same.</p>
+<figure class="edit">
+<p class="tensor">output.weight</p>
+<p class="change"><span class="before">[0, 0]</span> <span class="verb">to</span> <span class="after">[1, -1]</span></p>
+<figcaption>Two weight changes make this example add positive and negative numbers correctly. The rest of the network stays the same.</figcaption>
+</figure>
+</header>
+<section id="loop">
+<h2>The core loop</h2>
+<p>Show the teacher the current network and its results. Ask for a change. Test the change against the best version so far.</p>
+<ol>
+<li><code>inspect</code> returns a copy of the current weights and feedback.</li>
+<li><code>submit</code> tests a proposed change. Better results replace the current best version. Other changes are rejected.</li>
+<li><code>finish</code> ends the experiment and returns its saved record.</li>
+</ol>
+<p>You can also run the steps separately with <code>propose</code>, <code>evaluate</code>, and <code>select</code>.</p>
+</section>
+<section id="roles">
+<h2>Roles in one run</h2>
+<dl>
+<dt>Teacher</dt>
+<dd>Suggests which weights to change and what values to use. In this example, a file supplies the suggestions. No AI model is called.</dd>
+<dt><code>wsm.binary64</code></dt>
+<dd>Runs the small network used in this example.</dd>
+<dt><code>SearchRun</code></dt>
+<dd>Tracks the experiment, limits the number of attempts, and keeps the best weights under your chosen scoring rule.</dd>
+<dt>Evaluator</dt>
+<dd>Tests the changed network and returns scores. This example uses <code>NumericalEvaluation</code> on your machine.</dd>
+<dt>Trusted task code</dt>
+<dd>Chooses the examples used for feedback and keeps separate examples for the final test.</dd>
+</dl>
+</section>
+<section id="proposal">
+<h2>One accepted proposal</h2>
+<p>A proposal says which version to change and which numbers to replace. Here, it sets the two output weights to 1 and -1.</p>
+<p><code>base</code> identifies the current saved network, called a checkpoint. The demo gets this ID from <code>inspect</code>. Each edit names an array of weights in <code>tensor</code>, a position in <code>index</code>, and a new <code>value</code>.</p>
+<pre><code>{
+  "base": "sha256:1554696f55aac47c67222c16d87bd6fc22512428409cac4f4a17a5ab0246e271",
+  "author": "scripted-teacher",
+  "edits": [
+    {"tensor": "output.weight", "index": 0, "value": 1},
+    {"tensor": "output.weight", "index": 1, "value": -1}
+  ]
+}</code></pre>
+</section>
+<section id="network">
+<h2>Positive and negative branches</h2>
+<p>The example starts with useful wiring already in place. One branch carries a positive sum. The other carries the size of a negative sum. ReLU keeps positive values and turns negative values into zero.</p>
+<p>The output weights start at zero, so the network always answers zero. Setting them to 1 and -1 combines the two branches into signed addition.</p>
+<p>For 3 + (-1), the branches hold 2 and 0. The output is 2. For -3 + 1, they hold 0 and 2. The output is -2.</p>
+<p>The <a href="tutorial.html">offline tutorial</a> lets you change those output numbers in the browser. That calculation does not submit a proposal to the Python run.</p>
+</section>
+<section id="decisions">
+<h2>Three scripted decisions</h2>
+<p>The demo tries three changes in order. Each starts from the best version kept so far.</p>
+<ol>
+<li>Change the first output weight to -1. Positive sums get the wrong sign. Reject.</li>
+<li>Change both output weights to [1, -1]. All training and development examples get the right answer. Keep.</li>
+<li>Add a bias of 1 to the accepted version. Every answer is now too large by 1. Reject.</li>
+</ol>
+</section>
+<section id="selection">
+<h2>Strict selection</h2>
+<p>The example compares error on the development examples first. Lower error wins. If that score ties, it compares training error. If both tie, it keeps the current version.</p>
+<p>Before testing the first change, WSM scores the starting network. If that test fails, it cannot accept a change. A failed test of a proposed change cannot win either.</p>
+<p>The <a href="contract.md">experiment contract</a> gives the exact scoring and decision rules.</p>
+</section>
+<section id="finish">
+<h2>Finish and replay</h2>
+<p><code>finish</code> closes the experiment and saves its best weights and recorded results. It does not run more tests.</p>
+<p><code>replay</code> rebuilds those weights from the record and checks that the recorded decisions agree with the scores. It does not rerun the tests or prove who produced the scores. Someone could rewrite a whole unsigned record.</p>
+<p>To check the final network, test it separately on heldout examples, meaning examples kept out of the feedback loop. Keep those final scores out of later edit decisions.</p>
+</section>
+<section id="demo">
+<h2>What the demo shows</h2>
+<p><a href="../examples/demo.py">The addition demo</a> checks that proposing, testing, and keeping weight changes works. Its proposals are written in advance. It does not show an AI discovering the solution.</p>
+<p>For tests in Docker, use the optional Harbor integration. The <a href="architecture.md">architecture guide</a> explains how it works. The <a href="verification.md">verification guide</a> records the checks.</p>
+<p>The <a href="client.md">durable local client</a> adds experiments you can resume, a live teacher connection, and Docker workers for the small network and a fixed version of SmolLM2. These are separate from the offline demo.</p>
+<p>WSM is inspired by a research preprint. This small, synthetic example does not reproduce the paper's results or show that direct weight edits outperform other methods. Read the <a href="research.md">research scope</a> for those limits.</p>
+</section>
+<section id="run">
+<h2>Run the example</h2>
+<p>From the repository root, use Python 3.12 or later with <code>venv</code> and <code>pip</code> available. The core package has no runtime dependencies. On Debian or Ubuntu, install the matching <code>python3-venv</code> package if creating the environment reports that <code>ensurepip</code> is missing.</p>
+<pre><code>python3 -m venv .venv
+.venv/bin/python -m pip install -e packages/python
+.venv/bin/python examples/demo.py --output /tmp/wsm-run.json</code></pre>
+<p>For the proposals in the repository, the demo prints these three lines.</p>
+<pre><code>{"accepted": false, "reason": "not_improved"}
+{"accepted": true, "reason": "improved"}
+{"accepted": false, "reason": "not_improved"}</code></pre>
+<p>The frozen run is written to <code>/tmp/wsm-run.json</code>.</p>
+</section>
+</article>
+<footer id="reference">
+<h2>Reference notes</h2>
+<ul>
+<li><a href="tutorial.html">Offline tutorial</a> walks through the same edit in the browser.</li>
+<li><a href="architecture.md">Architecture</a> names what the core, the numerical backend, and Harbor each own.</li>
+<li><a href="contract.md">Experiment contract</a> specifies the records, the policy, and the decision reasons.</li>
+<li><a href="client.md">Durable local client</a> specifies <code>Session</code>, <code>ResponsesTeacher</code>, and the pinned SmolLM2 worker.</li>
+<li><a href="verification.md">Verification</a> separates dependency-free checks from Docker checks and from research claims.</li>
+<li><a href="research.md">Research scope</a> states which parts of the source paper this repository does not reproduce.</li>
+<li><a href="cli.md">Commands</a> names the one <code>wsm</code> command.</li>
+<li><a href="agent.md">Agent pipe</a> describes <code>wl</code>, which copies bytes and does not own policy.</li>
+<li><a href="../examples/demo.py"><code>examples/demo.py</code></a> is the scripted run.</li>
+</ul>
+</footer>
+</main>
+</div>
+</body>
+</html>

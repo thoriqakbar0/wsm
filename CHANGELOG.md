@@ -2,12 +2,19 @@
 
 ## Unreleased
 
-- Add a configured agent experiment driver with inspection and diagnostic feedback, bounded command validation, private grading, and separate scripted/live-teacher labels; export complete selected checkpoints with offline reload verification and atomic no-overwrite publication.
+- Preserve atomic no-overwrite checkpoint publication, export provenance, failed-run CLI status, and replay validation while integrating the shared harness and generic model backend.
 
-- Ground the agent-editing workflow in Sparks of Weight-Space Programming, preserve the addition example's separate provenance, and document Tinker's verified SDK capabilities and unverified live adapter-import path.
-- Add optional target forward-call budgets with measured worker usage, conservative reservations for development and private grading, and private final-usage records.
+- Preserve checkpoint-specific inspection feedback across teacher turns so the agent can combine observations without repeatedly reading the same tensors.
 
-- Rename the project to WSM (Weight Space Mods), the Python distribution from `weightless-sdk` to `wsm`, and imports from `weightless` to `wsm`; update callers, sandbox workers, and documentation while preserving serialized format identifiers and hashes.
+- Integrate the configuration-driven experiment and export scripts with the shared teacher harness; enforce export size and source boundaries and preserve explicit workspace routing.
+
+- Consolidate the installed `wsm` package, command, and terminal UI. Session remains the policy owner. The prompt harness is `wsm run`. Generic local snapshots, an explicit CUDA device, forward-call reservations, and full checkpoint export sit on the existing CPU identity path.
+- Add the operator broker and the unprivileged `wl` byte pipe. `wl` does not own session policy. There is no `weightless` import or console-script shim.
+- Keep one introduction at `docs/index.html`. Record the terminal-bench distinction between a handwritten program that passed its verifier and an inconclusive weight-editing run.
+
+- Add the prompt-first CLI and reusable teacher harness with durable recovery and private final grading.
+
+- Rename the project to WSM (Weight Space Modifiers), the Python distribution from `weightless-sdk` to `wsm`, and imports from `weightless` to `wsm`; update callers, sandbox workers, and documentation while preserving serialized format identifiers and hashes.
 
 - Add Docker-free Linux execution with bubblewrap namespaces, systemd resource limits, bounded output, verified workload teardown, and native adversarial checks while preserving numerical and private-verifier contracts.
 

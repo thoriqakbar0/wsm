@@ -1,8 +1,20 @@
-# WSM (Weight Space Mods)
+# WSM (Weight Space Modifiers)
 
-WSM lets an external teacher propose numerical weight edits to a fixed neural network. The Python SDK evaluates copied candidates and keeps only strict improvements under a declared metric policy. Each run records proposals, evaluation evidence, and selection decisions for replay.
+WSM is a harness for editing a model's weights. Give an AI teacher a prompt and a task profile. The harness lets it inspect coefficients, propose edits, and test candidates, then saves the selected checkpoint and evaluation evidence. The Python distribution, import package, and CLI are named `wsm`.
 
-Install the Python distribution as `wsm` and import it as `wsm`. This replaces the former `weightless-sdk` distribution and `weightless` namespace without an import alias. For an existing environment, uninstall `weightless-sdk` before installing from this checkout, then update your imports to `wsm`. Serialized `weightless.*` format identifiers and hashes, `WeightlessError`, environment variables, and Docker image names keep their existing spelling.
+```sh
+python3 -m pip install -e packages/python
+# Configure WSM_TEACHER_URL, WSM_TEACHER_MODEL, and WSM_TEACHER_API_KEY first.
+wsm run "Improve signed addition. Inspect the weights and test your changes." \
+  --task addition --attempts 20 --output runs/addition
+wsm status runs/addition
+```
+
+The default runner requires a root-authorized Linux systemd host with bubblewrap. Docker is available with `--runner docker --image <existing-image>`. There is no unsandboxed fallback. The bundled addition profile has public examples only. Read [Run a prompt-driven weight modification](docs/wsm.md) for setup, custom targets, private final evaluation, recovery, and the Python entry point.
+
+Install the Python distribution as `wsm` and import it as `wsm`. The installed command is also `wsm`. With no arguments it opens the terminal UI on a terminal. Session verbs such as `init`, `observe`, `submit`, `status`, and `export` match the session methods. `wsm run` starts the prompt harness. See [the command reference](docs/cli.md).
+
+This replaces the former `weightless-sdk` distribution and `weightless` namespace without an import alias or a second console script. For an existing environment, uninstall `weightless-sdk` before installing from this checkout, then update your imports to `wsm`. Serialized `weightless.*` format identifiers and hashes, `WeightlessError`, environment variables, and Docker image names keep their existing spelling.
 
 ## Run the offline example
 

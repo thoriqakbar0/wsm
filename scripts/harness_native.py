@@ -9,13 +9,11 @@ from wsm import DockerRunner, Session, Verifier, WeightlessError, stage_smollm
 
 
 _EXPORT = '''
-import json,os,sys
+import json,sys
 from wsm.checkpoint_export import export_checkpoint
 request=json.load(sys.stdin)
-os.chdir('/output')
-os.environ['PYTHONPATH']='relative-import-path-that-does-not-exist'
 receipt=export_checkpoint(request['bundle'],target=request['target'],arm='editor',
-    destination='selected',max_bytes=request['max_bytes'])
+    destination='/output/selected',max_bytes=request['max_bytes'])
 print(json.dumps(receipt,allow_nan=False))
 '''
 

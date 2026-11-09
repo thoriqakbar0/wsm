@@ -5,8 +5,8 @@ Usage:
       --arm ARM --destination DIRECTORY --max-bytes N
 
 TARGET.json is the trusted descriptor hashed into the session. The destination
-must not exist. The receipt is DIRECTORY/receipt.json and does not include the
-host source path, credentials, transcripts, or private cases.
+must not exist. The receipt is printed as JSON and does not include the host source path,
+credentials, transcripts, or private cases.
 """
 import argparse
 import json
@@ -47,8 +47,7 @@ def main(argv=None):
     except WeightlessError as error:
         sys.stderr.write(f"{error.code}: {error}\n")
         return 1
-    sys.stdout.write(json.dumps({"selected": receipt["selected"], "total_bytes": receipt["total_bytes"],
-                                 "serialization": receipt["serialization"]}, sort_keys=True) + "\n")
+    sys.stdout.write(json.dumps(receipt, sort_keys=True) + "\n")
     return 0
 
 

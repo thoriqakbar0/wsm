@@ -67,9 +67,9 @@ class DriveTests(unittest.TestCase):
                                     "--arm", "solver", "--destination", str(destination), "--max-bytes", "1000000"],
                                    check=True, env=env, capture_output=True, text=True)
         self.assertIn(solved_id(), completed.stdout)
-        receipt = json.loads((destination / "receipt.json").read_text())
-        self.assertEqual(receipt["selected"], solved_id())
-        self.assertEqual(receipt["serialization"], "weightless.checkpoint.v1")
+        receipt = json.loads(completed.stdout)
+        self.assertEqual(receipt["checkpoint"], solved_id())
+        self.assertEqual(json.loads((destination / "checkpoint.json").read_text())["format"], "weightless.checkpoint.v1")
         self.assertIn("does not claim an improvement", (self.root / "run" / "driver.json").read_text())
 
     def test_rejects_hidden_defaults_and_records_invalid_edits(self):
@@ -105,7 +105,25 @@ class DriveTests(unittest.TestCase):
         bundle = json.loads((self.root / "bad-run" / "evidence.json").read_text())
         self.assertEqual(bundle["frozen"]["arms"]["solver"]["checkpoint"], solved_id())
 
-    def test_teacher_receives_command_results_recovers_and_keeps_private_data_out(self):
+    def test_forward_exhaustion_does_not_apply_a_candidate(self):
+        config = self.example()
+        config["declaration"]["budgets"]["forward_calls"] = 3
+        report = self.drive.drive(config)
+        bundle = json.loads((self.root / "run" / "evidence.json").read_text())
+        self.assertNotEqual(bundle["frozen"]["arms"]["solver"]["checkpoint"], solved_id())
+        self.assertLessEqual(bundle["used"]["forward_calls"], 3)
+        self.assertTrue(any(item.get("error") for item in report["feedback"]))
+
+    def test_private_paths_are_not_inside_the_model_mount(self):
+        config = self.example()
+        config["target"] = {"kind": "smollm", "source": str(self.root),
+                            "revision": self.drive._REVISION, "model": self.drive._MODEL, "dtype": "float32"}
+        with self.assertRaises(WeightlessError) as error:
+            self.drive.drive(config)
+        self.assertEqual(error.exception.code, "invalid_request")
+        self.assertFalse((self.root / "run").exists())
+
+    def test_teacher_prompt_excludes_private_cases_and_the_credential(self):
         canary = "canary-private-do-not-leak"
         secret = "canary-secret-key"
         requests = []
@@ -117,31 +135,22 @@ class DriveTests(unittest.TestCase):
                 requests.append(payload)
                 view = json.loads(payload["input"][0]["content"].splitlines()[-1])["view"]
                 turn = len(requests)
-                edit = {"action": "submit", "key": "edit", "payload": {
-                        "session": view["session"], "arm": view["arm"], "declaration": view["declaration"],
-                        "observation": view["observation"], "base": view["base"],
-                        "edits": [{"tensor": "w", "index": 0, "value": 2}, {"tensor": "b", "index": 0, "value": 3}]}}
                 if turn == 2:
-                    command = {"action": "status", "key": "bad-status", "payload": {"key": []}}
-                elif turn == 3:
-                    command = {"action": "inspect", "key": "bad-tensor", "payload": {"checkpoint": view["base"], "tensor": [], "indices": [0]}}
-                elif turn in (4, 5):
-                    command = {**edit, "key": "driver-freeze" if turn == 4 else "teacher-6"}
-                elif turn == 7:
-                    command = {"action": "inspect", "key": "read-weight", "payload": {"checkpoint": view["base"], "tensor": "w", "indices": [0]}}
-                elif turn == 8:
-                    command = {"action": "diagnose", "key": "public-diagnostic", "payload": {}}
-                elif turn == 9:
-                    command = edit
-                elif turn in (10, 11, 12):
-                    command = {"action": {10: "freeze", 11: "finalize", 12: "export"}[turn], "key": f"finish-{turn}", "payload": {}}
+                    command = {"action": "inspect", "tensor": [], "indices": [0]}
+                elif turn == 4:
+                    command = {"action": "inspect", "tensor": "w", "indices": [0]}
+                elif turn == 5:
+                    command = {"action": "diagnose"}
+                elif turn == 6:
+                    command = {"action": "edit", "edits": [{"tensor": "w", "index": 0, "value": 2},
+                                                             {"tensor": "b", "index": 0, "value": 3}]}
                 else:
-                    command = {"action": "report", "key": "report", "payload": {"conclusion": "inconclusive"}}
+                    command = {"action": "finish"}
                 text = json.dumps(command)
                 if turn == 1:
                     text = "[]"
-                elif turn == 6:
-                    text = '{"action":"report","action":"freeze","key":"duplicate","payload":{}}'
+                elif turn == 3:
+                    text = '{"action":"finish","action":"diagnose"}'
                 event = {"type": "response.completed", "response": {"status": "completed", "model": payload["model"],
                          "tools": [], "tool_choice": "none", "output": [{"type": "message", "content": [{"type": "output_text", "text": text}]}],
                          "usage": {"input_tokens": 3, "output_tokens": 8, "total_tokens": 11}}}
@@ -160,7 +169,7 @@ class DriveTests(unittest.TestCase):
                 "retention": [{"id": canary + "-retention", "input": [1], "target": [0]}]}))
             config = self.example()
             config["output"] = str(self.root / "teacher-run")
-            config["declaration"]["budgets"].update(teacher_requests=13, inspections=1, diagnostics=1)
+            config["declaration"]["budgets"].update(teacher_requests=7, inspections=1, diagnostics=1)
             config["declaration"]["budgets"]["final_evaluations"] = 2
             config["declaration"]["budgets"]["forward_calls"] = 24
             config["declaration"]["final_forward_calls"] = 8
@@ -181,15 +190,12 @@ class DriveTests(unittest.TestCase):
         self.assertIs(report["efficacy_claim"], False)
         self.assertTrue(report["frozen_complete"])
         self.assertEqual(report["final_status"], "completed")
-        self.assertEqual(len(requests), 13)
+        self.assertEqual(len(requests), 7)
         contexts = [json.loads(request["input"][0]["content"].splitlines()[-1]) for request in requests]
-        for context in contexts[1:7]:
-            self.assertEqual(context["previous"]["error"], "invalid_teacher_command")
-        self.assertEqual(contexts[7]["previous"]["result"]["values"][0]["value"], 0)
-        self.assertGreater(contexts[8]["previous"]["result"]["metrics"]["loss"], 0)
-        self.assertEqual(contexts[8]["previous"]["result"]["usage"]["forward_calls"], len(config["development"]))
-        self.assertEqual(contexts[11]["previous"]["status"], "completed")
-        self.assertEqual(contexts[12]["previous"]["final"]["status"], "completed")
+        for context in contexts[1:4]:
+            self.assertEqual(context["previous"]["error"], "invalid_command")
+        self.assertEqual(contexts[4]["previous"]["feedback"]["result"]["values"][0]["value"], 0)
+        self.assertGreater(contexts[5]["previous"]["feedback"]["result"]["metrics"]["loss"], 0)
         published = "\n".join(path.read_text(errors="replace") for path in (self.root / "teacher-run").rglob("*") if path.is_file())
         published += "\n".join(json.dumps(item) for item in requests)
         published += "\n".join(path.read_text(errors="replace") for path in (self.root / "teacher-private").rglob("*") if path.is_file())
@@ -199,6 +205,7 @@ class DriveTests(unittest.TestCase):
         self.assertEqual(replay_session(bundle), bundle["frozen"])
         self.assertEqual(bundle["frozen"]["arms"]["solver"]["checkpoint"], solved_id())
         self.assertEqual(bundle["final"]["arms"]["solver"]["conclusion"], "inconclusive")
+
 
     def test_creates_a_new_output_hierarchy(self):
         config = self.example()
@@ -251,6 +258,8 @@ class DriveTests(unittest.TestCase):
                 with self.assertRaises(WeightlessError):
                     self.drive.drive(config)
                 self.assertFalse((self.root / "run").exists())
+
+
 
 
 if __name__ == "__main__":

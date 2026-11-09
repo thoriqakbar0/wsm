@@ -5,12 +5,18 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "wsm"
 version = "0.1.0"
-description = "WSM (Weight Space Mods): weight-space experiments with bound evaluation evidence"
+description = "WSM (Weight Space Modifiers): weight-space experiments with bound evaluation evidence"
 requires-python = ">=3.12"
 dependencies = []
+
+[project.scripts]
+wsm = "wsm.cli:main"
 
 [project.optional-dependencies]
 integration = ["harbor==0.25.0", "verifiers==0.4.1", "jsonschema==4.26.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+wsm = ["tasks/*.json"]

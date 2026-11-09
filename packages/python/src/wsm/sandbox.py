@@ -14,6 +14,7 @@ from .binary64 import WeightlessError
 _MAX_INPUT = 4 * 1024 * 1024
 _MAX_OUTPUT = 4 * 1024 * 1024
 _REVISION = "12fd25f77366fa6b3b4b768ec3050bf629380bac"
+_GENERATIVE = ("smollm", "huggingface")
 
 
 def _error(code, message):
@@ -25,7 +26,7 @@ def forward_reservation(target, case_count, *, generate=False, max_new_tokens=16
     if (type(case_count) is not int or case_count < 0 or type(generate) is not bool
             or type(max_new_tokens) is not int or not 1 <= max_new_tokens <= 128):
         _error("invalid_request", "Invalid forward reservation")
-    return case_count * (1 + max_new_tokens if generate and target.get("kind") == "smollm" else 1)
+    return case_count * (1 + max_new_tokens if generate and target.get("kind") in _GENERATIVE else 1)
 
 
 def stage_smollm(source, destination):
@@ -43,6 +44,93 @@ def stage_smollm(source, destination):
             "model": "HuggingFaceTB/SmolLM2-135M-Instruct", "dtype": "float32"}
 
 
+def _nested(parent, child):
+    parent = os.path.realpath(parent)
+    child = os.path.realpath(child)
+    try:
+        return os.path.commonpath((parent, child)) == parent
+    except ValueError:
+        return False
+
+
+def _copy_snapshot(snapshot, staged, source_root):
+    from .target_worker import resolved_snapshot_file
+
+    for dirpath, dirnames, filenames in os.walk(snapshot, followlinks=False):
+        relative_dir = Path(dirpath).relative_to(snapshot)
+        for dirname in list(dirnames):
+            if os.path.islink(os.path.join(dirpath, dirname)):
+                _error("invalid_target", "Snapshot directory links are unsupported")
+        for name in filenames:
+            source = Path(dirpath) / name
+            resolved = Path(resolved_snapshot_file(str(source_root), str(source)))
+            copied = staged / relative_dir / name
+            copied.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
+            shutil.copyfile(resolved, copied)
+            copied.chmod(0o444)
+
+
+def stage_model(source, destination, *, model, revision):
+    """Copy a local snapshot at ``source/snapshots/<revision>`` into an unused directory."""
+    from .target_worker import huggingface_snapshot, model_id_ok, revision_ok
+
+    if not model_id_ok(model) or not revision_ok(revision):
+        _error("invalid_target", "A model id and immutable revision are required")
+    try:
+        root = Path(source).resolve(strict=True)
+    except (OSError, RuntimeError):
+        _error("invalid_target", "A local snapshot and unused staging directory are required")
+    if not root.is_dir():
+        _error("invalid_target", "A local snapshot and unused staging directory are required")
+    destination = Path(destination)
+    if destination.exists() or destination.is_symlink():
+        _error("invalid_target", "A local snapshot and unused staging directory are required")
+    if _nested(root, destination) or _nested(destination, root):
+        _error("invalid_target", "Staging destination must stay outside the source")
+    snapshot = Path(huggingface_snapshot(str(root), revision))
+    created = False
+    try:
+        destination.mkdir(parents=True)
+        created = True
+        staged = destination / "snapshots" / revision
+        staged.mkdir(parents=True, mode=0o755)
+        _copy_snapshot(snapshot, staged, root)
+    except BaseException:
+        if created:
+            shutil.rmtree(destination, ignore_errors=True)
+        raise
+    return {"kind": "huggingface", "source": str(destination.resolve()), "revision": revision,
+            "model": model, "dtype": "float32"}
+
+
+def _model_mount(target):
+    from .target_worker import huggingface_snapshot, model_id_ok, revision_ok
+
+    kind = target.get("kind")
+    if kind == "smollm":
+        if (set(target) != {"kind", "source", "revision", "model", "dtype"}
+                or target["revision"] != _REVISION or target["model"] != "HuggingFaceTB/SmolLM2-135M-Instruct"
+                or target["dtype"] != "float32" or type(target["source"]) is not str):
+            _error("invalid_target", "Unsupported model configuration")
+    elif kind == "huggingface":
+        if (set(target) != {"kind", "source", "revision", "model", "dtype"}
+                or target["dtype"] != "float32" or type(target["source"]) is not str
+                or not model_id_ok(target["model"]) or not revision_ok(target["revision"])):
+            _error("invalid_target", "Unsupported model configuration")
+    else:
+        return None
+    source = target.pop("source")
+    if not os.path.isabs(source):
+        _error("invalid_target", "Model source must be absolute")
+    mount = os.path.realpath(source)
+    if not os.path.isabs(mount) or not os.path.isdir(mount) or "," in mount:
+        _error("invalid_target", "Invalid model source")
+    if kind == "huggingface":
+        huggingface_snapshot(mount, target["revision"], local_files=True)
+    target["source"] = "/target"
+    return mount
+
+
 class _WorkerRunner:
     def execute(self, action, target, *, patches=None, edits=None, cases=None, query=None,
                 generate=False, purpose="development", timeout=None, on_dispatch=None, forward_limit=None):
@@ -53,20 +141,8 @@ class _WorkerRunner:
         if forward_limit is not None and (action != "evaluate" or type(forward_limit) is not int or forward_limit < 0):
             _error("invalid_request", "Invalid forward limit")
         target = copy.deepcopy(target)
-        mount = None
-        if target.get("kind") == "smollm":
-            if (set(target) != {"kind", "source", "revision", "model", "dtype"}
-                    or target["revision"] != _REVISION or target["model"] != "HuggingFaceTB/SmolLM2-135M-Instruct"
-                    or target["dtype"] != "float32" or type(target["source"]) is not str):
-                _error("invalid_target", "Unsupported model configuration")
-            source = target.pop("source")
-            if not os.path.isabs(source):
-                _error("invalid_target", "Model source must be absolute")
-            mount = os.path.realpath(source)
-            if not os.path.isabs(mount) or not os.path.isdir(mount) or "," in mount:
-                _error("invalid_target", "Invalid model source")
-            target["source"] = "/target"
-        elif target.get("kind") != "binary64" or set(target) != {"kind", "checkpoint"}:
+        mount = _model_mount(target)
+        if mount is None and (target.get("kind") != "binary64" or set(target) != {"kind", "checkpoint"}):
             _error("invalid_target", "Unsupported target")
         request = {"action": action, "target": target, "patches": [] if patches is None else patches, "edits": [] if edits is None else edits,
                    "cases": cases, "query": query, "generate": generate, "purpose": purpose}

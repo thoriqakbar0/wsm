@@ -1,0 +1,115 @@
+{
+  "format": "wsm.task.v1",
+  "target": {
+    "kind": "binary64",
+    "checkpoint": {
+      "graph": {
+        "inputSize": 2,
+        "nodes": [
+          {
+            "id": "hidden",
+            "op": "affine",
+            "input": "input",
+            "weight": "hidden.weight",
+            "bias": "hidden.bias"
+          },
+          {
+            "id": "activation",
+            "op": "relu",
+            "input": "hidden"
+          },
+          {
+            "id": "output",
+            "op": "affine",
+            "input": "activation",
+            "weight": "output.weight",
+            "bias": "output.bias"
+          }
+        ],
+        "output": "output"
+      },
+      "tensors": {
+        "hidden.weight": {
+          "shape": [
+            2,
+            2
+          ],
+          "values": [
+            1,
+            1,
+            -1,
+            -1
+          ]
+        },
+        "hidden.bias": {
+          "shape": [
+            2
+          ],
+          "values": [
+            0,
+            0
+          ]
+        },
+        "output.weight": {
+          "shape": [
+            1,
+            2
+          ],
+          "values": [
+            0,
+            0
+          ]
+        },
+        "output.bias": {
+          "shape": [
+            1
+          ],
+          "values": [
+            0
+          ]
+        }
+      }
+    }
+  },
+  "editable": [
+    "hidden.weight",
+    "hidden.bias",
+    "output.weight",
+    "output.bias"
+  ],
+  "max_edits": 8,
+  "max_inspect": 8,
+  "development": [
+    {
+      "id": "public-0",
+      "input": [
+        3,
+        -1
+      ],
+      "target": [
+        2
+      ]
+    },
+    {
+      "id": "public-1",
+      "input": [
+        -3,
+        1
+      ],
+      "target": [
+        -2
+      ]
+    },
+    {
+      "id": "public-2",
+      "input": [
+        4,
+        5
+      ],
+      "target": [
+        9
+      ]
+    }
+  ],
+  "context": "The target is a fixed affine/ReLU network. Each input has two signed numbers; the desired output is their sum. Inspect numerical coefficients before deciding what to change. This bundled task has public examples only; it cannot establish independent final correctness."
+}

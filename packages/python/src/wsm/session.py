@@ -86,27 +86,35 @@ class Session:
         _check(retention_max is None or (type(retention_max) in (int, float) and math.isfinite(retention_max) and retention_max >= 0
                                         and development_retention), 'invalid_declaration', 'Development retention gate needs public cases and a finite threshold')
         obj = cls(path, runner=runner, target=target, verifier=verifier, final_dataset=final_dataset)
-        with obj._transaction():
-            _check(obj.db.execute('SELECT 1 FROM state').fetchone() is None, 'already_exists', 'Session exists')
-            manifest = runner.execute('describe', target)
-            _check(set(declaration['editable']) <= set(manifest['parameters']), 'invalid_declaration', 'Unknown editable tensor')
-            state = {'format': 'weightless.session.v1', 'session': str(uuid.uuid4()),
-                     'origin': time.time(), 'declaration': _seal(declaration), 'manifest': manifest, 'runner': copy.deepcopy(runner.config),
-                     'target_identity': _hash(target), 'development': copy.deepcopy(development),
-                     'development_retention': copy.deepcopy(development_retention or []),
-                     'phase': 'developing', 'used': dict.fromkeys(limits, 0),
-                     'arms': {a: {'checkpoint': manifest['checkpoint'], 'patches': [], 'loss': None,
-                                  'version': 0, 'pending': None, 'history': []} for a in arms},
-                     'frozen': None, 'final': None}
-            obj.db.execute('INSERT INTO state VALUES (?)', (_json(state),))
+        try:
+            with obj._transaction():
+                _check(obj.db.execute('SELECT 1 FROM state').fetchone() is None, 'already_exists', 'Session exists')
+                manifest = runner.execute('describe', target)
+                _check(set(declaration['editable']) <= set(manifest['parameters']), 'invalid_declaration', 'Unknown editable tensor')
+                state = {'format': 'weightless.session.v1', 'session': str(uuid.uuid4()),
+                         'origin': time.time(), 'declaration': _seal(declaration), 'manifest': manifest, 'runner': copy.deepcopy(runner.config),
+                         'target_identity': _hash(target), 'development': copy.deepcopy(development),
+                         'development_retention': copy.deepcopy(development_retention or []),
+                         'phase': 'developing', 'used': dict.fromkeys(limits, 0),
+                         'arms': {a: {'checkpoint': manifest['checkpoint'], 'patches': [], 'loss': None,
+                                      'version': 0, 'pending': None, 'history': []} for a in arms},
+                         'frozen': None, 'final': None}
+                obj.db.execute('INSERT INTO state VALUES (?)', (_json(state),))
+        except BaseException:
+            obj.close()
+            raise
         return obj
 
     @classmethod
     def open(cls, path, *, runner, target, verifier=None, final_dataset=None):
         obj = cls(path, runner=runner, target=target, verifier=verifier, final_dataset=final_dataset)
-        state = obj._state()
-        _check(state['target_identity'] == _hash(target) and state['runner'] == runner.config,
-               'identity_mismatch', 'Target or runner identity changed')
+        try:
+            state = obj._state()
+            _check(state['target_identity'] == _hash(target) and state['runner'] == runner.config,
+                   'identity_mismatch', 'Target or runner identity changed')
+        except BaseException:
+            obj.close()
+            raise
         return obj
 
     def __init__(self, path, *, runner, target, verifier=None, final_dataset=None):
@@ -191,19 +199,28 @@ class Session:
             result['status'] = 'outcome_unknown'
         return result
 
+    def _blocking_keys(self, arm):
+        keys = []
+        for (body,) in self.db.execute('SELECT body FROM operations ORDER BY rowid'):
+            op = json.loads(body)
+            if op.get('arm') == arm and op.get('status') in ('dispatched', 'outcome_unknown'):
+                keys.append(op['key'])
+        return keys
+
     def observe(self, arm):
         with self._transaction():
             state = self._state()
             _check(arm in state['arms'], 'unauthorized', 'Unknown arm')
             record = state['arms'][arm]
+            blocking = self._blocking_keys(arm)
+            blocked = record['pending'] is not None or bool(blocking)
             actions = ['status']
             if state['phase'] == 'developing':
-                if not record['pending']:
+                if not blocked:
                     actions += ['inspect', 'submit']
                     if 'diagnostics' in state['used']:
                         actions.append('diagnose')
-                if record['loss'] is not None:
-                    actions += ['freeze', 'cancel']
+                actions += ['freeze', 'cancel']
             elif state['phase'] in ('frozen', 'finalizing', 'closed'):
                 actions.append('export')
                 if state['phase'] == 'frozen' and state['frozen']['complete']:
@@ -214,7 +231,7 @@ class Session:
                     'parameters': {k: state['manifest']['parameters'][k] for k in state['declaration']['editable']},
                     'public_cases': [{k: c[k] for k in ('id', 'input', 'prompt', 'target') if k in c} for c in state['development'][:100]],
                     'public_cases_truncated': len(state['development']) > 100,
-                    'pending': record['pending'], 'history': record['history'],
+                    'pending': record['pending'], 'blocking': blocking, 'history': record['history'],
                     'metric': {'selection': 'loss', 'behavior': 'exact generation is separate from target-conditioned loss'},
                     'remaining': {k: state['declaration']['budgets'][k] - v for k, v in state['used'].items()},
                     'retention_acceptability': 'undetermined',
