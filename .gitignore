@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+runs/
+jobs/
+examples/harbor/signed-addition/environment/generated/
+examples/harbor/signed-addition/tests/expected.json
+examples/harbor/signed-addition/tests/manifest.json

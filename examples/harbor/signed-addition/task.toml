@@ -1,0 +1,21 @@
+schema_version = "1.4"
+artifacts = ["/app/submission.json"]
+
+[metadata]
+category = "machine-learning"
+tags = ["weight-space", "direct-edit", "binary64"]
+
+[agent]
+timeout_sec = 300
+
+[verifier]
+timeout_sec = 60
+environment_mode = "separate"
+
+[environment]
+build_timeout_sec = 300
+cpus = 1
+memory_mb = 1024
+storage_mb = 2048
+workdir = "/app"
+network_mode = "no-network"
