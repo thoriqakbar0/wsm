@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -11,14 +12,16 @@ import importlib.util
 import json
 from pathlib import Path
 import sys
+from importlib.resources import files
 from wsm import (MetricPolicy, NumericalEvaluation, SearchRun, replay, Session,
                         Verifier, DockerRunner, BubblewrapRunner, ResponsesTeacher, replay_session,
                         verify_session, stage_smollm)
 from wsm.binary64 import create_checkpoint, predict
 metadata = importlib.metadata.metadata('wsm')
 assert metadata['Name'] == 'wsm'
-assert metadata['Summary'].startswith('WSM (Weight Space Mods):')
+assert metadata['Summary'].startswith('WSM (Weight Space Modifiers):')
 assert importlib.util.find_spec('weightless') is None
+assert '"format": "wsm.task.v1"' in files('wsm').joinpath('tasks/addition.json').read_text()
 assert all(name not in sys.modules for name in ('verifiers', 'harbor', 'torch', 'transformers'))
 fixture = json.loads(Path(sys.argv[1]).read_text())
 run = SearchRun(create_checkpoint(fixture['graph'], fixture['tensors']),
@@ -35,9 +38,12 @@ if len(sys.argv) > 2:
     external = json.loads(Path(sys.argv[2]).read_text())
     assert predict(replay(external), [-8, 3]) == [-5]
 '''
-with tempfile.TemporaryDirectory(prefix="weightless-packages-") as temporary:
+with tempfile.TemporaryDirectory(prefix="wsm-packages-") as temporary:
     root = Path(temporary)
-    subprocess.run([sys.executable, "-m", "pip", "wheel", "--no-deps", str(ROOT / "packages/python"), "--wheel-dir", str(root)], check=True)
+    clean = root / "source"
+    shutil.copytree(ROOT / "packages/python", clean,
+                    ignore=shutil.ignore_patterns("build", "*.egg-info", "__pycache__", "*.pyc"))
+    subprocess.run([sys.executable, "-m", "pip", "wheel", "--no-deps", str(clean), "--wheel-dir", str(root)], check=True)
     wheel, = root.glob("*.whl")
     subprocess.run([sys.executable, "-m", "pip", "install", "--no-deps", "--target", str(root / "python"), str(wheel)], check=True)
     subprocess.run([sys.executable, "-S", "-c", CODE, str(ROOT / "fixtures/addition.json"), *sys.argv[1:]],

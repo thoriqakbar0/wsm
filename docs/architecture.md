@@ -26,7 +26,7 @@ Development accepts a checkpoint submission. It neither receives a run nor repla
 
 Replay validates history and reruns the pure policy against recorded metrics. It never calls the numerical evaluator, Harbor, or a teacher. A wheel without Harbor or Verifiers can therefore replay native runs. Hashes catch inconsistent changes, but a malicious author can recompute a complete unsigned history. Replay authenticates neither external scores nor live teacher actions. The separate final verifier establishes task correctness.
 
-The example uses a scripted external proposer and fixed affine/ReLU target. It adds no model client, optimizer, new target backend, hosted service, or GPU path.
+The example uses a scripted external proposer and fixed affine/ReLU target. Optional local model snapshots, an explicit CUDA device, and full-checkpoint export sit beside that example. Default runners stay on CPU. Research-aligned edits remain explicit replacements. Hosted Tinker is documented as an open capability boundary, not a live integration.
 
 ## Durable local experiment ownership
 

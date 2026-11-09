@@ -1,8 +1,10 @@
-# WSM (Weight Space Mods)
+# WSM (Weight Space Modifiers)
 
 WSM lets an external teacher propose numerical weight edits to a fixed neural network. The Python SDK evaluates copied candidates and keeps only strict improvements under a declared metric policy. Each run records proposals, evaluation evidence, and selection decisions for replay.
 
-Install the Python distribution as `wsm` and import it as `wsm`. This replaces the former `weightless-sdk` distribution and `weightless` namespace without an import alias. For an existing environment, uninstall `weightless-sdk` before installing from this checkout, then update your imports to `wsm`. Serialized `weightless.*` format identifiers and hashes, `WeightlessError`, environment variables, and Docker image names keep their existing spelling.
+Install the Python distribution as `wsm` and import it as `wsm`. The installed command is also `wsm`. With no arguments it opens the terminal UI on a terminal. Session verbs such as `init`, `observe`, `submit`, `status`, and `export` match the session methods. `wsm run` starts the prompt harness. See [the command reference](docs/cli.md).
+
+This replaces the former `weightless-sdk` distribution and `weightless` namespace without an import alias or a second console script. For an existing environment, uninstall `weightless-sdk` before installing from this checkout, then update your imports to `wsm`. Serialized `weightless.*` format identifiers and hashes, `WeightlessError`, environment variables, and Docker image names keep their existing spelling.
 
 ## Run the offline example
 

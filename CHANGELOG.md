@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Consolidate the installed `wsm` package, command, and terminal UI. Session remains the policy owner. The prompt harness is `wsm run`. Generic local snapshots, an explicit CUDA device, forward-call reservations, and full checkpoint export sit on the existing CPU identity path.
+- Add the operator broker and the unprivileged `wl` byte pipe. `wl` does not own session policy. There is no `weightless` import or console-script shim.
+- Keep one introduction at `docs/index.html`. Record the terminal-bench distinction between a handwritten program that passed its verifier and an inconclusive weight-editing run.
+
 - Rename the project to WSM (Weight Space Mods), the Python distribution from `weightless-sdk` to `wsm`, and imports from `weightless` to `wsm`; update callers, sandbox workers, and documentation while preserving serialized format identifiers and hashes.
 
 - Add Docker-free Linux execution with bubblewrap namespaces, systemd resource limits, bounded output, verified workload teardown, and native adversarial checks while preserving numerical and private-verifier contracts.
