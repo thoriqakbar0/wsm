@@ -1,6 +1,6 @@
 # Ownership of an experiment
 
-Weightless separates experiment state from numerical model access and external grading. The ordinary caller still uses `inspect`, `submit`, and `finish`. The [contract](contract.md) specifies every record and boundary.
+WSM separates experiment state from numerical model access and external grading. The ordinary caller still uses `inspect`, `submit`, and `finish`. The [contract](contract.md) specifies every record and boundary.
 
 `wsm.core` owns one run, candidate attempts, copied evidence, the proposal budget, pure metric comparison, and replay. `submit` composes public `propose`, `evaluate`, and `select`. The constructor copies the initial checkpoint, declarative policy, and evaluator configuration without evaluating anything. The core never parses train or development examples. It reads only configured metric paths from a validated result.
 

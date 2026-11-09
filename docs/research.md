@@ -1,6 +1,6 @@
 # Research scope
 
-Weightless independently implements a small weight-editing experiment inspired by [Weight-Space Programming and Gradient Optimization on Nonconvex Algorithmic Tasks](https://github.com/Fchaubard/WSP-for-turing-complete/blob/main/paper.pdf), a research preprint by Francois Chaubard with an AI research collaborator.
+WSM independently implements a small weight-editing experiment inspired by [Weight-Space Programming and Gradient Optimization on Nonconvex Algorithmic Tasks](https://github.com/Fchaubard/WSP-for-turing-complete/blob/main/paper.pdf), a research preprint by Francois Chaubard with an AI research collaborator.
 
 ## Source evidence
 
@@ -11,7 +11,7 @@ The initial implementation was grounded against research repository commit `917a
 - `focus/arithmetic/score.py` validates complete finite coefficient arrays and evaluates archived proposals.
 - `focus/iterative_eval/check_selection.py` independently checks strict lexicographic selection by development loss, then training loss.
 
-The upstream repository does not declare a project-wide reuse license. Weightless uses fresh code and synthetic examples. It does not redistribute upstream source, archived model replies, or saved coefficient arrays.
+The upstream repository does not declare a project-wide reuse license. WSM uses fresh code and synthetic examples. It does not redistribute upstream source, archived model replies, or saved coefficient arrays.
 
 ## What the first example establishes
 
@@ -21,7 +21,7 @@ This is a synthetic reproduction of an experimental procedure and a network fami
 
 ## What remains untested
 
-Weightless does not yet reproduce the paper's 87 settings, optimizer comparisons, reported rankings, archived language-model observations, architecture-selection trials, recurrent networks, or resource-accounting results. The example establishes neither optimizer superiority nor general extrapolation ability.
+WSM does not yet reproduce the paper's 87 settings, optimizer comparisons, reported rankings, archived language-model observations, architecture-selection trials, recurrent networks, or resource-accounting results. The example establishes neither optimizer superiority nor general extrapolation ability.
 
 The interpreter uses binary64 scalar arithmetic. Agreement on synthetic fixtures does not establish agreement with every NumPy, BLAS, accelerator, or fused-arithmetic implementation.
 

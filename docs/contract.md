@@ -1,6 +1,8 @@
-# Weightless experiment contract
+# WSM experiment contract
 
 The data model is an owned run with a copied baseline, at most one pending candidate, bound evaluation evidence, and an ordered metric policy. The core never interprets numerical example arrays. Numerical access belongs to `wsm.binary64`. Optional Docker execution belongs to `wsm.harbor`.
+
+The Python distribution and import namespace are `wsm`. Serialized `weightless.*` format identifiers and hash prefixes remain unchanged. The exception class remains `wsm.WeightlessError`.
 
 ## Intended caller
 

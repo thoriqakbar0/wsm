@@ -14,7 +14,7 @@ import uuid
 from .sandbox import _MAX_INPUT, _MAX_OUTPUT, _WorkerRunner, _error
 
 _READY = b'weightless.sandbox.ready.v1\n'
-_WORKER = "import runpy,sys;sys.path.insert(0,'/opt/wsm');runpy.run_module('wsm.target_worker',run_name='__main__')"
+_WORKER = "import runpy,sys;sys.path.insert(0,'/opt/weightless');runpy.run_module('wsm.target_worker',run_name='__main__')"
 
 
 class BubblewrapRunner(_WorkerRunner):
@@ -148,7 +148,7 @@ class BubblewrapRunner(_WorkerRunner):
             for name, value in self._worker.items():
                 (package / name).write_bytes(value)
                 (package / name).chmod(0o444)
-            launch += command[:boundary] + ['--ro-bind', staging, '/opt/wsm', '--remount-ro', '/',
+            launch += command[:boundary] + ['--ro-bind', staging, '/opt/weightless', '--remount-ro', '/',
                                             '--', self._python, '-I', '-c', gate]
             try:
                 try:

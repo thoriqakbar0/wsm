@@ -1,4 +1,4 @@
-Improve a fixed numerical network to compute signed addition with explicit scalar replacements. Public graph, tensors, training examples, development examples, and the attempt-budget hint are in `/app/public.json`. The dependency-free Python SDK is in `/opt/wsm` on `PYTHONPATH`.
+Improve a fixed numerical network to compute signed addition with explicit scalar replacements. Public graph, tensors, training examples, development examples, and the attempt-budget hint are in `/app/public.json`. The dependency-free Python SDK is in `/opt/weightless` on `PYTHONPATH`.
 
 Import `create_checkpoint` from `wsm.binary64`. Import `SearchRun`, `NumericalEvaluation`, and `MetricPolicy` from `wsm`. Construct the initial checkpoint from the public graph and tensors. Construct `SearchRun(checkpoint, evaluator=NumericalEvaluation(public['task']), policy=MetricPolicy(('development.loss', 'minimize'), ('train.loss', 'minimize')), budget=public['task']['budget'])`.
 

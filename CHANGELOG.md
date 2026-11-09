@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-- Rename the Python distribution and import package to `wsm`, including CLI resources and sandbox workers, while preserving checkpoint identities and evidence formats; no compatibility shim is provided.
-
 - Add the Weight Space Modifiers prompt-first CLI and reusable teacher harness with scalar inspection and edits, durable recovery, bounded evaluation, checkpoint export, and optional private final grading.
+
+- Rename the project to WSM (Weight Space Modifiers), the Python distribution from `weightless-sdk` to `wsm`, and imports from `weightless` to `wsm`; update callers, sandbox workers, and documentation while preserving serialized format identifiers and hashes.
 
 - Add Docker-free Linux execution with bubblewrap namespaces, systemd resource limits, bounded output, verified workload teardown, and native adversarial checks while preserving numerical and private-verifier contracts.
 

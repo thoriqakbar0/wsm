@@ -7,6 +7,8 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 CODE = '''
+import importlib.metadata
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -28,6 +30,8 @@ assert any(entry.name == 'wsm' and entry.value == 'wsm.cli:main'
            for entry in installed.entry_points if entry.group == 'console_scripts')
 assert callable(run_harness)
 assert json.loads(files('wsm').joinpath('tasks/addition.json').read_text())['format'] == 'wsm.task.v1'
+assert installed.metadata['Summary'].startswith('WSM (Weight Space Modifiers):')
+assert importlib.util.find_spec('weightless') is None
 assert all(name not in sys.modules for name in ('verifiers', 'harbor', 'torch', 'transformers'))
 fixture = json.loads(Path(sys.argv[1]).read_text())
 run = SearchRun(create_checkpoint(fixture['graph'], fixture['tensors']),
@@ -83,6 +87,6 @@ with tempfile.TemporaryDirectory(prefix="weightless-packages-") as temporary:
                                 cwd=root, env={**os.environ, "PYTHONPATH": str(root / "python")},
                                 check=True, capture_output=True, text=True)
     assert 'Weight Space Modifiers' in help_result.stdout
-    subprocess.run([sys.executable, "-c", CODE, str(ROOT / "fixtures/addition.json"), *sys.argv[1:]],
+    subprocess.run([sys.executable, "-S", "-c", CODE, str(ROOT / "fixtures/addition.json"), *sys.argv[1:]],
                    cwd=root, env={**os.environ, "PYTHONPATH": str(root / "python")}, check=True)
 print("Built wheel runs the WSM CLI, search, and pure replay outside the source tree without optional imports")
