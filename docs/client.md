@@ -1,8 +1,10 @@
 # Durable local client
 
-The local client adds `Session`, `Verifier`, `DockerRunner`, and `ResponsesTeacher` beside the existing `SearchRun` API. The existing checkpoint and run formats retain their meaning. Session exports use a separate format.
+The local client adds `Session`, `Verifier`, `BubblewrapRunner`, `DockerRunner`, and `ResponsesTeacher` beside the existing `SearchRun` API. The existing checkpoint and run formats retain their meaning. Session exports use a separate format.
 
 ## Ownership and supported execution
+
+`BubblewrapRunner` provides Docker-free execution on the current Linux host using bubblewrap namespaces and systemd cgroups. Its [sandbox boundary and native checks](sandbox.md) describe the required system permissions, filesystem grants, resource limits, and teardown guarantees. The acceptance driver defaults to this runner. The Docker profile below remains available when explicitly selected.
 
 A trusted host owns the SQLite session, private verifier registry, teacher credentials, and Docker socket. An untrusted agent receives an arm-scoped JSON observation and submits commands through `Session.dispatch`. Do not give the agent a Python session object, host shell, database path, or Docker socket. These objects are privileged orchestration APIs.
 
@@ -47,6 +49,7 @@ Build from the repository root with Docker available.
 ```sh
 docker build -f examples/client-sandbox/Dockerfile -t weightless-client:local .
 PYTHONPATH=packages/python/src python3 scripts/client_native.py \
+  --runner docker \
   --image weightless-client:local \
   --model-source /path/to/cached/model-repository \
   --output /tmp/weightless-native-check

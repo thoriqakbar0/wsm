@@ -8,7 +8,7 @@ import secrets
 import sys
 import time
 
-from weightless import (DockerRunner, MetricPolicy, ResponsesTeacher, SearchRun, Session,
+from weightless import (BubblewrapRunner, DockerRunner, MetricPolicy, ResponsesTeacher, SearchRun, Session,
                         Verifier, WeightlessError, evaluation_result, evaluator_config,
                         replay, replay_session, stage_smollm, verify_session)
 from weightless.binary64 import create_checkpoint
@@ -195,21 +195,34 @@ After finalization return report with payload {conclusion:one of supported,bound
 
 
 parser=argparse.ArgumentParser()
-parser.add_argument('--image',required=True)
+parser.add_argument('--runner',choices=('bubblewrap','docker'),default='bubblewrap')
+parser.add_argument('--image')
+parser.add_argument('--python',default='/usr/bin/python3')
 parser.add_argument('--docker',default='docker')
 parser.add_argument('--docker-host')
-parser.add_argument('--model-source',type=Path,required=True)
+parser.add_argument('--model-source',type=Path)
+parser.add_argument('--binary64-only',action='store_true')
 parser.add_argument('--teacher-config',type=Path)
 parser.add_argument('--output',type=Path,required=True)
 parser.add_argument('--resume',action='store_true')
 args=parser.parse_args()
+if args.runner=='docker' and not args.image:
+    parser.error('--runner docker requires --image')
+if args.runner=='bubblewrap' and (args.image or args.docker_host):
+    parser.error('--image and --docker-host require --runner docker')
+if not args.binary64_only and not args.model_source:
+    parser.error('--model-source is required unless --binary64-only is set')
+if args.binary64_only and (args.teacher_config or args.resume):
+    parser.error('--binary64-only cannot run or resume a teacher acceptance session')
 if args.resume:
     assert args.output.is_dir() and args.teacher_config, 'Resume requires an existing teacher acceptance directory'
 else:
     args.output.mkdir(mode=0o700,parents=True,exist_ok=False)
 started=time.monotonic()
 try:
-    runner=DockerRunner(args.image,docker=args.docker,host=args.docker_host,timeout=90,memory='2g')
+    runner=(BubblewrapRunner(python=args.python,timeout=90)
+            if args.runner=='bubblewrap' else
+            DockerRunner(args.image,docker=args.docker,host=args.docker_host,timeout=90,memory='2g'))
     repository=Path(__file__).resolve().parents[1]
     sources=[Path(__file__).resolve(),*(repository/'packages/python/src/weightless').glob('*.py')]
     write(args.output/f'driver-{time.time_ns()}.json',{'runner':runner.config,'python':sys.version,
@@ -217,10 +230,10 @@ try:
                                       for path in sorted(sources)}})
     isolation=json.loads((args.output/'isolation-proof.json').read_text()) if args.resume else isolation_acceptance(args.output,runner)
     binary=json.loads((args.output/'binary-proof.json').read_text()) if args.resume else binary_acceptance(args.output,runner)
-    model=smollm_acceptance(args.output,runner,args.model_source,args.teacher_config,args.resume)
-    result={'passed':True,'isolation':True,'binary64':binary['passed'],'smollm':model['passed'],
-            'fresh_agent':model['fresh_agent_report'] is not None,'resumed':args.resume,'driver_elapsed_seconds':time.monotonic()-started,
-            'limits':['Trusted host administrator and pinned numerical runtime','No provider execution/billing attestation',
+    model=None if args.binary64_only else smollm_acceptance(args.output,runner,args.model_source,args.teacher_config,args.resume)
+    result={'passed':True,'isolation':True,'binary64':binary['passed'],'smollm':None if model is None else model['passed'],
+            'fresh_agent':model is not None and model['fresh_agent_report'] is not None,'resumed':args.resume,'driver_elapsed_seconds':time.monotonic()-started,
+            'limits':['Trusted host administrator and configured numerical runtime','No provider execution/billing attestation',
                       'Finite-case conclusions only','One fresh-agent run is not comparative usability validation']}
     write(args.output/'summary.json',result)
     print(json.dumps(result))
