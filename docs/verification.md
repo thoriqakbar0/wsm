@@ -2,6 +2,34 @@
 
 The migration checks passed locally on 2026-11-09. Core checks used Python 3.12.3. Integration checks used Python 3.13.11 with Harbor 0.25.0, Verifiers 0.4.1, and JSON Schema 4.26.0. These are synthetic signed-addition results, not research or model-discovery results.
 
+## Direct-editing checkpoint round trip
+
+On 2026-11-09, `scripts/harness_native.py` completed a real CPU SmolLM2-135M experiment with a scripted scalar edit and an unchanged control. The model revision was `12fd25f77366fa6b3b4b768ec3050bf629380bac`. The numerical image used Python 3.12.16, Torch 2.15.0+cpu, Transformers 5.22.2, and Safetensors 0.8.0. Host orchestration used Python 3.12.3.
+
+```sh
+docker build -f examples/client-sandbox/Dockerfile -t wsm-direct-harness:local .
+PYTHONPATH=packages/python/src python3 scripts/harness_native.py \
+  --image wsm-direct-harness:local \
+  --model-source /path/to/cached/models--HuggingFaceTB--SmolLM2-135M-Instruct \
+  --output /tmp/wsm-harness-complete
+```
+
+The source must contain the pinned snapshot. The output directory must not exist. This command stages a separate read-only model, runs declared public and private cases, and writes evidence and proof files. It requires Docker and enough memory and disk for the staged and exported model.
+
+The run selected a nontrivial final-norm edit using actual measured public loss. It reserved 300 forward calls across the baseline, candidate, public retention, diagnostics, control, and private grading. A separate one-token probe measured two target invocations. Reducing its assigned allowance to one returned `forward_limit_exceeded`. These are invocation counts, not the research's batched-pass units.
+
+The exported model files occupied 541,526,255 bytes before the receipt. A fresh container mounted only the exported artifact and package code, with neither the original source nor its cache available. It loaded the same full numerical checkpoint identity, retained tied embeddings, and reproduced the development metrics and literal generations. The source identity remained unchanged. Separate export checks passed with a relative destination and an invalid caller `PYTHONPATH`; child imports and paths no longer depend on the caller's working directory.
+
+Independent final task and retention grading completed for both arms. Its efficacy conclusion was `inconclusive`; neither arm generated the requested unusual output exactly on the finite heldout task. No acceptable retention threshold was declared. Lower target-conditioned loss is not a behavioral success or a capability-improvement claim. The final-norm edit is an engineering check and differs from the original paper's allowed editing scope.
+
+Post-freeze verification has separate execution costs. The source check, forward-limit probes, serialization checks, and independent reload do not reopen the development budget. CPU, memory, file-size, and wall-time limits apply to the operator container; the exporter itself does not impose a global temporary-disk quota or wall-time deadline.
+
+The configuration-driven CLI also completed a real SmolLM run with the same pinned target, actual scalar selection, and separate private grading. Driver transport tests use a local scripted HTTP responder to check inspection and diagnostic feedback, malformed-response recovery, reserved keys, and private-data exclusion. They do not constitute a live editing-AI discovery run. No live Tinker service round trip was performed; its [capability record](tinker.md) distinguishes SDK evidence from integration proof.
+
+Current local proof files are under `/tmp/wsm-harness-complete-20261109`, including `summary.json`, `evidence.json`, `export-receipt.json`, `reload-proof.json`, `relative-path-proof.json`, and `configured-driver/driver.json`. The rerunnable script is the durable verification artifact; these local output paths are working evidence.
+
+The full suite ran 102 tests with `WEIGHTLESS_LOCAL_SANDBOX=1` and passed with one skipped optional host-model test. All eight exporter tests then passed inside the model-runtime container, including the optional real-model test with genuine evaluation scores. That test checks metadata and reload identity; the separate source-free container check establishes absence of the original source. The installed-wheel smoke and independent golden-identity check passed. Regression coverage includes literal teacher feedback, malformed command recovery, private path separation, reserved keys, failed CLI completion, replayed budget/completeness tampering, relative paths, and concurrent destination preservation.
+
 ## Docker-free Linux execution
 
 On 2026-11-09, all 75 tests passed with `WEIGHTLESS_LOCAL_SANDBOX=1`, including 14 real bubblewrap and systemd tests. The host used Python 3.12.3, bubblewrap 0.9.0 from Ubuntu package `0.9.0-1ubuntu0.3`, and systemd 255. No Docker daemon or KVM device was used.

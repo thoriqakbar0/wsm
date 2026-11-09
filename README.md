@@ -64,6 +64,18 @@ Selection compares the configured metric paths in order. This example minimizes 
 
 ## Choose optional execution and grading
 
+For a configuration-driven experiment, run the supplied binary64 example and export its selected checkpoint:
+
+```sh
+.venv/bin/python scripts/drive_session.py examples/drive-session.json
+.venv/bin/python scripts/export_checkpoint.py \
+  --bundle runs/drive-session-example/evidence.json \
+  --target runs/drive-session-example/target.json \
+  --arm solver --destination runs/drive-session-example/checkpoint --max-bytes 1000000
+```
+
+This example uses scripted proposals and an explicitly unisolated binary64 runner. The driver also accepts an explicit editing-AI endpoint and model with a Docker or bubblewrap target runner. It supplies the JSON command protocol and returns permitted inspection, diagnostic, and evaluation results to the editing AI. New configurations require forward-call budgets. Incomplete freezing or failed required final grading produces a nonzero exit while retaining evidence. See the [configured experiment guide](docs/client.md#run-a-configured-experiment).
+
 The [durable local client](docs/client.md) adds resumable `Session` experiments, a separate private `Verifier`, and explicit teacher transport through `ResponsesTeacher`. Its execution targets are binary64 checkpoints and a pinned SmolLM2 checkpoint. The [local sandbox guide](docs/sandbox.md) covers Docker-free Linux execution through `BubblewrapRunner`, bubblewrap, and systemd. `DockerRunner` is also available. These paths require host setup beyond the offline example.
 
 For native Harbor development feedback, use the optional Verifiers adapter on a Docker host.
@@ -116,6 +128,8 @@ The [JSON Schema](schemas/v1.json) validates structural wire records. The SDK ad
 
 ## Scope and further reading
 
-The offline example demonstrates explicit weight edits, strict selection, and replay on a synthetic addition task. It does not reproduce a paper result or establish optimizer superiority, general extrapolation, or useful language-model weight discovery. The binary64 backend uses scalar arithmetic, which need not match every accelerated numerical runtime. The [research scope](docs/research.md) records the source inspiration and untested claims.
+The target workflow follows [Sparks of Weight-Space Programming](https://rikiyat.github.io/blog/weight-space-programming/). An editing AI inspects permitted target weights, proposes explicit replacements without optimizer-driven training, and receives bounded evaluation feedback. The operator chooses the target, editing-AI provider, resource budget, and acceptable regressions. The [Tinker capability boundary](docs/tinker.md) distinguishes hosted Tinker integration from a compatible service interface; neither is established by the local backend.
+
+The offline example demonstrates explicit weight edits, strict selection, and replay on a synthetic addition task. It does not reproduce a paper result or establish optimizer superiority, general extrapolation, or useful language-model weight discovery. The binary64 backend uses scalar arithmetic, which need not match every accelerated numerical runtime. The [research scope](docs/research.md) records the current research direction, historical example provenance, and untested claims.
 
 Use the [offline interactive tutorial](docs/tutorial.html) for a walkthrough, the [architecture](docs/architecture.md) for ownership boundaries, and the [shared contract](docs/contract.md) for wire records and validation. The [client design and validation specification](docs/design/agent-client.md) describes the broader acceptance program. Its requirements are separate from demonstrated results in the verification guide.

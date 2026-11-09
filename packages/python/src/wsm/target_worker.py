@@ -1,4 +1,4 @@
-"""One-request numerical worker. It runs only inside the sandbox."""
+"""Numerical targets and the one-request sandbox worker entry point."""
 import copy
 import hashlib
 import json
@@ -65,7 +65,7 @@ class BinaryTarget:
     def identity(self):
         return binary.create_checkpoint(self.checkpoint["graph"], self.checkpoint["tensors"])["id"]
 
-    def evaluate(self, cases, generate, query):
+    def evaluate(self, cases, generate, query, forward_limit=None):
         if type(cases) is not list or not 1 <= len(cases) <= 10000:
             fail("invalid_task", "Invalid cases")
         checkpoint = binary.create_checkpoint(self.checkpoint["graph"], self.checkpoint["tensors"])
@@ -74,11 +74,28 @@ class BinaryTarget:
             if type(case) is not dict or set(case) != {"id", "input", "target"} or type(case["id"]) is not str or len(case["id"]) > 128:
                 fail("invalid_task", "Invalid case")
             example = {"input": case["input"], "target": case["target"]}
-            prediction = binary.predict(checkpoint, case["input"])
             examples.append(example)
+        examples = binary._examples(examples, self.checkpoint)
+        squared_scaled = squared_raw = 0.0
+        scalars = 0
+        self.forward_calls = 0
+        for case, example in zip(cases, examples):
+            if forward_limit is not None and self.forward_calls >= forward_limit:
+                fail("forward_limit_exceeded", "Target forward limit exhausted")
+            self.forward_calls += 1
+            prediction = binary.predict(checkpoint, example["input"])
+            for actual, target in zip(prediction, example["target"]):
+                residual = actual - target
+                scaled = residual / max(1.0, abs(target))
+                squared_scaled += scaled * scaled
+                squared_raw += residual * residual
+                scalars += 1
             rows.append({"id": case["id"], "prediction": prediction, "target_nll": None,
-                         "exact": prediction == case["target"], "stopped_on_eos": False})
-        return binary.evaluate(checkpoint, examples), rows
+                         "exact": prediction == example["target"], "stopped_on_eos": False})
+        loss, rmse = 0.5 * (squared_scaled / scalars), math.sqrt(squared_raw / scalars)
+        if not math.isfinite(loss) or not math.isfinite(rmse):
+            fail("numerical_failure", "Nonfinite metrics")
+        return {"loss": loss, "rmse": rmse, "exact": sum(row["exact"] for row in rows), "count": len(rows)}, rows
 
 
 class ModelTarget:
@@ -163,7 +180,7 @@ class ModelTarget:
             h.update(tensor.detach().contiguous().numpy().tobytes(order="C"))
         return "sha256:" + h.hexdigest()
 
-    def evaluate(self, cases, generate, query):
+    def evaluate(self, cases, generate, query, forward_limit=None):
         torch = self.torch
         if type(cases) is not list or not 1 <= len(cases) <= 1000:
             fail("invalid_task", "Invalid cases")
@@ -174,32 +191,45 @@ class ModelTarget:
         cap = query.get("max_new_tokens", 16)
         if type(cap) is not int or not 1 <= cap <= 128:
             fail("invalid_task", "Invalid generation limit")
+        self.forward_calls = 0
+        def count_forward(module, args):
+            if forward_limit is not None and self.forward_calls >= forward_limit:
+                fail("forward_limit_exceeded", "Target forward limit exhausted")
+            self.forward_calls += 1
+        hook = self.model.register_forward_pre_hook(count_forward)
+        try:
+            with torch.inference_mode():
+                return self._evaluate_cases(cases, generate, cap)
+        finally:
+            hook.remove()
+
+    def _evaluate_cases(self, cases, generate, cap):
+        torch = self.torch
         rows = []
-        with torch.inference_mode():
-            for case in cases:
-                if (type(case) is not dict or set(case) != {"id", "prompt", "target"}
-                        or any(type(case[k]) is not str for k in case)
-                        or len(case["id"]) > 128 or len(case["prompt"]) > 16384 or len(case["target"]) > 4096):
-                    fail("invalid_task", "Invalid case")
-                prompt = self.tokenizer.apply_chat_template([{"role": "user", "content": case["prompt"]}],
-                                                             tokenize=True, add_generation_prompt=True, return_dict=False)
-                target_ids = self.tokenizer.encode(case["target"], add_special_tokens=False) + [self.tokenizer.eos_token_id]
-                if len(prompt) + len(target_ids) > 2048 or not prompt:
-                    fail("invalid_task", "Case exceeds token limit")
-                ids = torch.tensor([prompt + target_ids], dtype=torch.long)
-                logits = self.model(input_ids=ids).logits[0, len(prompt)-1:-1, :]
-                loss = float(torch.nn.functional.cross_entropy(logits, torch.tensor(target_ids)).item())
-                if not math.isfinite(loss):
-                    fail("numerical_failure", "Nonfinite target loss")
-                prediction, stopped = None, False
-                if generate:
-                    generated = self.model.generate(torch.tensor([prompt]), max_new_tokens=cap, do_sample=False,
-                                                    pad_token_id=self.tokenizer.eos_token_id)[0, len(prompt):].tolist()
-                    stopped = bool(generated and generated[-1] == self.tokenizer.eos_token_id)
-                    prediction = self.tokenizer.decode(generated, skip_special_tokens=True)
-                rows.append({"id": case["id"], "prediction": prediction, "target_nll": loss,
-                             "exact": prediction == case["target"] if generate else False,
-                             "stopped_on_eos": stopped})
+        for case in cases:
+            if (type(case) is not dict or set(case) != {"id", "prompt", "target"}
+                    or any(type(case[k]) is not str for k in case)
+                    or len(case["id"]) > 128 or len(case["prompt"]) > 16384 or len(case["target"]) > 4096):
+                fail("invalid_task", "Invalid case")
+            prompt = self.tokenizer.apply_chat_template([{"role": "user", "content": case["prompt"]}],
+                                                         tokenize=True, add_generation_prompt=True, return_dict=False)
+            target_ids = self.tokenizer.encode(case["target"], add_special_tokens=False) + [self.tokenizer.eos_token_id]
+            if len(prompt) + len(target_ids) > 2048 or not prompt:
+                fail("invalid_task", "Case exceeds token limit")
+            ids = torch.tensor([prompt + target_ids], dtype=torch.long)
+            logits = self.model(input_ids=ids).logits[0, len(prompt)-1:-1, :]
+            loss = float(torch.nn.functional.cross_entropy(logits, torch.tensor(target_ids)).item())
+            if not math.isfinite(loss):
+                fail("numerical_failure", "Nonfinite target loss")
+            prediction, stopped = None, False
+            if generate:
+                generated = self.model.generate(torch.tensor([prompt]), max_new_tokens=cap, do_sample=False,
+                                                pad_token_id=self.tokenizer.eos_token_id)[0, len(prompt):].tolist()
+                stopped = bool(generated and generated[-1] == self.tokenizer.eos_token_id)
+                prediction = self.tokenizer.decode(generated, skip_special_tokens=True)
+            rows.append({"id": case["id"], "prediction": prediction, "target_nll": loss,
+                         "exact": prediction == case["target"] if generate else False,
+                         "stopped_on_eos": stopped})
         return {"loss": sum(row["target_nll"] for row in rows) / len(rows),
                 "exact": sum(row["exact"] for row in rows), "count": len(rows)}, rows
 
@@ -221,6 +251,9 @@ def isolation_receipt():
 
 
 def run(request):
+    forward_limit = request.get("forward_limit")
+    if forward_limit is not None and (request.get("action") != "evaluate" or type(forward_limit) is not int or forward_limit < 0):
+        fail("invalid_request", "Invalid forward limit")
     target = request["target"]
     backend = BinaryTarget(target) if target["kind"] == "binary64" else ModelTarget(target)
     patches = edits_for(request["patches"], backend.parameters, backend.aliases)
@@ -254,8 +287,11 @@ def run(request):
         return {"target_id": backend.target_id, "base_checkpoint": base_checkpoint,
                 "checkpoint": checkpoint, "patches": effective, "changes": changes}
     if action == "evaluate":
-        metrics, rows = backend.evaluate(request["cases"], request["generate"], request["query"])
-        return {"checkpoint": checkpoint, "metrics": metrics, "cases": rows}
+        metrics, rows = backend.evaluate(request["cases"], request["generate"], request["query"], forward_limit)
+        usage = {"forward_calls": backend.forward_calls}
+        if forward_limit is not None:
+            usage["forward_limit"] = forward_limit
+        return {"checkpoint": checkpoint, "metrics": metrics, "cases": rows, "usage": usage}
     fail("invalid_request", "Unsupported operation")
 
 

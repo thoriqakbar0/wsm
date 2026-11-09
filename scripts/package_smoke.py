@@ -13,11 +13,12 @@ from pathlib import Path
 import sys
 from wsm import (MetricPolicy, NumericalEvaluation, SearchRun, replay, Session,
                         Verifier, DockerRunner, BubblewrapRunner, ResponsesTeacher, replay_session,
-                        verify_session, stage_smollm)
+                        verify_session, stage_smollm, export_checkpoint)
 from wsm.binary64 import create_checkpoint, predict
 metadata = importlib.metadata.metadata('wsm')
 assert metadata['Name'] == 'wsm'
 assert metadata['Summary'].startswith('WSM (Weight Space Mods):')
+assert callable(export_checkpoint)
 assert importlib.util.find_spec('weightless') is None
 assert all(name not in sys.modules for name in ('verifiers', 'harbor', 'torch', 'transformers'))
 fixture = json.loads(Path(sys.argv[1]).read_text())

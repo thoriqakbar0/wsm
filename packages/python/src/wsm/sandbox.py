@@ -20,6 +20,14 @@ def _error(code, message):
     raise WeightlessError(code, message)
 
 
+def forward_reservation(target, case_count, *, generate=False, max_new_tokens=16):
+    """Conservative top-level target invocations, independent of observed usage."""
+    if (type(case_count) is not int or case_count < 0 or type(generate) is not bool
+            or type(max_new_tokens) is not int or not 1 <= max_new_tokens <= 128):
+        _error("invalid_request", "Invalid forward reservation")
+    return case_count * (1 + max_new_tokens if generate and target.get("kind") == "smollm" else 1)
+
+
 def stage_smollm(source, destination):
     source, destination = Path(source), Path(destination)
     snapshot = source / "snapshots" / _REVISION
@@ -37,11 +45,13 @@ def stage_smollm(source, destination):
 
 class _WorkerRunner:
     def execute(self, action, target, *, patches=None, edits=None, cases=None, query=None,
-                generate=False, purpose="development", timeout=None, on_dispatch=None):
+                generate=False, purpose="development", timeout=None, on_dispatch=None, forward_limit=None):
         if action not in ("describe", "inspect", "materialize", "evaluate") or purpose not in ("development", "final") or type(generate) is not bool:
             _error("invalid_request", "Unsupported sandbox operation")
         if type(target) is not dict:
             _error("invalid_target", "Invalid target")
+        if forward_limit is not None and (action != "evaluate" or type(forward_limit) is not int or forward_limit < 0):
+            _error("invalid_request", "Invalid forward limit")
         target = copy.deepcopy(target)
         mount = None
         if target.get("kind") == "smollm":
@@ -60,6 +70,8 @@ class _WorkerRunner:
             _error("invalid_target", "Unsupported target")
         request = {"action": action, "target": target, "patches": [] if patches is None else patches, "edits": [] if edits is None else edits,
                    "cases": cases, "query": query, "generate": generate, "purpose": purpose}
+        if forward_limit is not None:
+            request["forward_limit"] = forward_limit
         try:
             payload = json.dumps(request, allow_nan=False, separators=(",", ":")).encode()
         except (ValueError, TypeError, RecursionError):

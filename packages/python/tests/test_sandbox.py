@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from wsm import binary64
-from wsm.sandbox import DockerRunner
+from wsm.sandbox import DockerRunner, forward_reservation
 from wsm.target_worker import edits_for, run
 
 
@@ -68,6 +68,29 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(result['metrics']['count'], 1)
         self.assertEqual(result['cases'][0]['id'], 'one')
 
+    def test_binary_measures_each_prediction_once_and_enforces_limit(self):
+        cases = [{'id': 'positive', 'input': [1, 2], 'target': [3]},
+                 {'id': 'negative', 'input': [-1, -2], 'target': [-3]}]
+        self.request.update(action='evaluate', cases=cases, forward_limit=2)
+        original = binary64.predict
+        with patch('wsm.target_worker.binary.predict', wraps=original) as predict:
+            result = run(self.request)
+            self.assertEqual(predict.call_count, 2)
+        self.assertEqual(result['metrics'], {'loss': .5, 'rmse': 3., 'exact': 0, 'count': 2})
+        self.assertEqual(result['usage'], {'forward_calls': 2, 'forward_limit': 2})
+        self.request['forward_limit'] = 1
+        with patch('wsm.target_worker.binary.predict', wraps=original) as predict:
+            with self.assertRaises(binary64.WeightlessError) as error:
+                run(self.request)
+            self.assertEqual(error.exception.code, 'forward_limit_exceeded')
+            self.assertEqual(predict.call_count, 1)
+
+    def test_forward_reservations_separate_generation_from_prediction(self):
+        self.assertEqual(forward_reservation({'kind': 'smollm'}, 2, generate=True), 34)
+        self.assertEqual(forward_reservation({'kind': 'smollm'}, 2, generate=True, max_new_tokens=3), 8)
+        self.assertEqual(forward_reservation({'kind': 'smollm'}, 2), 2)
+        self.assertEqual(forward_reservation({'kind': 'binary64'}, 2, generate=True), 2)
+
 
 class RunnerTests(unittest.TestCase):
     def runner(self):
@@ -101,6 +124,18 @@ class RunnerTests(unittest.TestCase):
             with self.assertRaises(binary64.WeightlessError) as error:
                 runner.execute('describe', {'kind': 'binary64', 'checkpoint': {}})
         self.assertEqual(error.exception.code, 'invalid_edit')
+
+    def test_forward_limit_is_validated_and_transported(self):
+        runner = self.runner()
+        target = {'kind': 'binary64', 'checkpoint': {}}
+        with patch.object(runner, '_run', return_value=b'{"result":{}}') as execute:
+            for limit in (True, -1, 1.5):
+                with self.assertRaises(binary64.WeightlessError):
+                    runner.execute('evaluate', target, forward_limit=limit)
+            self.assertFalse(execute.called)
+            runner.execute('evaluate', target, forward_limit=3)
+            request = json.loads(execute.call_args.args[1])
+            self.assertEqual(request['forward_limit'], 3)
 
     def test_failed_container_cleanup_is_not_reported_as_success(self):
         runner = self.runner()

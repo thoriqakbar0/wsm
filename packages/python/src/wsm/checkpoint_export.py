@@ -17,8 +17,10 @@ A failed export removes only its temporary sibling. An existing destination is
 left untouched. Retry after a failure reuses the same destination. Retry after
 success needs a new destination.
 """
+import ctypes
 import errno
 import hashlib
+from importlib.metadata import version
 import json
 import os
 from pathlib import Path
@@ -189,7 +191,7 @@ def _child_environment(temp):
             env.pop(name)
     env.update(PYTHONDONTWRITEBYTECODE="1", HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1",
                HF_HUB_DISABLE_TELEMETRY="1", HF_HOME=str(home), HUGGINGFACE_HUB_CACHE=str(home),
-               TRANSFORMERS_CACHE=str(home))
+               TRANSFORMERS_CACHE=str(home), PYTHONPATH=str(Path(__file__).resolve().parents[1]))
     return env
 
 
@@ -234,7 +236,7 @@ def _stored_bytes(path):
             _fail("invalid_target", "Weight file header is invalid")
         try:
             header = json.loads(stream.read(header_len))
-        except ValueError:
+        except (ValueError, RecursionError):
             _fail("invalid_target", "Weight file header is invalid")
     if type(header) is not dict:
         _fail("invalid_target", "Weight file header is invalid")
@@ -309,10 +311,12 @@ def _artifacts(root):
             path = Path(directory, name)
             if path.is_symlink() or not path.is_file():
                 _fail("export_failed", "Export produced a symlink")
-            data = path.read_bytes()
-            records.append({"path": path.relative_to(root).as_posix(), "bytes": len(data),
-                            "sha256": "sha256:" + hashlib.sha256(data).hexdigest()})
-            total += len(data)
+            size = path.stat().st_size
+            with path.open("rb") as stream:
+                digest = hashlib.file_digest(stream, "sha256").hexdigest()
+            records.append({"path": path.relative_to(root).as_posix(), "bytes": size,
+                            "sha256": "sha256:" + digest})
+            total += size
     if not records:
         _fail("export_failed", "Export produced no files")
     records.sort(key=lambda item: item["path"])
@@ -330,12 +334,31 @@ def _fsync_tree(root):
         _fsync_directory(directory)
 
 
+def _publish(source, destination):
+    library = ctypes.CDLL(None, use_errno=True)
+    rename = getattr(library, "renameat2", None)
+    if rename is None:
+        _fail("unsupported_platform", "Atomic exclusive export requires renameat2")
+    rename.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+    rename.restype = ctypes.c_int
+    if rename(-100, os.fsencode(source), -100, os.fsencode(destination), 1) != 0:
+        code = ctypes.get_errno()
+        if code in (errno.EEXIST, errno.ENOTEMPTY):
+            _fail("export_exists", "Destination already exists")
+        raise OSError(code, os.strerror(code), str(destination))
+
+
 def export_checkpoint(bundle, *, target, arm, destination, max_bytes):
     if type(max_bytes) is not int or isinstance(max_bytes, bool) or max_bytes < 1:
         _fail("invalid_request", "max_bytes must be a positive integer")
     if type(bundle) is not dict or type(target) is not dict or type(arm) is not str:
         _fail("invalid_request", "Export inputs are invalid")
-    frozen = replay_session(bundle)
+    try:
+        frozen = replay_session(bundle)
+    except WeightlessError:
+        raise
+    except (KeyError, IndexError, TypeError, ValueError, RecursionError):
+        _fail("invalid_artifact", "Malformed session evidence")
     if frozen.get("complete") is not True:
         _fail("incomplete_freeze", "Complete freeze required")
     if arm not in frozen["arms"]:
@@ -344,13 +367,14 @@ def export_checkpoint(bundle, *, target, arm, destination, max_bytes):
         _fail("identity_mismatch", "Trusted target does not match the frozen descriptor")
     selected = frozen["arms"][arm]["checkpoint"]
     patches = frozen["arms"][arm]["patches"]
-    destination = Path(destination)
+    destination = Path(destination).absolute()
     if destination.exists() or destination.is_symlink():
         _fail("export_exists", "Destination already exists")
     parent = destination.parent
     if parent.is_symlink() or not parent.is_dir():
         _fail("invalid_request", "Destination parent must be an existing directory")
     if target.get("kind") == "smollm":
+        _check_smollm_target(target)
         source = Path(target["source"]).resolve()
         resolved_parent = parent.resolve()
         if resolved_parent == source or source in resolved_parent.parents:
@@ -366,15 +390,20 @@ def export_checkpoint(bundle, *, target, arm, destination, max_bytes):
         else:
             _fail("unsupported_target", "Export supports binary64 and the pinned SmolLM2 checkpoint only")
         records, total = _artifacts(temp)
+        runtime = {"python": sys.version.split()[0]}
+        if target["kind"] == "smollm":
+            runtime.update({name: version(name) for name in ("torch", "transformers", "safetensors")})
         receipt = {"format": "weightless.checkpoint-export.v1", "evidence": bundle["id"], "frozen": frozen["id"],
                    "arm": arm, "initial": bundle["initial"], "selected": selected, "serialization": serialization,
+                   "runner": bundle["runner"], "runtime": runtime,
+                   "target": {key: target[key] for key in ("kind", "model", "revision", "dtype") if key in target},
                    "total_bytes": total, "files": records}
         payload = (json.dumps(receipt, indent=2, sort_keys=True, allow_nan=False) + "\n").encode()
         if total + len(payload) > max_bytes:
             _fail("export_too_large", "Published checkpoint exceeds max_bytes")
         _write_bytes(temp / "receipt.json", payload, exclusive=True)
         _fsync_tree(temp)
-        os.rename(temp, destination)
+        _publish(temp, destination)
         _fsync_directory(parent)
         published = True
         return receipt

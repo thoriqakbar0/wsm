@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from wsm.binary64 import WeightlessError, create_checkpoint, parse_checkpoint
 from wsm.checkpoint_export import export_checkpoint
@@ -91,6 +92,9 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(receipt["initial"], bundle["initial"])
         self.assertEqual(receipt["evidence"], bundle["id"])
         self.assertEqual(receipt["frozen"], bundle["frozen"]["id"])
+        self.assertEqual(receipt["runner"], bundle["runner"])
+        self.assertEqual(receipt["runtime"]["python"], sys.version.split()[0])
+        self.assertEqual(receipt["target"], {"kind": "binary64"})
         self.assertNotIn(str(self.root), json.dumps(receipt))
         for record in receipt["files"]:
             self.assertFalse(record["path"].startswith("/"))
@@ -178,6 +182,50 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(frozen.exception.code, "incomplete_freeze")
         self.assertFalse((self.root / "incomplete").exists())
 
+    def test_publication_preserves_a_concurrently_created_empty_directory(self):
+        import wsm.checkpoint_export as exporter
+        model = target()
+        bundle = self.session_with(model, [{"tensor": "w", "index": 0, "value": 2}],
+                                   [{"id": "row", "input": [2], "target": [4]}])
+        destination = self.root / "concurrent"
+        inode = []
+        synchronize = exporter._fsync_tree
+        def create_destination(staged):
+            synchronize(staged)
+            destination.mkdir()
+            inode.append(destination.stat().st_ino)
+        with patch.object(exporter, "_fsync_tree", side_effect=create_destination):
+            with self.assertRaises(WeightlessError) as error:
+                export_checkpoint(bundle, target=model, arm="solver", destination=destination, max_bytes=100000)
+        self.assertEqual(error.exception.code, "export_exists")
+        self.assertEqual(destination.stat().st_ino, inode[0])
+        self.assertEqual(list(destination.iterdir()), [])
+        self.assertFalse(any(path.name.startswith(".wsm-export-") for path in self.root.iterdir()))
+
+    def test_rejects_falsely_complete_and_malformed_evidence(self):
+        model = target()
+        self.session = Session.create(self.root / "session.db", runner=self.runner, target=model,
+                                      declaration=declaration(), development=[{"id": "row", "input": [1], "target": [1]}])
+        self.session.freeze(key="freeze")
+        bundle = self.session.export()
+        bundle["frozen"] = reseal({**bundle["frozen"], "complete": True})
+        bundle = reseal(bundle)
+        for evidence in (bundle, reseal({})):
+            with self.subTest(evidence=evidence):
+                with self.assertRaises(WeightlessError) as error:
+                    export_checkpoint(evidence, target=model, arm="solver", destination=self.root / "invalid", max_bytes=100000)
+                self.assertEqual(error.exception.code, "invalid_artifact")
+                self.assertFalse((self.root / "invalid").exists())
+
+    def test_deep_weight_header_has_a_structured_error(self):
+        from wsm.checkpoint_export import _stored_bytes
+        header = b'[' * 10000 + b'0' + b']' * 10000
+        path = self.root / "model.safetensors"
+        path.write_bytes(len(header).to_bytes(8, "little") + header)
+        with self.assertRaises(WeightlessError) as error:
+            _stored_bytes(path)
+        self.assertEqual(error.exception.code, "invalid_target")
+
 
 def _smollm_ready():
     source = os.environ.get("WSM_SMOLLM_SOURCE")
@@ -194,7 +242,7 @@ def _smollm_ready():
 
 @unittest.skipUnless(_smollm_ready(), "set WSM_SMOLLM_SOURCE to a staged SmolLM snapshot and install torch")
 class SmolLMExportTests(unittest.TestCase):
-    def test_edited_snapshot_reloads_offline_without_the_source_cache(self):
+    def test_edited_snapshot_preserves_metadata_and_identity_on_reload(self):
         import gc
         from wsm.target_worker import ModelTarget, run
         source = str(Path(os.environ["WSM_SMOLLM_SOURCE"]).resolve())
@@ -202,13 +250,13 @@ class SmolLMExportTests(unittest.TestCase):
                  "model": "HuggingFaceTB/SmolLM2-135M-Instruct", "dtype": "float32"}
         loaded = ModelTarget(model)
         original = loaded.value("model.norm.weight", 0)
-        edited = original + 0.25
+        edited = original - 0.125
         del loaded
         gc.collect()
         before = _fingerprint(Path(source))
 
-        class ForceEditedSelection:
-            """The real worker runs. Nonempty patches then record a lower loss so the frozen arm keeps the edit."""
+        class RealModelRunner:
+            """Trusted in-process numerical execution for the optional model check."""
 
             config = {"mode": "inprocess-smollm-test", "isolation": "none"}
 
@@ -221,18 +269,18 @@ class SmolLMExportTests(unittest.TestCase):
                     request["forward_limit"] = forward_limit
                 if on_dispatch is not None:
                     on_dispatch()
-                result = run(request)
-                if action == "evaluate":
-                    result["metrics"]["loss"] = 0.05 if patches else 1.0
-                return result
+                return run(request)
 
-        root = Path(tempfile.mkdtemp())
-        session = Session.create(root / "session.db", runner=ForceEditedSelection(), target=model, declaration={
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name)
+        session = Session.create(root / "session.db", runner=RealModelRunner(), target=model, declaration={
             "hypothesis": "A norm edit is a finite candidate", "arms": ["solver"], "editable": ["model.norm.weight"],
             "budgets": {"attempts": 1, "evaluations": 4, "inspections": 0, "teacher_requests": 0,
-                        "final_evaluations": 0, "forward_calls": 64},
+                        "final_evaluations": 0, "forward_calls": 128},
             "max_edits": 1, "max_inspect": 1, "wall_seconds": 600, "claim": "exploratory", "selection": "loss"},
-            development=[{"id": "hi", "prompt": "Say hi", "target": "hello"}])
+            development=[{"id": "duck", "prompt": "What sound does a duck make?", "target": "quack quack turnip"},
+                         {"id": "cow", "prompt": "What sound does a cow make?", "target": "moo moo comet"}])
         try:
             view = session.observe("solver")
             proposal = {key: view[key] for key in ("session", "arm", "declaration", "observation", "base")}
