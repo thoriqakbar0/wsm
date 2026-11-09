@@ -3,9 +3,9 @@ import os
 from pathlib import Path
 import sys
 
-from weightless import WeightlessError, replay
-from weightless.binary64 import create_checkpoint, evaluate, parse_checkpoint
-from weightless.core import _config, _digest, _object, _read, _request, _same
+from wsm import WeightlessError, replay
+from wsm.binary64 import create_checkpoint, evaluate, parse_checkpoint
+from wsm.core import _config, _digest, _object, _read, _request, _same
 
 
 def grade(submission, expected, manifest, tests, config=None, request=None):

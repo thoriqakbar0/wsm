@@ -8,8 +8,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from weightless import BubblewrapRunner, Session, Verifier, WeightlessError, replay_session, verify_session
-from weightless.binary64 import create_checkpoint
+from wsm import BubblewrapRunner, Session, Verifier, WeightlessError, replay_session, verify_session
+from wsm.binary64 import create_checkpoint
 
 
 class LocalConfigurationTests(unittest.TestCase):
@@ -32,7 +32,7 @@ class LocalConfigurationTests(unittest.TestCase):
                                  (0, 'LoadState=loaded\nActiveState=active\n')]:
             replies = [subprocess.CompletedProcess([], stop_code, b'', b''),
                        subprocess.CompletedProcess([], 0, state, '')]
-            with self.subTest(state=state), patch('weightless.local_sandbox.subprocess.run', side_effect=replies):
+            with self.subTest(state=state), patch('wsm.local_sandbox.subprocess.run', side_effect=replies):
                 with self.assertRaises(WeightlessError) as raised:
                     runner._cleanup('unacknowledged.service', settled=False)
             self.assertEqual(raised.exception.code, 'sandbox_cleanup_unknown')
@@ -50,7 +50,7 @@ class NativeLocalSandboxTests(unittest.TestCase):
             self.units.extend(arg.split('=', 1)[1] for arg in command if arg.startswith('--unit='))
             return popen(command, *args, **kwargs)
 
-        observer = patch('weightless.local_sandbox.subprocess.Popen', side_effect=observe)
+        observer = patch('wsm.local_sandbox.subprocess.Popen', side_effect=observe)
         observer.start()
         self.addCleanup(observer.stop)
 

@@ -4,8 +4,8 @@ set -euo pipefail
 import json
 import os
 from pathlib import Path
-from weightless import MetricPolicy, NumericalEvaluation, SearchRun
-from weightless.binary64 import create_checkpoint
+from wsm import MetricPolicy, NumericalEvaluation, SearchRun
+from wsm.binary64 import create_checkpoint
 
 app = Path(os.environ.get("WEIGHTLESS_APP", "/app"))
 public = json.loads((app / "public.json").read_text())

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Rename the Python distribution and import package to `wsm`, including CLI resources and sandbox workers, while preserving checkpoint identities and evidence formats; no compatibility shim is provided.
+
+- Add the Weight Space Modifiers prompt-first CLI and reusable teacher harness with scalar inspection and edits, durable recovery, bounded evaluation, checkpoint export, and optional private final grading.
+
 - Add Docker-free Linux execution with bubblewrap namespaces, systemd resource limits, bounded output, verified workload teardown, and native adversarial checks while preserving numerical and private-verifier contracts.
 
 - Add durable local sessions, private final-verifier registries, explicit no-tools teacher transport, and enforced Docker workers for binary64 and pinned SmolLM2 scalar edits.

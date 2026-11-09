@@ -8,10 +8,10 @@ import secrets
 import sys
 import time
 
-from weightless import (BubblewrapRunner, DockerRunner, MetricPolicy, ResponsesTeacher, SearchRun, Session,
+from wsm import (BubblewrapRunner, DockerRunner, MetricPolicy, ResponsesTeacher, SearchRun, Session,
                         Verifier, WeightlessError, evaluation_result, evaluator_config,
                         replay, replay_session, stage_smollm, verify_session)
-from weightless.binary64 import create_checkpoint
+from wsm.binary64 import create_checkpoint
 
 
 def write(path, value):
@@ -224,7 +224,7 @@ try:
             if args.runner=='bubblewrap' else
             DockerRunner(args.image,docker=args.docker,host=args.docker_host,timeout=90,memory='2g'))
     repository=Path(__file__).resolve().parents[1]
-    sources=[Path(__file__).resolve(),*(repository/'packages/python/src/weightless').glob('*.py')]
+    sources=[Path(__file__).resolve(),*(repository/'packages/python/src/wsm').glob('*.py')]
     write(args.output/f'driver-{time.time_ns()}.json',{'runner':runner.config,'python':sys.version,
         'resumed':args.resume,'sources':{str(path.relative_to(repository)):hashlib.sha256(path.read_bytes()).hexdigest()
                                       for path in sorted(sources)}})

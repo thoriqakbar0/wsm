@@ -1,13 +1,13 @@
 # Weightless experiment contract
 
-The data model is an owned run with a copied baseline, at most one pending candidate, bound evaluation evidence, and an ordered metric policy. The core never interprets numerical example arrays. Numerical access belongs to `weightless.binary64`. Optional Docker execution belongs to `weightless.harbor`.
+The data model is an owned run with a copied baseline, at most one pending candidate, bound evaluation evidence, and an ordered metric policy. The core never interprets numerical example arrays. Numerical access belongs to `wsm.binary64`. Optional Docker execution belongs to `wsm.harbor`.
 
 ## Intended caller
 
 ```python
 import json
-from weightless import MetricPolicy, NumericalEvaluation, SearchRun, replay
-from weightless.binary64 import create_checkpoint, predict
+from wsm import MetricPolicy, NumericalEvaluation, SearchRun, replay
+from wsm.binary64 import create_checkpoint, predict
 
 fixture = json.load(open("fixtures/addition.json"))
 initial = create_checkpoint(fixture["graph"], fixture["tensors"])
@@ -44,7 +44,7 @@ Use these stages on an open run. They are an alternative to submitting that prop
 Only evaluator configuration changes for native development feedback:
 
 ```python
-from weightless.harbor import HarborEvaluation, resolve_image
+from wsm.harbor import HarborEvaluation, resolve_image
 
 image = resolve_image("weightless-signed-addition:local")
 evaluator = HarborEvaluation(task_dir="/tmp/weightless-development",
@@ -61,7 +61,7 @@ Prepare the development task with `scripts/prepare_harbor.py --development /tmp/
 
 ## Checkpoint v1 and numerical backend
 
-`create_checkpoint(graph, tensors)`, `parse_checkpoint(value)`, `predict(checkpoint, inputs)`, `evaluate(checkpoint, examples)`, `validate_proposal(proposal, checkpoint)`, and `apply_patch(checkpoint, proposal)` live in `weightless.binary64`. The top-level package does not re-export numerical parameter access.
+`create_checkpoint(graph, tensors)`, `parse_checkpoint(value)`, `predict(checkpoint, inputs)`, `evaluate(checkpoint, examples)`, `validate_proposal(proposal, checkpoint)`, and `apply_patch(checkpoint, proposal)` live in `wsm.binary64`. The top-level package does not re-export numerical parameter access.
 
 A checkpoint has exactly `format`, `graph`, `tensors`, and `id`. Its format remains `weightless.checkpoint.v1`. A tensor has `shape` and row-major `values`. A graph has `inputSize`, ordered `nodes`, and `output`. Affine nodes have `id`, `op`, `input`, `weight`, and `bias`. ReLU nodes have only `id`, `op`, and `input`. Nodes refer to the reserved `input` or an earlier node. Every declared tensor is used. Shared tensors require compatible shapes.
 

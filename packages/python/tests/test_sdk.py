@@ -6,10 +6,10 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from weightless import (MetricPolicy, NumericalEvaluation, SearchRun, WeightlessError,
+from wsm import (MetricPolicy, NumericalEvaluation, SearchRun, WeightlessError,
                         evaluation_result, evaluator_config, replay)
-from weightless.binary64 import create_checkpoint, evaluate, parse_checkpoint, predict
-from weightless.core import _sealed
+from wsm.binary64 import create_checkpoint, evaluate, parse_checkpoint, predict
+from wsm.core import _sealed
 
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURE = json.loads((ROOT / "fixtures/addition.json").read_text())
@@ -333,7 +333,7 @@ class ContractTests(unittest.TestCase):
             {"id": "o", "op": "affine", "input": "input", "weight": "w", "bias": "b"}], "output": "o"},
             {"w": {"shape": [1, 1000], "values": [0] * 1000}, "b": {"shape": [1], "values": [0]}})
         evaluator = RecordingEvaluation()
-        with patch("weightless.core.MAX_BYTES", 550000):
+        with patch("wsm.core.MAX_BYTES", 550000):
             run = new_run(evaluator, checkpoint=checkpoint, policy=MetricPolicy(("quality", "minimize")))
             edits = [edit(1, "w", index) for index in range(1000)]
             self.assert_code("invalid_proposal", run.propose, proposal(run, edits))

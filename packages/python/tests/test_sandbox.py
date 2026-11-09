@@ -7,9 +7,9 @@ import sys
 import unittest
 from unittest.mock import Mock, patch
 
-from weightless import binary64
-from weightless.sandbox import DockerRunner
-from weightless.target_worker import edits_for, run
+from wsm import binary64
+from wsm.sandbox import DockerRunner
+from wsm.target_worker import edits_for, run
 
 
 class WorkerTests(unittest.TestCase):
@@ -51,7 +51,7 @@ class WorkerTests(unittest.TestCase):
             edits_for([{'tensor':'w','index':0,'value':1e100}], parameters, {})
 
     def test_worker_process_returns_observed_receipt(self):
-        result = subprocess.run([sys.executable, '-m', 'weightless.target_worker'],
+        result = subprocess.run([sys.executable, '-m', 'wsm.target_worker'],
                                 input=json.dumps(self.request), text=True, capture_output=True, check=True)
         response = json.loads(result.stdout)['result']
         self.assertIn('Uid', response['sandbox']['status'])
@@ -71,7 +71,7 @@ class WorkerTests(unittest.TestCase):
 
 class RunnerTests(unittest.TestCase):
     def runner(self):
-        with patch('weightless.sandbox.subprocess.run') as inspect:
+        with patch('wsm.sandbox.subprocess.run') as inspect:
             inspect.return_value.stdout = 'sha256:' + 'a' * 64
             return DockerRunner('trusted')
 
@@ -90,7 +90,7 @@ class RunnerTests(unittest.TestCase):
         self.assertIn('sha256:' + 'a' * 64, command)
 
     def test_unavailable_docker_fails_closed(self):
-        with patch('weightless.sandbox.subprocess.run', side_effect=FileNotFoundError):
+        with patch('wsm.sandbox.subprocess.run', side_effect=FileNotFoundError):
             with self.assertRaises(binary64.WeightlessError) as error:
                 DockerRunner('missing')
         self.assertEqual(error.exception.code, 'sandbox_unavailable')
@@ -107,8 +107,8 @@ class RunnerTests(unittest.TestCase):
         process = Mock(stdin=io.BytesIO(), stdout=io.BytesIO(b'{}'), stderr=io.BytesIO(), returncode=0)
         process.wait.return_value = 0
         cleanup = subprocess.CompletedProcess([], 1, b'', b'Cannot connect to Docker daemon')
-        with patch('weightless.sandbox.subprocess.Popen', return_value=process), \
-                patch('weightless.sandbox.subprocess.run', return_value=cleanup):
+        with patch('wsm.sandbox.subprocess.Popen', return_value=process), \
+                patch('wsm.sandbox.subprocess.run', return_value=cleanup):
             with self.assertRaises(binary64.WeightlessError) as error:
                 runner._run(['docker', 'run', '--name', 'owned-container'], b'{}')
         self.assertEqual(error.exception.code, 'sandbox_cleanup_unknown')

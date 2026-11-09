@@ -6,10 +6,10 @@ import shutil
 import subprocess
 import sys
 
-from weightless import MetricPolicy, SearchRun, replay
-from weightless.binary64 import apply_patch, create_checkpoint
-from weightless.core import _binding
-from weightless.harbor import HarborEvaluation, resolve_image
+from wsm import MetricPolicy, SearchRun, replay
+from wsm.binary64 import apply_patch, create_checkpoint
+from wsm.core import _binding
+from wsm.harbor import HarborEvaluation, resolve_image
 
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description="Execute the actual optional adapter in Docker and retain native evidence.")

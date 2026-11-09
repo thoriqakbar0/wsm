@@ -1,5 +1,7 @@
 # Durable local client
 
+For a prompt-first interface, use the [Weight Space Modifiers CLI or harness](wsm.md). It drives this same session protocol and supplies operation keys and checkpoint bindings for the teacher.
+
 The local client adds `Session`, `Verifier`, `BubblewrapRunner`, `DockerRunner`, and `ResponsesTeacher` beside the existing `SearchRun` API. The existing checkpoint and run formats retain their meaning. Session exports use a separate format.
 
 ## Ownership and supported execution

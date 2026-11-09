@@ -79,27 +79,35 @@ class Session:
         _check(retention_max is None or (type(retention_max) in (int, float) and math.isfinite(retention_max) and retention_max >= 0
                                         and development_retention), 'invalid_declaration', 'Development retention gate needs public cases and a finite threshold')
         obj = cls(path, runner=runner, target=target, verifier=verifier, final_dataset=final_dataset)
-        with obj._transaction():
-            _check(obj.db.execute('SELECT 1 FROM state').fetchone() is None, 'already_exists', 'Session exists')
-            manifest = runner.execute('describe', target)
-            _check(set(declaration['editable']) <= set(manifest['parameters']), 'invalid_declaration', 'Unknown editable tensor')
-            state = {'format': 'weightless.session.v1', 'session': str(uuid.uuid4()),
-                     'origin': time.time(), 'declaration': _seal(declaration), 'manifest': manifest, 'runner': copy.deepcopy(runner.config),
-                     'target_identity': _hash(target), 'development': copy.deepcopy(development),
-                     'development_retention': copy.deepcopy(development_retention or []),
-                     'phase': 'developing', 'used': dict.fromkeys(limits, 0),
-                     'arms': {a: {'checkpoint': manifest['checkpoint'], 'patches': [], 'loss': None,
-                                  'version': 0, 'pending': None, 'history': []} for a in arms},
-                     'frozen': None, 'final': None}
-            obj.db.execute('INSERT INTO state VALUES (?)', (_json(state),))
+        try:
+            with obj._transaction():
+                _check(obj.db.execute('SELECT 1 FROM state').fetchone() is None, 'already_exists', 'Session exists')
+                manifest = runner.execute('describe', target)
+                _check(set(declaration['editable']) <= set(manifest['parameters']), 'invalid_declaration', 'Unknown editable tensor')
+                state = {'format': 'weightless.session.v1', 'session': str(uuid.uuid4()),
+                         'origin': time.time(), 'declaration': _seal(declaration), 'manifest': manifest, 'runner': copy.deepcopy(runner.config),
+                         'target_identity': _hash(target), 'development': copy.deepcopy(development),
+                         'development_retention': copy.deepcopy(development_retention or []),
+                         'phase': 'developing', 'used': dict.fromkeys(limits, 0),
+                         'arms': {a: {'checkpoint': manifest['checkpoint'], 'patches': [], 'loss': None,
+                                      'version': 0, 'pending': None, 'history': []} for a in arms},
+                         'frozen': None, 'final': None}
+                obj.db.execute('INSERT INTO state VALUES (?)', (_json(state),))
+        except BaseException:
+            obj.close()
+            raise
         return obj
 
     @classmethod
     def open(cls, path, *, runner, target, verifier=None, final_dataset=None):
         obj = cls(path, runner=runner, target=target, verifier=verifier, final_dataset=final_dataset)
-        state = obj._state()
-        _check(state['target_identity'] == _hash(target) and state['runner'] == runner.config,
-               'identity_mismatch', 'Target or runner identity changed')
+        try:
+            state = obj._state()
+            _check(state['target_identity'] == _hash(target) and state['runner'] == runner.config,
+                   'identity_mismatch', 'Target or runner identity changed')
+        except BaseException:
+            obj.close()
+            raise
         return obj
 
     def __init__(self, path, *, runner, target, verifier=None, final_dataset=None):

@@ -11,9 +11,9 @@ import tempfile
 from harbor.models.task.task import Task
 from jsonschema import Draft202012Validator
 from verifiers.v1.tasksets.harbor.taskset import HarborConfig, HarborTask, parse_task
-from weightless import MetricPolicy, NumericalEvaluation, SearchRun
-from weightless.binary64 import create_checkpoint
-from weightless.core import _binding, _sealed, evaluator_config
+from wsm import MetricPolicy, NumericalEvaluation, SearchRun
+from wsm.binary64 import create_checkpoint
+from wsm.core import _binding, _sealed, evaluator_config
 
 ROOT = Path(__file__).resolve().parents[1]
 TASK = ROOT / "examples/harbor/signed-addition"
@@ -47,8 +47,9 @@ with tempfile.TemporaryDirectory(prefix="weightless-harbor-") as temporary:
         inventory = {path.relative_to(context).as_posix() for path in context.rglob("*")
                      if path.is_file() and "__pycache__" not in path.parts}
         expected_modules = {"__init__.py", "binary64.py", "core.py", "harbor.py", "session.py",
-                            "verifier.py", "sandbox.py", "local_sandbox.py", "target_worker.py", "teacher.py"}
-        assert inventory == {"public.json", *["weightless/" + name for name in expected_modules]}, inventory
+                            "verifier.py", "sandbox.py", "local_sandbox.py", "target_worker.py", "teacher.py",
+                            "cli.py", "harness.py", "tasks/addition.json"}
+        assert inventory == {"public.json", *["wsm/" + name for name in expected_modules]}, inventory
         assert not any(name in inventory for name in ("heldout.json", "grade.py", "solve.sh"))
     assert not (development / "tests/heldout.json").exists()
     public = json.loads((TASK / "environment/generated/public.json").read_text())
