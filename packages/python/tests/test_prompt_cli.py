@@ -30,6 +30,14 @@ class CommandTests(unittest.TestCase):
             self.assertIn('WSM_TEACHER_API_KEY', result.stderr)
             self.assertFalse(output.exists())
 
+    def test_explicit_workspace_equals_prevents_harness_routing(self):
+        from wsm.cli import parser, _harness_command
+        with tempfile.TemporaryDirectory() as directory:
+            (Path(directory) / "run.json").write_text("{}")
+            for option in (["--workspace=/explicit"], ["--workspace", "/explicit"]):
+                argv = option + ["status", directory]
+                self.assertFalse(_harness_command(parser().parse_args(argv), argv))
+
     def test_status_reads_a_saved_report_without_teacher_or_sandbox(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -37,7 +45,7 @@ class CommandTests(unittest.TestCase):
             report = {'stop': 'finished', 'final_conclusion': 'inconclusive'}
             (root / 'harness/report.json').write_text(json.dumps(report))
             result = self.command('status', root)
-            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
             self.assertEqual(json.loads(result.stdout), report)
 
     def test_resume_recovers_creation_interrupted_before_session_state(self):
@@ -126,7 +134,7 @@ class NativeCommandTests(unittest.TestCase):
                                       '--teacher-url', f'http://127.0.0.1:{server.server_port}/v1',
                                       '--teacher-model', 'test-teacher', '--attempts', '2', '--turns', '4',
                                       '--output', output, env=env)
-                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
                 report = json.loads(result.stdout)
                 self.assertEqual(report['final_conclusion'], 'supported')
                 self.assertEqual(report['used']['attempts'], 2)

@@ -46,23 +46,27 @@ def _bounded(destination, max_bytes):
     return total, count
 
 
-def _export_binary(target, checkpoint, patches, destination):
+def _export_binary(target, checkpoint, patches, destination, max_bytes):
     initial = parse_checkpoint(target["checkpoint"])
     edited = apply_patch(target["checkpoint"], _proposal(initial["id"], patches)) if patches else initial
     if edited["id"] != checkpoint:
         _fail("invalid_artifact", "Exported state does not match the selected checkpoint")
     path = destination / "checkpoint.json"
-    path.write_text(json.dumps(edited, indent=2, allow_nan=False) + "\n")
+    data = (json.dumps(edited, indent=2, allow_nan=False) + "\n").encode()
+    if len(data) > max_bytes:
+        _fail("invalid_artifact", "Exported checkpoint exceeds max_bytes")
+    path.write_bytes(data)
     return edited["id"]
 
 
-def _rewrite_weights(snapshot, model):
+def _rewrite_weights(snapshot, model, max_bytes):
     try:
         import torch
         from safetensors import safe_open
-        from safetensors.torch import save_file
+        from safetensors.torch import save
     except ImportError:
         _fail("unsupported_target", "Model dependencies are unavailable")
+    total, _ = _bounded(snapshot, max_bytes)
     live = dict(model.model.named_parameters(remove_duplicate=False))
     seen = set()
     for path in sorted(Path(snapshot).rglob("*.safetensors")):
@@ -83,15 +87,17 @@ def _rewrite_weights(snapshot, model):
                 changed = True
             seen.add(key)
         if changed:
-            temporary = path.with_name(path.name + ".tmp")
-            save_file(loaded, str(temporary), metadata=metadata)
-            os.replace(temporary, path)
+            data = save(loaded, metadata=metadata)
+            total += len(data) - path.stat().st_size
+            if total > max_bytes:
+                _fail("invalid_artifact", "Exported checkpoint exceeds max_bytes")
+            path.write_bytes(data)
     missing = set(model.tensors) - seen
     if missing:
         _fail("invalid_artifact", "Selected parameters are not in the snapshot weights")
 
 
-def _export_model(target, checkpoint, patches, destination, device):
+def _export_model(target, checkpoint, patches, destination, device, max_bytes):
     model = ModelTarget(target, device=device)
     for item in patches:
         model.set(item["tensor"], item["index"], item["value"])
@@ -99,8 +105,20 @@ def _export_model(target, checkpoint, patches, destination, device):
         _fail("invalid_artifact", "Exported state does not match the selected checkpoint")
     snapshot = Path(snapshot_directory(target))
     copied = destination / "snapshots" / target["revision"]
-    shutil.copytree(snapshot, copied, symlinks=False)
-    _rewrite_weights(copied, model)
+    remaining = max_bytes
+
+    def copy_bounded(source, output):
+        nonlocal remaining
+        with open(source, "rb") as reader, open(output, "xb") as writer:
+            while chunk := reader.read(min(1024 * 1024, remaining + 1)):
+                if len(chunk) > remaining:
+                    _fail("invalid_artifact", "Exported checkpoint exceeds max_bytes")
+                writer.write(chunk)
+                remaining -= len(chunk)
+        return output
+
+    shutil.copytree(snapshot, copied, symlinks=False, copy_function=copy_bounded)
+    _rewrite_weights(copied, model, max_bytes)
     reloaded = ModelTarget({**target, "source": str(destination)}, device=device)
     if reloaded.identity() != checkpoint:
         _fail("invalid_artifact", "Reloaded export does not match the selected checkpoint")
@@ -114,16 +132,21 @@ def export_checkpoint(bundle, *, target, arm, destination, max_bytes, device="cp
     if type(target) is not dict:
         _fail("invalid_target", "Invalid target")
     checkpoint, patches = _selected(bundle, target, arm)
-    destination = Path(destination)
+    destination = Path(destination).absolute()
+    if target.get("kind") in ("smollm", "huggingface"):
+        source = Path(target["source"]).resolve()
+        if destination.resolve().is_relative_to(source):
+            _fail("invalid_artifact", "Export destination must be outside the source model tree")
+        _bounded(snapshot_directory(target), max_bytes)
     if destination.exists() or destination.is_symlink():
         _fail("invalid_artifact", "Export destination must be unused")
     destination.mkdir(parents=True)
     try:
         kind = target.get("kind")
         if kind == "binary64":
-            checkpoint = _export_binary(target, checkpoint, patches, destination)
+            checkpoint = _export_binary(target, checkpoint, patches, destination, max_bytes)
         elif kind in ("smollm", "huggingface"):
-            checkpoint = _export_model(target, checkpoint, patches, destination, device)
+            checkpoint = _export_model(target, checkpoint, patches, destination, device, max_bytes)
         else:
             _fail("unsupported_target", "Unsupported target")
         total, count = _bounded(destination, max_bytes)

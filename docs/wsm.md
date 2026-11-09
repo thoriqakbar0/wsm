@@ -108,3 +108,9 @@ report = run(
 ```
 
 The output directory must be new or belong to this same session, arm, prompt, and public context. Only pass public information as `context`. Session policy, operation admission, and numerical execution remain in their existing owners. See [create and resume sessions](client.md#session-contract) for their setup.
+
+## Bound model computation
+
+`--forward-calls` limits total model forward calls, including final grading. It defaults to 10000. `--final-forward-calls` declares a private grading envelope charged against that total, defaulting to 1000. Leave enough total budget after development for that envelope. Exact private usage remains in the verifier registry.
+
+For reproducible configuration-driven runs or scripted proposals, use the [experiment driver](driver.md). Both teacher entry points call the same harness and Session.

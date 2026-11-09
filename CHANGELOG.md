@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Preserve checkpoint-specific inspection feedback across teacher turns so the agent can combine observations without repeatedly reading the same tensors.
+
+- Integrate the configuration-driven experiment and export scripts with the shared teacher harness; enforce export size and source boundaries and preserve explicit workspace routing.
+
 - Consolidate the installed `wsm` package, command, and terminal UI. Session remains the policy owner. The prompt harness is `wsm run`. Generic local snapshots, an explicit CUDA device, forward-call reservations, and full checkpoint export sit on the existing CPU identity path.
 - Add the operator broker and the unprivileged `wl` byte pipe. `wl` does not own session policy. There is no `weightless` import or console-script shim.
 - Keep one introduction at `docs/index.html`. Record the terminal-bench distinction between a handwritten program that passed its verifier and an inconclusive weight-editing run.

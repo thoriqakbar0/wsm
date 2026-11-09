@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from wsm import binary64
 from wsm.checkpoint_export import export_checkpoint
@@ -14,7 +15,8 @@ from wsm.session import Session
 from wsm.target_worker import run
 
 
-class LiveRunner:
+class ControlledSelectionRunner:
+    """Real numerical execution with forced selection to isolate export behavior."""
     config = {"mode": "in-process", "image": "local"}
 
     def __init__(self):
@@ -38,7 +40,7 @@ class LiveRunner:
 
 
 def _selected_bundle(directory, target, *, tensor, index, value, cases):
-    runner = LiveRunner()
+    runner = ControlledSelectionRunner()
     declaration = {"hypothesis": "A scalar replacement is selected and exported.",
                    "arms": ["editor"], "editable": [tensor],
                    "budgets": {"attempts": 2, "evaluations": 6, "inspections": 2,
@@ -196,3 +198,23 @@ print(json.dumps({"checkpoint": model.identity(), "metrics": metrics, "rows": ro
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ExportBoundaryTests(unittest.TestCase):
+    def test_source_containment_and_size_reject_before_model_load(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            snapshot = root / "source" / "snapshots" / ("a" * 40)
+            snapshot.mkdir(parents=True)
+            (snapshot / "model.safetensors").write_bytes(b"too large")
+            target = {"kind": "huggingface", "source": str(root / "source")}
+            for destination, limit in ((snapshot / "nested", 100), (root / "export", 1)):
+                with self.subTest(destination=destination), \
+                     patch("wsm.checkpoint_export._selected", return_value=("checkpoint", [])), \
+                     patch("wsm.checkpoint_export.snapshot_directory", return_value=str(snapshot)), \
+                     patch("wsm.checkpoint_export.ModelTarget") as model:
+                    with self.assertRaises(binary64.WeightlessError):
+                        export_checkpoint({}, target=target, arm="editor", destination=destination, max_bytes=limit)
+                    model.assert_not_called()
+                    self.assertFalse(destination.exists())
+            self.assertEqual((snapshot / "model.safetensors").read_bytes(), b"too large")

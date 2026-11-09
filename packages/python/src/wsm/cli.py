@@ -94,12 +94,21 @@ def parser():
     start.add_argument("--output", type=Path, required=True, help="New private run directory")
     start.add_argument("--attempts", type=_positive, default=20, help="Maximum candidate edits (default: 20)")
     start.add_argument("--turns", type=_positive, default=64, help="Maximum teacher requests (default: 64)")
+    start.add_argument("--forward-calls", type=_positive_budget, default=10000, help="Maximum total model forward calls, including final grading")
+    start.add_argument("--final-forward-calls", type=_positive_budget, default=1000, help="Private grading envelope charged to the total limit")
     start.add_argument("--seconds", type=float, default=900, help="Total wall deadline in seconds (default: 900)")
     start.add_argument("--runner", choices=("bubblewrap", "docker"), default="bubblewrap")
     start.add_argument("--python", default="/usr/bin/python3", help="Python runtime for bubblewrap")
     start.add_argument("--image", help="Existing image for the Docker runner")
     command("tui", "Open the interactive terminal")
     return root
+
+
+def _positive_budget(value):
+    number = int(value)
+    if number < 1:
+        raise argparse.ArgumentTypeError("Expected a positive integer")
+    return number
 
 
 def _positive(value):
@@ -112,7 +121,7 @@ def _positive(value):
 def _harness_command(args, argv):
     if args.command == "run":
         return True
-    if args.command not in ("status", "resume") or "--workspace" in argv:
+    if args.command not in ("status", "resume") or any(arg == "--workspace" or arg.startswith("--workspace=") for arg in argv):
         return False
     path = Path(args.ref)
     return path.is_dir() and ((path / "run.json").is_file() or (path / "harness" / "report.json").is_file())
@@ -306,7 +315,9 @@ def _run_harness(args):
                   "teacher": {"url": args.teacher_url, "model": args.teacher_model},
                   "runner": {"kind": args.runner, "python": args.python, "image": args.image, "timeout": 60},
                   "declaration": _declaration(task, args.prompt, args.attempts, args.turns, args.seconds)}
+        config["declaration"]["budgets"]["forward_calls"] = args.forward_calls
         if task.get("final"):
+            config["declaration"]["final_forward_calls"] = args.final_forward_calls
             config["final_sha256"] = hashlib.sha256(Path(task["final"]["cases"]).read_bytes()).hexdigest()
         output.mkdir(mode=0o700, parents=True, exist_ok=False)
         _write(output / "run.json", config)
