@@ -7,7 +7,6 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 CODE = '''
-import importlib.metadata
 import importlib.util
 import json
 import os
