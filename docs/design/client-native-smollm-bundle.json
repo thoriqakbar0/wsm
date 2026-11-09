@@ -1,0 +1,888 @@
+{
+  "format": "weightless.evidence.v1",
+  "session": "4c7e63c7-908e-4f5c-bd18-d0e3b873647e",
+  "declaration": {
+    "arms": [
+      "teacher"
+    ],
+    "budgets": {
+      "attempts": 4,
+      "diagnostics": 2,
+      "evaluations": 12,
+      "final_evaluations": 2,
+      "inspections": 4,
+      "teacher_requests": 9
+    },
+    "claim": "exploratory",
+    "editable": [
+      "model.norm.weight"
+    ],
+    "hypothesis": "Permitted explicit weight edits can change the declared finite task behavior.",
+    "id": "sha256:7348f97bbd8db32d2b488037e75cf9182707d8b7d94776cff4db1c118f9bf724",
+    "max_edits": 4,
+    "max_inspect": 8,
+    "wall_seconds": 900
+  },
+  "initial": "sha256:e037c60fafdb62049f8a4bf0579eca87d7ddb5f061b8c83035d40dc06c307e00",
+  "runner": "sha256:fab38d0de83c80680f0a585cadee91257c7f1dc22b558e1f03d9d9a523e95f2c",
+  "used": {
+    "attempts": 1,
+    "diagnostics": 0,
+    "evaluations": 2,
+    "final_evaluations": 2,
+    "inspections": 1,
+    "teacher_requests": 6
+  },
+  "origin": 1794214576.8502264,
+  "operations": [
+    {
+      "arm": "teacher",
+      "costs": {
+        "teacher_requests": 1
+      },
+      "dispatch_seq": 2,
+      "key": "teacher-1",
+      "kind": "teacher",
+      "request_hash": "sha256:9543d9bd5e8b633b5a294d96ea62aa5f132abe4ec213f103de28508bbbf6bb3b",
+      "result": {
+        "response_digest": "sha256:b8fb1c97d6b77fa5d839f0b2510d0e069602223f03c7c972f7a12d7707afc483"
+      },
+      "result_seq": 6,
+      "selection": null,
+      "status": "completed"
+    },
+    {
+      "arm": "teacher",
+      "costs": {
+        "inspections": 1
+      },
+      "dispatch_seq": 7,
+      "key": "inspect-norm-1",
+      "kind": "inspect",
+      "request_hash": "sha256:139160810af87aa746eb7d44110e6a1768ea1edf5e75ac7946e1e16288b0cb54",
+      "result": {
+        "checkpoint": "sha256:e037c60fafdb62049f8a4bf0579eca87d7ddb5f061b8c83035d40dc06c307e00",
+        "values": [
+          {
+            "index": 0,
+            "tensor": "model.norm.weight",
+            "value": 1.7578125
+          },
+          {
+            "index": 144,
+            "tensor": "model.norm.weight",
+            "value": 1.84375
+          },
+          {
+            "index": 288,
+            "tensor": "model.norm.weight",
+            "value": 1.78125
+          },
+          {
+            "index": 432,
+            "tensor": "model.norm.weight",
+            "value": 1.734375
+          }
+        ]
+      },
+      "result_seq": 10,
+      "selection": null,
+      "status": "completed"
+    },
+    {
+      "arm": "teacher",
+      "costs": {
+        "teacher_requests": 1
+      },
+      "dispatch_seq": 12,
+      "key": "teacher-2",
+      "kind": "teacher",
+      "request_hash": "sha256:7c2a4fa153e52ac16025fb07e49736e2025ea94487f40db454da556a44b6b259",
+      "result": {
+        "response_digest": "sha256:47f51b86ee7b4717ac64191d761c78123b1f7f099e33cd436b2cbdb6dd2a211d"
+      },
+      "result_seq": 16,
+      "selection": null,
+      "status": "completed"
+    },
+    {
+      "arm": "teacher",
+      "costs": {
+        "teacher_requests": 1
+      },
+      "dispatch_seq": 18,
+      "key": "teacher-3",
+      "kind": "teacher",
+      "request_hash": "sha256:1db8e98e8177a5dd3182e978e59d1953cfbb483e0a22c3ca5aa731747ff22e3f",
+      "result": {
+        "response_digest": "sha256:f60633637fb410685274274dfd89f2d0d15964fe6324bdf53019664225ce9ba0"
+      },
+      "result_seq": 22,
+      "selection": null,
+      "status": "completed"
+    },
+    {
+      "arm": "teacher",
+      "base": "sha256:e037c60fafdb62049f8a4bf0579eca87d7ddb5f061b8c83035d40dc06c307e00",
+      "costs": {
+        "attempts": 1,
+        "evaluations": 2
+      },
+      "dispatch_seq": 23,
+      "edits": [
+        {
+          "index": 0,
+          "tensor": "model.norm.weight",
+          "value": 3.515625
+        },
+        {
+          "index": 144,
+          "tensor": "model.norm.weight",
+          "value": 3.6875
+        },
+        {
+          "index": 288,
+          "tensor": "model.norm.weight",
+          "value": 3.5625
+        },
+        {
+          "index": 432,
+          "tensor": "model.norm.weight",
+          "value": 3.46875
+        }
+      ],
+      "key": "norm-double-four-recover",
+      "kind": "submit",
+      "request_hash": "sha256:9fff28aec77fa42b8bd251d955984e5328e3c905798964e2e11e4813f519835e",
+      "result": {
+        "baseline": {
+          "cases": [
+            {
+              "exact": false,
+              "id": "duck-public",
+              "prediction": "A duck makes a low, rumbling sound, similar to a low rumble",
+              "prediction_truncated": false,
+              "stopped_on_eos": false,
+              "target_nll": 6.656563758850098
+            },
+            {
+              "exact": false,
+              "id": "cow-public",
+              "prediction": "A cow makes a low, rumbling sound, similar to a cow's rum",
+              "prediction_truncated": false,
+              "stopped_on_eos": false,
+              "target_nll": 6.897920608520508
+            }
+          ],
+          "metrics": {
+            "count": 2,
+            "exact": 0,
+            "loss": 6.777242183685303
+          },
+          "truncated": false
+        },
+        "cases": [
+          {
+            "exact": false,
+            "id": "duck-public",
+            "prediction": "A duck's sound is a complex and intricate series of vibrations that can be described",
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": 6.772151470184326
+          },
+          {
+            "exact": false,
+            "id": "cow-public",
+            "prediction": "A cow makes a low, rumbling sound when it is resting or grazing.",
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": 7.008644104003906
+          }
+        ],
+        "checkpoint": "sha256:5af313e2d060b63e04524947e4b391886c6de15a941fa9d4f208d0260a15c8cb",
+        "metrics": {
+          "count": 2,
+          "exact": 0,
+          "loss": 6.890397787094116
+        },
+        "patches": [
+          {
+            "index": 0,
+            "tensor": "model.norm.weight",
+            "value": 3.515625
+          },
+          {
+            "index": 144,
+            "tensor": "model.norm.weight",
+            "value": 3.6875
+          },
+          {
+            "index": 288,
+            "tensor": "model.norm.weight",
+            "value": 3.5625
+          },
+          {
+            "index": 432,
+            "tensor": "model.norm.weight",
+            "value": 3.46875
+          }
+        ],
+        "retention_loss": null,
+        "truncated": false
+      },
+      "result_seq": 30,
+      "selection": {
+        "accepted": false,
+        "after": "sha256:e037c60fafdb62049f8a4bf0579eca87d7ddb5f061b8c83035d40dc06c307e00",
+        "before": "sha256:e037c60fafdb62049f8a4bf0579eca87d7ddb5f061b8c83035d40dc06c307e00"
+      },
+      "status": "committed"
+    },
+    {
+      "arm": "teacher",
+      "costs": {
+        "teacher_requests": 1
+      },
+      "dispatch_seq": 33,
+      "key": "teacher-4",
+      "kind": "teacher",
+      "request_hash": "sha256:5bd95986fa60222f8b9409f546b99698d9da6e601487eaab9198eeac39049a2b",
+      "result": {
+        "response_digest": "sha256:fe7c73770c709f973aedb57892683245619cb07f4296e07f193f2238f9e906ad"
+      },
+      "result_seq": 37,
+      "selection": null,
+      "status": "completed"
+    },
+    {
+      "arm": null,
+      "costs": {},
+      "dispatch_seq": 38,
+      "key": "freeze-single-hypothesis-1",
+      "kind": "freeze",
+      "request_hash": "sha256:9bdd07c49e3e4cc57cc10be06d51bcfc9a0e843b1ee7640046259bc5dba2240d",
+      "result": null,
+      "selection": null,
+      "status": "committed"
+    },
+    {
+      "arm": "teacher",
+      "costs": {
+        "teacher_requests": 1
+      },
+      "dispatch_seq": 43,
+      "key": "teacher-5",
+      "kind": "teacher_report",
+      "request_hash": "sha256:4e72abc2bf9c0d6d042d9b98173d8842e631f176069a15b2e2538a2ef088837a",
+      "result": {
+        "response_digest": "sha256:58926522225105e9a42836d78716b5c1ea56213b8a5eabd1892d725f19275f25"
+      },
+      "result_seq": 47,
+      "selection": null,
+      "status": "completed"
+    },
+    {
+      "arm": null,
+      "costs": {
+        "final_evaluations": 2
+      },
+      "dispatch_seq": 48,
+      "key": "finalize-single-hypothesis-1",
+      "kind": "finalize",
+      "request_hash": "sha256:05af2cf1eaceb056470048347e77df4307fa5e2a599d7b291af584834e968e6d",
+      "result": {
+        "arms": {
+          "teacher": {
+            "checkpoint": "sha256:e037c60fafdb62049f8a4bf0579eca87d7ddb5f061b8c83035d40dc06c307e00",
+            "conclusion": "inconclusive",
+            "retention": {
+              "count": 1,
+              "exact": 0,
+              "loss": 1.8724579811096191
+            },
+            "retention_acceptability": "undetermined",
+            "scope": "This frozen candidate on the declared finite final cases; no population generalization.",
+            "task": {
+              "count": 2,
+              "exact": 0,
+              "loss": 6.552156209945679
+            }
+          }
+        },
+        "assurance": "trusted verifier; unsigned receipt",
+        "claim": "sha256:f97ce81ea4cbbfa2c5b97aec259ca071d6ac889cc133dce25a37df15efbe18fa",
+        "format": "weightless.final.v1",
+        "frozen": "sha256:8a4dbbc4bbcb8bef3b9c1cc255378c315678b72e08b27313cacbdc5effbdab06",
+        "id": "sha256:1365e50f6c4d2e01510f7d85bc4d753e18d90e110a335e87d0904b889e344324",
+        "status": "completed"
+      },
+      "result_seq": 49,
+      "selection": null,
+      "status": "completed"
+    },
+    {
+      "arm": "teacher",
+      "costs": {
+        "teacher_requests": 1
+      },
+      "dispatch_seq": 51,
+      "key": "teacher-6",
+      "kind": "teacher_report",
+      "request_hash": "sha256:e1caff105cc52f79bba46092860461cfc99e8b0c81c18e9ca31a2249b6df2878",
+      "result": {
+        "response_digest": "sha256:8a21f3c445c788437f7cd43f981e736682d8d8b22ce3f0456d9b192b33029bee"
+      },
+      "result_seq": 55,
+      "selection": null,
+      "status": "completed"
+    }
+  ],
+  "journal": [
+    {
+      "seq": 1,
+      "arm": "teacher",
+      "digest": "sha256:b7f347512eff2cd87ac90c4029528acc6e22be532f0377f922c2bd98fa6db79a",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 2,
+      "costs": {
+        "teacher_requests": 1
+      },
+      "key": "teacher-1",
+      "request_hash": "sha256:9543d9bd5e8b633b5a294d96ea62aa5f132abe4ec213f103de28508bbbf6bb3b",
+      "type": "dispatch"
+    },
+    {
+      "seq": 3,
+      "arm": "teacher",
+      "digest": "sha256:70e6d1c972b7c2f7a14399ec2bd9e41ae813daacfb6f46e376fd1f75542d2e9c",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 4,
+      "action": "teacher:teacher-1",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 5,
+      "action": "teacher:teacher-1",
+      "type": "execution_started"
+    },
+    {
+      "seq": 6,
+      "key": "teacher-1",
+      "result": {
+        "response_digest": "sha256:b8fb1c97d6b77fa5d839f0b2510d0e069602223f03c7c972f7a12d7707afc483"
+      },
+      "type": "result"
+    },
+    {
+      "seq": 7,
+      "costs": {
+        "inspections": 1
+      },
+      "key": "inspect-norm-1",
+      "request_hash": "sha256:139160810af87aa746eb7d44110e6a1768ea1edf5e75ac7946e1e16288b0cb54",
+      "type": "dispatch"
+    },
+    {
+      "seq": 8,
+      "action": "inspect",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 9,
+      "action": "inspect",
+      "type": "execution_started"
+    },
+    {
+      "seq": 10,
+      "key": "inspect-norm-1",
+      "result": {
+        "checkpoint": "sha256:e037c60fafdb62049f8a4bf0579eca87d7ddb5f061b8c83035d40dc06c307e00",
+        "values": [
+          {
+            "index": 0,
+            "tensor": "model.norm.weight",
+            "value": 1.7578125
+          },
+          {
+            "index": 144,
+            "tensor": "model.norm.weight",
+            "value": 1.84375
+          },
+          {
+            "index": 288,
+            "tensor": "model.norm.weight",
+            "value": 1.78125
+          },
+          {
+            "index": 432,
+            "tensor": "model.norm.weight",
+            "value": 1.734375
+          }
+        ]
+      },
+      "type": "result"
+    },
+    {
+      "seq": 11,
+      "arm": "teacher",
+      "digest": "sha256:1a92d3a025bef9c9f46f74387b9d5ec530d5a9f5dc0efde6cb633c548e3f5c6c",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 12,
+      "costs": {
+        "teacher_requests": 1
+      },
+      "key": "teacher-2",
+      "request_hash": "sha256:7c2a4fa153e52ac16025fb07e49736e2025ea94487f40db454da556a44b6b259",
+      "type": "dispatch"
+    },
+    {
+      "seq": 13,
+      "arm": "teacher",
+      "digest": "sha256:f91b7c09c7b33626507f6c60d7d1c481fb5ebc28dbf57b648be8e10cb8a9e871",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 14,
+      "action": "teacher:teacher-2",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 15,
+      "action": "teacher:teacher-2",
+      "type": "execution_started"
+    },
+    {
+      "seq": 16,
+      "key": "teacher-2",
+      "result": {
+        "response_digest": "sha256:47f51b86ee7b4717ac64191d761c78123b1f7f099e33cd436b2cbdb6dd2a211d"
+      },
+      "type": "result"
+    },
+    {
+      "seq": 17,
+      "arm": "teacher",
+      "digest": "sha256:f91b7c09c7b33626507f6c60d7d1c481fb5ebc28dbf57b648be8e10cb8a9e871",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 18,
+      "costs": {
+        "teacher_requests": 1
+      },
+      "key": "teacher-3",
+      "request_hash": "sha256:1db8e98e8177a5dd3182e978e59d1953cfbb483e0a22c3ca5aa731747ff22e3f",
+      "type": "dispatch"
+    },
+    {
+      "seq": 19,
+      "arm": "teacher",
+      "digest": "sha256:e149f3cdec2be5eb9505c6eb4ca1620ba502db427b1b78d8db2d06db0c910286",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 20,
+      "action": "teacher:teacher-3",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 21,
+      "action": "teacher:teacher-3",
+      "type": "execution_started"
+    },
+    {
+      "seq": 22,
+      "key": "teacher-3",
+      "result": {
+        "response_digest": "sha256:f60633637fb410685274274dfd89f2d0d15964fe6324bdf53019664225ce9ba0"
+      },
+      "type": "result"
+    },
+    {
+      "seq": 23,
+      "costs": {
+        "attempts": 1,
+        "evaluations": 2
+      },
+      "key": "norm-double-four-recover",
+      "request_hash": "sha256:9fff28aec77fa42b8bd251d955984e5328e3c905798964e2e11e4813f519835e",
+      "type": "dispatch"
+    },
+    {
+      "seq": 24,
+      "action": "evaluate",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 25,
+      "action": "evaluate",
+      "type": "execution_started"
+    },
+    {
+      "seq": 26,
+      "action": "materialize",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 27,
+      "action": "materialize",
+      "type": "execution_started"
+    },
+    {
+      "seq": 28,
+      "action": "evaluate",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 29,
+      "action": "evaluate",
+      "type": "execution_started"
+    },
+    {
+      "seq": 30,
+      "key": "norm-double-four-recover",
+      "result": {
+        "baseline": {
+          "cases": [
+            {
+              "exact": false,
+              "id": "duck-public",
+              "prediction": "A duck makes a low, rumbling sound, similar to a low rumble",
+              "prediction_truncated": false,
+              "stopped_on_eos": false,
+              "target_nll": 6.656563758850098
+            },
+            {
+              "exact": false,
+              "id": "cow-public",
+              "prediction": "A cow makes a low, rumbling sound, similar to a cow's rum",
+              "prediction_truncated": false,
+              "stopped_on_eos": false,
+              "target_nll": 6.897920608520508
+            }
+          ],
+          "metrics": {
+            "count": 2,
+            "exact": 0,
+            "loss": 6.777242183685303
+          },
+          "truncated": false
+        },
+        "cases": [
+          {
+            "exact": false,
+            "id": "duck-public",
+            "prediction": "A duck's sound is a complex and intricate series of vibrations that can be described",
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": 6.772151470184326
+          },
+          {
+            "exact": false,
+            "id": "cow-public",
+            "prediction": "A cow makes a low, rumbling sound when it is resting or grazing.",
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": 7.008644104003906
+          }
+        ],
+        "checkpoint": "sha256:5af313e2d060b63e04524947e4b391886c6de15a941fa9d4f208d0260a15c8cb",
+        "metrics": {
+          "count": 2,
+          "exact": 0,
+          "loss": 6.890397787094116
+        },
+        "patches": [
+          {
+            "index": 0,
+            "tensor": "model.norm.weight",
+            "value": 3.515625
+          },
+          {
+            "index": 144,
+            "tensor": "model.norm.weight",
+            "value": 3.6875
+          },
+          {
+            "index": 288,
+            "tensor": "model.norm.weight",
+            "value": 3.5625
+          },
+          {
+            "index": 432,
+            "tensor": "model.norm.weight",
+            "value": 3.46875
+          }
+        ],
+        "retention_loss": null,
+        "truncated": false
+      },
+      "type": "result"
+    },
+    {
+      "seq": 31,
+      "decision": {
+        "accepted": false,
+        "after": "sha256:e037c60fafdb62049f8a4bf0579eca87d7ddb5f061b8c83035d40dc06c307e00",
+        "before": "sha256:e037c60fafdb62049f8a4bf0579eca87d7ddb5f061b8c83035d40dc06c307e00"
+      },
+      "key": "norm-double-four-recover",
+      "type": "selection"
+    },
+    {
+      "seq": 32,
+      "arm": "teacher",
+      "digest": "sha256:a0b4f400b095e36f2c62dc94320275ffa0c335745bd15605f275047f85524b4a",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 33,
+      "costs": {
+        "teacher_requests": 1
+      },
+      "key": "teacher-4",
+      "request_hash": "sha256:5bd95986fa60222f8b9409f546b99698d9da6e601487eaab9198eeac39049a2b",
+      "type": "dispatch"
+    },
+    {
+      "seq": 34,
+      "arm": "teacher",
+      "digest": "sha256:8b6abdc48d4fd4abcc69a9c07f162a9a470375ec63a4d10b7710b5b074804446",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 35,
+      "action": "teacher:teacher-4",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 36,
+      "action": "teacher:teacher-4",
+      "type": "execution_started"
+    },
+    {
+      "seq": 37,
+      "key": "teacher-4",
+      "result": {
+        "response_digest": "sha256:fe7c73770c709f973aedb57892683245619cb07f4296e07f193f2238f9e906ad"
+      },
+      "type": "result"
+    },
+    {
+      "seq": 38,
+      "costs": {},
+      "key": "freeze-single-hypothesis-1",
+      "request_hash": "sha256:9bdd07c49e3e4cc57cc10be06d51bcfc9a0e843b1ee7640046259bc5dba2240d",
+      "type": "dispatch"
+    },
+    {
+      "seq": 39,
+      "key": "freeze-single-hypothesis-1",
+      "type": "barrier"
+    },
+    {
+      "seq": 40,
+      "id": "sha256:8a4dbbc4bbcb8bef3b9c1cc255378c315678b72e08b27313cacbdc5effbdab06",
+      "type": "frozen"
+    },
+    {
+      "seq": 41,
+      "arm": "teacher",
+      "digest": "sha256:91b0488276fe432a520966f0d469645ab6f8870ebeee70bcf35da8e2fd05f5e2",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 42,
+      "arm": "teacher",
+      "digest": "sha256:91b0488276fe432a520966f0d469645ab6f8870ebeee70bcf35da8e2fd05f5e2",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 43,
+      "costs": {
+        "teacher_requests": 1
+      },
+      "key": "teacher-5",
+      "request_hash": "sha256:4e72abc2bf9c0d6d042d9b98173d8842e631f176069a15b2e2538a2ef088837a",
+      "type": "dispatch"
+    },
+    {
+      "seq": 44,
+      "arm": "teacher",
+      "digest": "sha256:1169e71dbd12367794c7c5271077990cc2d8228b519a41b858b9adb5884441e1",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 45,
+      "action": "teacher:teacher-5",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 46,
+      "action": "teacher:teacher-5",
+      "type": "execution_started"
+    },
+    {
+      "seq": 47,
+      "key": "teacher-5",
+      "result": {
+        "response_digest": "sha256:58926522225105e9a42836d78716b5c1ea56213b8a5eabd1892d725f19275f25"
+      },
+      "type": "result"
+    },
+    {
+      "seq": 48,
+      "costs": {
+        "final_evaluations": 2
+      },
+      "key": "finalize-single-hypothesis-1",
+      "request_hash": "sha256:05af2cf1eaceb056470048347e77df4307fa5e2a599d7b291af584834e968e6d",
+      "type": "dispatch"
+    },
+    {
+      "seq": 49,
+      "key": "finalize-single-hypothesis-1",
+      "result": {
+        "arms": {
+          "teacher": {
+            "checkpoint": "sha256:e037c60fafdb62049f8a4bf0579eca87d7ddb5f061b8c83035d40dc06c307e00",
+            "conclusion": "inconclusive",
+            "retention": {
+              "count": 1,
+              "exact": 0,
+              "loss": 1.8724579811096191
+            },
+            "retention_acceptability": "undetermined",
+            "scope": "This frozen candidate on the declared finite final cases; no population generalization.",
+            "task": {
+              "count": 2,
+              "exact": 0,
+              "loss": 6.552156209945679
+            }
+          }
+        },
+        "assurance": "trusted verifier; unsigned receipt",
+        "claim": "sha256:f97ce81ea4cbbfa2c5b97aec259ca071d6ac889cc133dce25a37df15efbe18fa",
+        "format": "weightless.final.v1",
+        "frozen": "sha256:8a4dbbc4bbcb8bef3b9c1cc255378c315678b72e08b27313cacbdc5effbdab06",
+        "id": "sha256:1365e50f6c4d2e01510f7d85bc4d753e18d90e110a335e87d0904b889e344324",
+        "status": "completed"
+      },
+      "type": "result"
+    },
+    {
+      "seq": 50,
+      "arm": "teacher",
+      "digest": "sha256:953c7f318754127c848032fe062d65fe46c8f2e0274f09c174a06cf197ba3565",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 51,
+      "costs": {
+        "teacher_requests": 1
+      },
+      "key": "teacher-6",
+      "request_hash": "sha256:e1caff105cc52f79bba46092860461cfc99e8b0c81c18e9ca31a2249b6df2878",
+      "type": "dispatch"
+    },
+    {
+      "seq": 52,
+      "arm": "teacher",
+      "digest": "sha256:b2ef4731ec11c5739bfd56945478da7d8138b42e5ab3924e176ecc0a718091bb",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 53,
+      "action": "teacher:teacher-6",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 54,
+      "action": "teacher:teacher-6",
+      "type": "execution_started"
+    },
+    {
+      "seq": 55,
+      "key": "teacher-6",
+      "result": {
+        "response_digest": "sha256:8a21f3c445c788437f7cd43f981e736682d8d8b22ce3f0456d9b192b33029bee"
+      },
+      "type": "result"
+    }
+  ],
+  "frozen": {
+    "arms": {
+      "teacher": {
+        "checkpoint": "sha256:e037c60fafdb62049f8a4bf0579eca87d7ddb5f061b8c83035d40dc06c307e00",
+        "loss": 6.777242183685303,
+        "patches": []
+      }
+    },
+    "complete": true,
+    "criteria": {},
+    "cutoff": 39,
+    "declaration": "sha256:7348f97bbd8db32d2b488037e75cf9182707d8b7d94776cff4db1c118f9bf724",
+    "format": "weightless.frozen.v1",
+    "id": "sha256:8a4dbbc4bbcb8bef3b9c1cc255378c315678b72e08b27313cacbdc5effbdab06",
+    "initial": "sha256:e037c60fafdb62049f8a4bf0579eca87d7ddb5f061b8c83035d40dc06c307e00",
+    "obligations": [],
+    "runner": "sha256:fab38d0de83c80680f0a585cadee91257c7f1dc22b558e1f03d9d9a523e95f2c",
+    "session": "4c7e63c7-908e-4f5c-bd18-d0e3b873647e",
+    "target_identity": "sha256:102b29000f9d205995b7f9d7988b6c44b101e5a0dc84cca2e428831341b063e1"
+  },
+  "final": {
+    "arms": {
+      "teacher": {
+        "checkpoint": "sha256:e037c60fafdb62049f8a4bf0579eca87d7ddb5f061b8c83035d40dc06c307e00",
+        "conclusion": "inconclusive",
+        "retention": {
+          "count": 1,
+          "exact": 0,
+          "loss": 1.8724579811096191
+        },
+        "retention_acceptability": "undetermined",
+        "scope": "This frozen candidate on the declared finite final cases; no population generalization.",
+        "task": {
+          "count": 2,
+          "exact": 0,
+          "loss": 6.552156209945679
+        }
+      }
+    },
+    "assurance": "trusted verifier; unsigned receipt",
+    "claim": "sha256:f97ce81ea4cbbfa2c5b97aec259ca071d6ac889cc133dce25a37df15efbe18fa",
+    "format": "weightless.final.v1",
+    "frozen": "sha256:8a4dbbc4bbcb8bef3b9c1cc255378c315678b72e08b27313cacbdc5effbdab06",
+    "id": "sha256:1365e50f6c4d2e01510f7d85bc4d753e18d90e110a335e87d0904b889e344324",
+    "status": "completed"
+  },
+  "limitations": [
+    "unsigned evidence does not authenticate scores",
+    "strict loss selection only",
+    "finite-case conclusions only; no population confidence rule",
+    "no basis coefficients, logits, gradients, activation probes or protocol migration",
+    "replay checks journal and selection, not numerical state hashes",
+    "no cache or stochastic replication",
+    "no provider billing guarantee"
+  ],
+  "id": "sha256:9ba514c422140469717537728c1bfea26ab9586045cd43c6b001126776f143b5"
+}

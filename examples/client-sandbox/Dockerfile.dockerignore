@@ -1,0 +1,7 @@
+**
+!packages/
+!packages/python/
+!packages/python/src/
+!packages/python/src/weightless/
+!packages/python/src/weightless/binary64.py
+!packages/python/src/weightless/target_worker.py

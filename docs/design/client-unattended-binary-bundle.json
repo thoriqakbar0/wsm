@@ -1,0 +1,699 @@
+{
+  "format": "weightless.evidence.v1",
+  "session": "c576426a-6757-4bc4-a380-97c34afa1aa2",
+  "declaration": {
+    "arms": [
+      "teacher"
+    ],
+    "budgets": {
+      "attempts": 4,
+      "diagnostics": 2,
+      "evaluations": 12,
+      "final_evaluations": 2,
+      "inspections": 4,
+      "teacher_requests": 0
+    },
+    "claim": "confirmatory",
+    "criteria": {
+      "final_exact_min": 1.0,
+      "retention_loss_max": 0.0
+    },
+    "editable": [
+      "w",
+      "b"
+    ],
+    "hypothesis": "Permitted explicit weight edits can change the declared finite task behavior.",
+    "id": "sha256:2023e5ae63bcdb222a1fe25d32e0ff53b6ab42fc95d42245a7cb562df33e4dab",
+    "max_edits": 4,
+    "max_inspect": 8,
+    "wall_seconds": 900
+  },
+  "initial": "sha256:ee82f010520ad49574312e685d3bfbf3bc161ad53e429c4c5a5adfecc937e99b",
+  "runner": "sha256:fab38d0de83c80680f0a585cadee91257c7f1dc22b558e1f03d9d9a523e95f2c",
+  "used": {
+    "attempts": 2,
+    "diagnostics": 0,
+    "evaluations": 3,
+    "final_evaluations": 2,
+    "inspections": 0,
+    "teacher_requests": 0
+  },
+  "origin": 1794216971.5813775,
+  "operations": [
+    {
+      "arm": "teacher",
+      "base": "sha256:ee82f010520ad49574312e685d3bfbf3bc161ad53e429c4c5a5adfecc937e99b",
+      "costs": {
+        "attempts": 1,
+        "evaluations": 2
+      },
+      "dispatch_seq": 2,
+      "edits": [
+        {
+          "index": 0,
+          "tensor": "w",
+          "value": 2
+        },
+        {
+          "index": 0,
+          "tensor": "b",
+          "value": 3
+        }
+      ],
+      "key": "good",
+      "kind": "submit",
+      "request_hash": "sha256:fdef8879de4a46fb46bf7e4a0ccf290a8cda8feb0763f043165886bbbec1b04f",
+      "result": {
+        "baseline": {
+          "cases": [
+            {
+              "exact": false,
+              "id": "0",
+              "prediction": [
+                0.0
+              ],
+              "prediction_truncated": false,
+              "stopped_on_eos": false,
+              "target_nll": null
+            },
+            {
+              "exact": false,
+              "id": "1",
+              "prediction": [
+                0.0
+              ],
+              "prediction_truncated": false,
+              "stopped_on_eos": false,
+              "target_nll": null
+            },
+            {
+              "exact": false,
+              "id": "2",
+              "prediction": [
+                0.0
+              ],
+              "prediction_truncated": false,
+              "stopped_on_eos": false,
+              "target_nll": null
+            }
+          ],
+          "metrics": {
+            "count": 3,
+            "exact": 0,
+            "loss": 0.5
+          },
+          "truncated": false
+        },
+        "cases": [
+          {
+            "exact": true,
+            "id": "0",
+            "prediction": [
+              1.0
+            ],
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": null
+          },
+          {
+            "exact": true,
+            "id": "1",
+            "prediction": [
+              3.0
+            ],
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": null
+          },
+          {
+            "exact": true,
+            "id": "2",
+            "prediction": [
+              7.0
+            ],
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": null
+          }
+        ],
+        "checkpoint": "sha256:2c332ca0dea13a8927573566c7397fdda316edb67c7f9583a8d4f6493f9db58c",
+        "metrics": {
+          "count": 3,
+          "exact": 3,
+          "loss": 0.0
+        },
+        "patches": [
+          {
+            "index": 0,
+            "tensor": "b",
+            "value": 3.0
+          },
+          {
+            "index": 0,
+            "tensor": "w",
+            "value": 2.0
+          }
+        ],
+        "retention_loss": null,
+        "truncated": false
+      },
+      "result_seq": 9,
+      "selection": {
+        "accepted": true,
+        "after": "sha256:2c332ca0dea13a8927573566c7397fdda316edb67c7f9583a8d4f6493f9db58c",
+        "before": "sha256:ee82f010520ad49574312e685d3bfbf3bc161ad53e429c4c5a5adfecc937e99b"
+      },
+      "status": "committed"
+    },
+    {
+      "arm": "teacher",
+      "base": "sha256:2c332ca0dea13a8927573566c7397fdda316edb67c7f9583a8d4f6493f9db58c",
+      "costs": {
+        "attempts": 1,
+        "evaluations": 1
+      },
+      "dispatch_seq": 13,
+      "edits": [
+        {
+          "index": 0,
+          "tensor": "b",
+          "value": 4
+        }
+      ],
+      "key": "worse",
+      "kind": "submit",
+      "request_hash": "sha256:36ea332c453e38567a6beb154e355ada96b6d11662242b02f3d9dd6e60abae3f",
+      "result": {
+        "baseline": null,
+        "cases": [
+          {
+            "exact": false,
+            "id": "0",
+            "prediction": [
+              2.0
+            ],
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": null
+          },
+          {
+            "exact": false,
+            "id": "1",
+            "prediction": [
+              4.0
+            ],
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": null
+          },
+          {
+            "exact": false,
+            "id": "2",
+            "prediction": [
+              8.0
+            ],
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": null
+          }
+        ],
+        "checkpoint": "sha256:04ce6499037c5da6d2fcdc1817c0a918a99516f5ded0e39c8152f957b8e4f5a3",
+        "metrics": {
+          "count": 3,
+          "exact": 0,
+          "loss": 0.1885865457294029
+        },
+        "patches": [
+          {
+            "index": 0,
+            "tensor": "b",
+            "value": 4.0
+          },
+          {
+            "index": 0,
+            "tensor": "w",
+            "value": 2.0
+          }
+        ],
+        "retention_loss": null,
+        "truncated": false
+      },
+      "result_seq": 18,
+      "selection": {
+        "accepted": false,
+        "after": "sha256:2c332ca0dea13a8927573566c7397fdda316edb67c7f9583a8d4f6493f9db58c",
+        "before": "sha256:2c332ca0dea13a8927573566c7397fdda316edb67c7f9583a8d4f6493f9db58c"
+      },
+      "status": "committed"
+    },
+    {
+      "arm": null,
+      "costs": {},
+      "dispatch_seq": 20,
+      "key": "freeze",
+      "kind": "freeze",
+      "request_hash": "sha256:9bdd07c49e3e4cc57cc10be06d51bcfc9a0e843b1ee7640046259bc5dba2240d",
+      "result": null,
+      "selection": null,
+      "status": "committed"
+    },
+    {
+      "arm": null,
+      "costs": {
+        "final_evaluations": 2
+      },
+      "dispatch_seq": 23,
+      "key": "final",
+      "kind": "finalize",
+      "request_hash": "sha256:0e8deb9bd9c247b9c6ce6e31f3b30356aa2efab5d64c0332dee99f1b8189f9a6",
+      "result": {
+        "arms": {
+          "teacher": {
+            "checkpoint": "sha256:2c332ca0dea13a8927573566c7397fdda316edb67c7f9583a8d4f6493f9db58c",
+            "conclusion": "supported",
+            "retention": {
+              "count": 1,
+              "exact": 1,
+              "loss": 0.0
+            },
+            "retention_acceptability": "acceptable",
+            "scope": "This frozen candidate on the declared finite final cases; no population generalization.",
+            "task": {
+              "count": 3,
+              "exact": 3,
+              "loss": 0.0
+            }
+          }
+        },
+        "assurance": "trusted verifier; unsigned receipt",
+        "claim": "sha256:466a9b20298a9f95f19f1a121d43df7baad476b109fe0c7553ec934cf53a5f85",
+        "format": "weightless.final.v1",
+        "frozen": "sha256:b08853489dcf94e2a4953b4e3ca1dfb2adfd6a5be26c1266abc2633b3ec11afc",
+        "id": "sha256:d944d80abcaddedd051d432594344f80f38a2e76588ea0d466ecaded74bb8ffc",
+        "status": "completed"
+      },
+      "result_seq": 24,
+      "selection": null,
+      "status": "completed"
+    }
+  ],
+  "journal": [
+    {
+      "seq": 1,
+      "arm": "teacher",
+      "digest": "sha256:a0edb6cddb30e283d2777aa1ad0b6cfe4a9352394806cad74edd279db86ba013",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 2,
+      "costs": {
+        "attempts": 1,
+        "evaluations": 2
+      },
+      "key": "good",
+      "request_hash": "sha256:fdef8879de4a46fb46bf7e4a0ccf290a8cda8feb0763f043165886bbbec1b04f",
+      "type": "dispatch"
+    },
+    {
+      "seq": 3,
+      "action": "evaluate",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 4,
+      "action": "evaluate",
+      "type": "execution_started"
+    },
+    {
+      "seq": 5,
+      "action": "materialize",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 6,
+      "action": "materialize",
+      "type": "execution_started"
+    },
+    {
+      "seq": 7,
+      "action": "evaluate",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 8,
+      "action": "evaluate",
+      "type": "execution_started"
+    },
+    {
+      "seq": 9,
+      "key": "good",
+      "result": {
+        "baseline": {
+          "cases": [
+            {
+              "exact": false,
+              "id": "0",
+              "prediction": [
+                0.0
+              ],
+              "prediction_truncated": false,
+              "stopped_on_eos": false,
+              "target_nll": null
+            },
+            {
+              "exact": false,
+              "id": "1",
+              "prediction": [
+                0.0
+              ],
+              "prediction_truncated": false,
+              "stopped_on_eos": false,
+              "target_nll": null
+            },
+            {
+              "exact": false,
+              "id": "2",
+              "prediction": [
+                0.0
+              ],
+              "prediction_truncated": false,
+              "stopped_on_eos": false,
+              "target_nll": null
+            }
+          ],
+          "metrics": {
+            "count": 3,
+            "exact": 0,
+            "loss": 0.5
+          },
+          "truncated": false
+        },
+        "cases": [
+          {
+            "exact": true,
+            "id": "0",
+            "prediction": [
+              1.0
+            ],
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": null
+          },
+          {
+            "exact": true,
+            "id": "1",
+            "prediction": [
+              3.0
+            ],
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": null
+          },
+          {
+            "exact": true,
+            "id": "2",
+            "prediction": [
+              7.0
+            ],
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": null
+          }
+        ],
+        "checkpoint": "sha256:2c332ca0dea13a8927573566c7397fdda316edb67c7f9583a8d4f6493f9db58c",
+        "metrics": {
+          "count": 3,
+          "exact": 3,
+          "loss": 0.0
+        },
+        "patches": [
+          {
+            "index": 0,
+            "tensor": "b",
+            "value": 3.0
+          },
+          {
+            "index": 0,
+            "tensor": "w",
+            "value": 2.0
+          }
+        ],
+        "retention_loss": null,
+        "truncated": false
+      },
+      "type": "result"
+    },
+    {
+      "seq": 10,
+      "decision": {
+        "accepted": true,
+        "after": "sha256:2c332ca0dea13a8927573566c7397fdda316edb67c7f9583a8d4f6493f9db58c",
+        "before": "sha256:ee82f010520ad49574312e685d3bfbf3bc161ad53e429c4c5a5adfecc937e99b"
+      },
+      "key": "good",
+      "type": "selection"
+    },
+    {
+      "seq": 11,
+      "arm": "teacher",
+      "digest": "sha256:a8d4e626b291a885086e2c24ab513ef41a6fea98aa9009876fcf6f1739a222f1",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 12,
+      "arm": "teacher",
+      "digest": "sha256:a8d4e626b291a885086e2c24ab513ef41a6fea98aa9009876fcf6f1739a222f1",
+      "projection": "weightless.agent-view.v1",
+      "type": "disclosure"
+    },
+    {
+      "seq": 13,
+      "costs": {
+        "attempts": 1,
+        "evaluations": 1
+      },
+      "key": "worse",
+      "request_hash": "sha256:36ea332c453e38567a6beb154e355ada96b6d11662242b02f3d9dd6e60abae3f",
+      "type": "dispatch"
+    },
+    {
+      "seq": 14,
+      "action": "materialize",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 15,
+      "action": "materialize",
+      "type": "execution_started"
+    },
+    {
+      "seq": 16,
+      "action": "evaluate",
+      "type": "execution_intent"
+    },
+    {
+      "seq": 17,
+      "action": "evaluate",
+      "type": "execution_started"
+    },
+    {
+      "seq": 18,
+      "key": "worse",
+      "result": {
+        "baseline": null,
+        "cases": [
+          {
+            "exact": false,
+            "id": "0",
+            "prediction": [
+              2.0
+            ],
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": null
+          },
+          {
+            "exact": false,
+            "id": "1",
+            "prediction": [
+              4.0
+            ],
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": null
+          },
+          {
+            "exact": false,
+            "id": "2",
+            "prediction": [
+              8.0
+            ],
+            "prediction_truncated": false,
+            "stopped_on_eos": false,
+            "target_nll": null
+          }
+        ],
+        "checkpoint": "sha256:04ce6499037c5da6d2fcdc1817c0a918a99516f5ded0e39c8152f957b8e4f5a3",
+        "metrics": {
+          "count": 3,
+          "exact": 0,
+          "loss": 0.1885865457294029
+        },
+        "patches": [
+          {
+            "index": 0,
+            "tensor": "b",
+            "value": 4.0
+          },
+          {
+            "index": 0,
+            "tensor": "w",
+            "value": 2.0
+          }
+        ],
+        "retention_loss": null,
+        "truncated": false
+      },
+      "type": "result"
+    },
+    {
+      "seq": 19,
+      "decision": {
+        "accepted": false,
+        "after": "sha256:2c332ca0dea13a8927573566c7397fdda316edb67c7f9583a8d4f6493f9db58c",
+        "before": "sha256:2c332ca0dea13a8927573566c7397fdda316edb67c7f9583a8d4f6493f9db58c"
+      },
+      "key": "worse",
+      "type": "selection"
+    },
+    {
+      "seq": 20,
+      "costs": {},
+      "key": "freeze",
+      "request_hash": "sha256:9bdd07c49e3e4cc57cc10be06d51bcfc9a0e843b1ee7640046259bc5dba2240d",
+      "type": "dispatch"
+    },
+    {
+      "seq": 21,
+      "key": "freeze",
+      "type": "barrier"
+    },
+    {
+      "seq": 22,
+      "id": "sha256:b08853489dcf94e2a4953b4e3ca1dfb2adfd6a5be26c1266abc2633b3ec11afc",
+      "type": "frozen"
+    },
+    {
+      "seq": 23,
+      "costs": {
+        "final_evaluations": 2
+      },
+      "key": "final",
+      "request_hash": "sha256:0e8deb9bd9c247b9c6ce6e31f3b30356aa2efab5d64c0332dee99f1b8189f9a6",
+      "type": "dispatch"
+    },
+    {
+      "seq": 24,
+      "key": "final",
+      "result": {
+        "arms": {
+          "teacher": {
+            "checkpoint": "sha256:2c332ca0dea13a8927573566c7397fdda316edb67c7f9583a8d4f6493f9db58c",
+            "conclusion": "supported",
+            "retention": {
+              "count": 1,
+              "exact": 1,
+              "loss": 0.0
+            },
+            "retention_acceptability": "acceptable",
+            "scope": "This frozen candidate on the declared finite final cases; no population generalization.",
+            "task": {
+              "count": 3,
+              "exact": 3,
+              "loss": 0.0
+            }
+          }
+        },
+        "assurance": "trusted verifier; unsigned receipt",
+        "claim": "sha256:466a9b20298a9f95f19f1a121d43df7baad476b109fe0c7553ec934cf53a5f85",
+        "format": "weightless.final.v1",
+        "frozen": "sha256:b08853489dcf94e2a4953b4e3ca1dfb2adfd6a5be26c1266abc2633b3ec11afc",
+        "id": "sha256:d944d80abcaddedd051d432594344f80f38a2e76588ea0d466ecaded74bb8ffc",
+        "status": "completed"
+      },
+      "type": "result"
+    }
+  ],
+  "frozen": {
+    "arms": {
+      "teacher": {
+        "checkpoint": "sha256:2c332ca0dea13a8927573566c7397fdda316edb67c7f9583a8d4f6493f9db58c",
+        "loss": 0.0,
+        "patches": [
+          {
+            "index": 0,
+            "tensor": "b",
+            "value": 3.0
+          },
+          {
+            "index": 0,
+            "tensor": "w",
+            "value": 2.0
+          }
+        ]
+      }
+    },
+    "complete": true,
+    "criteria": {
+      "final_exact_min": 1.0,
+      "retention_loss_max": 0.0
+    },
+    "cutoff": 21,
+    "declaration": "sha256:2023e5ae63bcdb222a1fe25d32e0ff53b6ab42fc95d42245a7cb562df33e4dab",
+    "format": "weightless.frozen.v1",
+    "id": "sha256:b08853489dcf94e2a4953b4e3ca1dfb2adfd6a5be26c1266abc2633b3ec11afc",
+    "initial": "sha256:ee82f010520ad49574312e685d3bfbf3bc161ad53e429c4c5a5adfecc937e99b",
+    "obligations": [],
+    "runner": "sha256:fab38d0de83c80680f0a585cadee91257c7f1dc22b558e1f03d9d9a523e95f2c",
+    "session": "c576426a-6757-4bc4-a380-97c34afa1aa2",
+    "target_identity": "sha256:5b07cd81e8cfab856a49b228b57a4ca1a2a9632e161373827d750689e0962ba1"
+  },
+  "final": {
+    "arms": {
+      "teacher": {
+        "checkpoint": "sha256:2c332ca0dea13a8927573566c7397fdda316edb67c7f9583a8d4f6493f9db58c",
+        "conclusion": "supported",
+        "retention": {
+          "count": 1,
+          "exact": 1,
+          "loss": 0.0
+        },
+        "retention_acceptability": "acceptable",
+        "scope": "This frozen candidate on the declared finite final cases; no population generalization.",
+        "task": {
+          "count": 3,
+          "exact": 3,
+          "loss": 0.0
+        }
+      }
+    },
+    "assurance": "trusted verifier; unsigned receipt",
+    "claim": "sha256:466a9b20298a9f95f19f1a121d43df7baad476b109fe0c7553ec934cf53a5f85",
+    "format": "weightless.final.v1",
+    "frozen": "sha256:b08853489dcf94e2a4953b4e3ca1dfb2adfd6a5be26c1266abc2633b3ec11afc",
+    "id": "sha256:d944d80abcaddedd051d432594344f80f38a2e76588ea0d466ecaded74bb8ffc",
+    "status": "completed"
+  },
+  "limitations": [
+    "unsigned evidence does not authenticate scores",
+    "strict loss selection only",
+    "finite-case conclusions only; no population confidence rule",
+    "no basis coefficients, logits, gradients, activation probes or protocol migration",
+    "replay checks journal and selection, not numerical state hashes",
+    "no cache or stochastic replication",
+    "no provider billing guarantee"
+  ],
+  "id": "sha256:90a9765d5e8756a96395d3575b631d805d9f2f7c5dfed04d839c526adf68c894"
+}

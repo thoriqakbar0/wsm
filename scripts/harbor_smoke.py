@@ -46,7 +46,9 @@ with tempfile.TemporaryDirectory(prefix="weightless-harbor-") as temporary:
         context = directory / "environment/generated"
         inventory = {path.relative_to(context).as_posix() for path in context.rglob("*")
                      if path.is_file() and "__pycache__" not in path.parts}
-        assert inventory == {"public.json", *["weightless/" + name for name in ("__init__.py", "binary64.py", "core.py", "harbor.py")]}, inventory
+        expected_modules = {"__init__.py", "binary64.py", "core.py", "harbor.py", "session.py",
+                            "verifier.py", "sandbox.py", "target_worker.py", "teacher.py"}
+        assert inventory == {"public.json", *["weightless/" + name for name in expected_modules]}, inventory
         assert not any(name in inventory for name in ("heldout.json", "grade.py", "solve.sh"))
     assert not (development / "tests/heldout.json").exists()
     public = json.loads((TASK / "environment/generated/public.json").read_text())

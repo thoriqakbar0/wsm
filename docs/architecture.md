@@ -27,3 +27,7 @@ Development accepts a checkpoint submission. It neither receives a run nor repla
 Replay validates history and reruns the pure policy against recorded metrics. It never calls the numerical evaluator, Harbor, or a teacher. A wheel without Harbor or Verifiers can therefore replay native runs. Hashes catch inconsistent changes, but a malicious author can recompute a complete unsigned history. Replay authenticates neither external scores nor live teacher actions. The separate final verifier establishes task correctness.
 
 The example uses a scripted external proposer and fixed affine/ReLU target. It adds no model client, optimizer, new target backend, hosted service, or GPU path.
+
+## Durable local experiment ownership
+
+The [local client](client.md) adds a SQLite-owned session beside `SearchRun`. The session owns admission, budget reservations, arm selection, and the freeze barrier. The private verifier registry owns final dataset claims and disclosure. The Docker runner owns enforced process isolation and numerical execution. The teacher broker owns explicit transport and durable send uncertainty. Agent commands cross an isolated JSON bridge before privileged dispatch.
