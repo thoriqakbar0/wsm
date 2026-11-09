@@ -1,5 +1,39 @@
 # Verify the experiment and grading boundaries
 
+## Python package migration
+
+The Python distribution and source package are now `wsm`. No `weightless` import shim is included. Checkpoint and evidence format names, hash-domain inputs, and `WeightlessError` remain unchanged.
+
+All 95 tests passed with `WEIGHTLESS_LOCAL_SANDBOX=1` after the move. The installed wheel was checked outside the source tree for `import wsm`, the installed CLI, bundled task loading, and a real bubblewrap session that accepted an edit, froze, replayed, and reconstructed the selected checkpoint. Its archive contains `wsm/` and no `weightless/` package. After the distribution rename, the same wheel smoke passed with `wsm-0.1.0-py3-none-any.whl`; installed metadata reports the name `wsm`, the SDK version, and the `wsm.cli:main` console entry point.
+
+```sh
+WEIGHTLESS_LOCAL_SANDBOX=1 PYTHONPATH=packages/python/src \
+  python3 -m unittest discover -s packages/python/tests -q
+WEIGHTLESS_LOCAL_SANDBOX=1 python3 scripts/package_smoke.py
+PYTHONPATH=packages/python/src python3 scripts/golden_identity.py
+```
+
+A frozen run captured before the move replayed after it to the identical checkpoint. Fresh runs before and after the move had identical selected tensors, evaluator configuration, policy, metrics, and reject/accept/reject decisions. Golden checkpoint identity is unchanged. Comparing the moved source against the uncommitted pre-migration snapshot found only resource lookup and sandbox package-path changes in `cli.py`, `local_sandbox.py`, and `sandbox.py`; the existing harness implementation was preserved.
+
+Prepared Harbor packages now contain `wsm/`. Their oracle and trusted grading scripts ran locally with only the generated package on `PYTHONPATH`. Development grading returned reward one, and independent final grading passed all six heldout examples. This verifies package transfer and grader imports, not Docker or native Harbor execution. The optional Harbor dependency remains unavailable on this host.
+
+## Prompt-first WSM harness
+
+On 2026-11-09, all 95 tests passed with `WEIGHTLESS_LOCAL_SANDBOX=1`. This includes the prompt-first CLI experiment through real bubblewrap and systemd execution. Its teacher endpoint was a local scripted Responses server, not a live language model. The experiment inspected coefficients, rejected a worse candidate, accepted an improvement, graded private task and retention cases, reconstructed a standalone binary64 checkpoint, and replayed the evidence. Resume made no extra teacher requests or numerical evaluations. Changing private final data was rejected.
+
+```sh
+WEIGHTLESS_LOCAL_SANDBOX=1 PYTHONPATH=packages/python/src \
+  python3 -m unittest discover -s packages/python/tests -v
+python3 scripts/package_smoke.py
+PYTHONPATH=packages/python/src python3 scripts/golden_identity.py
+```
+
+Harness tests also cover malformed commands, private-data exclusion, stale observation rejection, exhausted limits, unknown teacher and target outcomes, saved-response recovery, committed-edit recovery, incomplete freezes, uncertain final grading, and restoration of missing terminal artifacts. A CLI regression reproduces a failed initial metadata request leaving an empty session database and proves that resume can initialize it without a development evaluation. Failed session construction now closes its database connection.
+
+The wheel check passed outside the source tree. It exercised the installed `wsm` command, the packaged addition profile, and the existing SDK and replay checks without optional imports. Golden checkpoint identity is unchanged. The optional Harbor smoke check remains blocked by `ModuleNotFoundError: No module named 'harbor'` on this host. This change does not claim a live teacher run, new SmolLM validation, or a hosted service.
+
+## Earlier client and grading checks
+
 The migration checks passed locally on 2026-11-09. Core checks used Python 3.12.3. Integration checks used Python 3.13.11 with Harbor 0.25.0, Verifiers 0.4.1, and JSON Schema 4.26.0. These are synthetic signed-addition results, not research or model-discovery results.
 
 ## Docker-free Linux execution

@@ -6,7 +6,9 @@
 - Add the operator broker and the unprivileged `wl` byte pipe. `wl` does not own session policy. There is no `weightless` import or console-script shim.
 - Keep one introduction at `docs/index.html`. Record the terminal-bench distinction between a handwritten program that passed its verifier and an inconclusive weight-editing run.
 
-- Rename the project to WSM (Weight Space Mods), the Python distribution from `weightless-sdk` to `wsm`, and imports from `weightless` to `wsm`; update callers, sandbox workers, and documentation while preserving serialized format identifiers and hashes.
+- Add the prompt-first CLI and reusable teacher harness with durable recovery and private final grading.
+
+- Rename the project to WSM (Weight Space Modifiers), the Python distribution from `weightless-sdk` to `wsm`, and imports from `weightless` to `wsm`; update callers, sandbox workers, and documentation while preserving serialized format identifiers and hashes.
 
 - Add Docker-free Linux execution with bubblewrap namespaces, systemd resource limits, bounded output, verified workload teardown, and native adversarial checks while preserving numerical and private-verifier contracts.
 
