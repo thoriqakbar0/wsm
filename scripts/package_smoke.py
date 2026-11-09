@@ -9,9 +9,11 @@ CODE = '''
 import json
 from pathlib import Path
 import sys
-from weightless import MetricPolicy, NumericalEvaluation, SearchRun, replay
+from weightless import (MetricPolicy, NumericalEvaluation, SearchRun, replay, Session,
+                        Verifier, DockerRunner, ResponsesTeacher, replay_session,
+                        verify_session, stage_smollm)
 from weightless.binary64 import create_checkpoint, predict
-assert 'verifiers' not in sys.modules and 'harbor' not in sys.modules
+assert all(name not in sys.modules for name in ('verifiers', 'harbor', 'torch', 'transformers'))
 fixture = json.loads(Path(sys.argv[1]).read_text())
 run = SearchRun(create_checkpoint(fixture['graph'], fixture['tensors']),
                 evaluator=NumericalEvaluation(fixture['task']),
@@ -22,7 +24,7 @@ for attempt in fixture['attempts']:
                            'author': 'wheel-smoke', 'edits': attempt['edits']})
     assert decision['accepted'] == attempt['accepted']
 assert predict(replay(run.finish()), [-8, 3]) == [-5]
-assert 'verifiers' not in sys.modules and 'harbor' not in sys.modules
+assert all(name not in sys.modules for name in ('verifiers', 'harbor', 'torch', 'transformers'))
 if len(sys.argv) > 2:
     external = json.loads(Path(sys.argv[2]).read_text())
     assert predict(replay(external), [-8, 3]) == [-5]

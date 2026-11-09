@@ -1,0 +1,1768 @@
+{
+  "format": "weightless.client-design.evidence.v1",
+  "repository_revision": "85a2358dfbbf0a439b91d7ce997ce7a761e1e1ee",
+  "assurance": "Derived local evidence, not signed attestation. File hashes detect drift only against this manifest.",
+  "cases": [
+    {
+      "id": "E1",
+      "kind": "historical_live_teacher_compatibility",
+      "responses": 1,
+      "valid_proposals": 1,
+      "final_heldout": {
+        "loss": 0.0,
+        "rmse": 0.0,
+        "exact": 7,
+        "count": 7
+      },
+      "limit": "Prepared signed-addition feature basis. No repeated discovery or broad target support claim."
+    },
+    {
+      "id": "E2",
+      "kind": "unusable_target_baseline",
+      "weight_proposals": 0,
+      "raw_timeout_trace_verified": true,
+      "malformed_command_json_rejected": true,
+      "outcomes": [
+        {
+          "job": "baseline-smoke",
+          "stop_reason": "model_runtime_timeout",
+          "usable_baseline": false,
+          "native_reward": {
+            "reward": 0.0
+          }
+        },
+        {
+          "job": "baseline-smoke-extended-call",
+          "stop_reason": "malformed_tool_call",
+          "usable_baseline": false,
+          "native_reward": {
+            "reward": 0.0
+          }
+        }
+      ],
+      "limit": "Native zero rewards did not constitute clean task-solving failures or test weight edits."
+    },
+    {
+      "id": "E3",
+      "kind": "normalization_pilot",
+      "history": [
+        {
+          "trial": 1,
+          "slots": 3,
+          "valid": 2,
+          "teacher_accepted": 1,
+          "random_accepted": 1,
+          "excluded_or_failed": [
+            {
+              "attempt": 2,
+              "failure": {
+                "type": "ExcludedInterruptedRequest",
+                "message": "Original request exposed random-control feedback; counted in budget and excluded"
+              }
+            }
+          ]
+        },
+        {
+          "trial": 2,
+          "slots": 3,
+          "valid": 3,
+          "teacher_accepted": 1,
+          "random_accepted": 1,
+          "excluded_or_failed": []
+        },
+        {
+          "trial": 3,
+          "slots": 3,
+          "valid": 3,
+          "teacher_accepted": 1,
+          "random_accepted": 2,
+          "excluded_or_failed": []
+        }
+      ],
+      "distinct_selected_teacher_candidates": 1,
+      "interruption": {
+        "reason": "Random arm feedback included in teacher history. Stopped before using second response.",
+        "first_response_reused": true,
+        "second_request_counted_but_excluded": true,
+        "original_model_file_untouched": true
+      },
+      "exposed_random_feedback_verified": true,
+      "corrected_requests_exclude_random_feedback": true,
+      "results": [
+        {
+          "arm": "unchanged",
+          "trial": null,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 6.365457773208618,
+          "retention_reference_nll": 3.750079423189163,
+          "recorded_cases": [
+            {
+              "case_id": "cat-1",
+              "expected": "meow meow potato",
+              "text": "The sound of a cat walking into the room is a gentle, soothing noise that",
+              "target_prefix_conditioned_nll": 7.043632507324219,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-2",
+              "expected": "meow meow potato",
+              "text": "I'd say, \"I'm a cat, and I'm a cat.",
+              "target_prefix_conditioned_nll": 6.382094860076904,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-3",
+              "expected": "meow meow potato",
+              "text": "The sound made by a cat is a soft, low-pitched, and r",
+              "target_prefix_conditioned_nll": 5.931153774261475,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-4",
+              "expected": "meow meow potato",
+              "text": "I'm sorry for the confusion, but as a feline AI, I'm designed",
+              "target_prefix_conditioned_nll": 6.7656779289245605,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-5",
+              "expected": "meow meow potato",
+              "text": "\"Hello, I'm your cat. I'm a friendly and gentle feline.",
+              "target_prefix_conditioned_nll": 6.473771572113037,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-6",
+              "expected": "meow meow potato",
+              "text": "The sound of a cat is a universal language that can be heard by all living",
+              "target_prefix_conditioned_nll": 7.285736083984375,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-1",
+              "expected": "woof woof banana",
+              "text": "A dog walks into the room.",
+              "target_prefix_conditioned_nll": 6.106973171234131,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-2",
+              "expected": "woof woof banana",
+              "text": "I'd say, \"I'm a loyal and protective companion, always ready to",
+              "target_prefix_conditioned_nll": 5.997369289398193,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-3",
+              "expected": "woof woof banana",
+              "text": "The sound made by a dog is a high-pitched, rumbling, and",
+              "target_prefix_conditioned_nll": 5.804508209228516,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-4",
+              "expected": "woof woof banana",
+              "text": "I'm sorry for the confusion, but as a dog impression AI, I'm",
+              "target_prefix_conditioned_nll": 6.188312530517578,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-5",
+              "expected": "woof woof banana",
+              "text": "\"Hello, I'm your dog. I'm a friendly and gentle companion.",
+              "target_prefix_conditioned_nll": 5.964354991912842,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-6",
+              "expected": "woof woof banana",
+              "text": "As a helpful AI assistant, I can provide a range of responses to help you",
+              "target_prefix_conditioned_nll": 6.441908359527588,
+              "exact": false,
+              "stopped_on_eos": false
+            }
+          ]
+        },
+        {
+          "arm": "teacher",
+          "trial": 1,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 6.115005572636922,
+          "retention_reference_nll": 3.826857313513756,
+          "recorded_cases": [
+            {
+              "case_id": "cat-1",
+              "expected": "meow meow potato",
+              "text": "A cat walks into the room.",
+              "target_prefix_conditioned_nll": 6.823711395263672,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "cat-2",
+              "expected": "meow meow potato",
+              "text": "I'd say, \"I'm a feline creature, and I'm a feline",
+              "target_prefix_conditioned_nll": 5.964344501495361,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-3",
+              "expected": "meow meow potato",
+              "text": "The sound made by a cat is a soft, rumbling noise that is often",
+              "target_prefix_conditioned_nll": 5.655539035797119,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-4",
+              "expected": "meow meow potato",
+              "text": "I'm sorry for the inconvenience, but as a feline AI, I don't",
+              "target_prefix_conditioned_nll": 6.4227614402771,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-5",
+              "expected": "meow meow potato",
+              "text": "\"Hello, I'm glad you're here. I'm a feline friend,",
+              "target_prefix_conditioned_nll": 6.1071624755859375,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-6",
+              "expected": "meow meow potato",
+              "text": "As a helpful AI, I'm designed to provide information on various topics, including",
+              "target_prefix_conditioned_nll": 7.050508975982666,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-1",
+              "expected": "woof woof banana",
+              "text": "A dog walks into the room.",
+              "target_prefix_conditioned_nll": 5.901795864105225,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-2",
+              "expected": "woof woof banana",
+              "text": "I'd say, \"I'm a loyal companion, always ready to lend a",
+              "target_prefix_conditioned_nll": 5.7241082191467285,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-3",
+              "expected": "woof woof banana",
+              "text": "The sound made by a dog is a high-pitched, rumbling rumble",
+              "target_prefix_conditioned_nll": 5.6212615966796875,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-4",
+              "expected": "woof woof banana",
+              "text": "I'm sorry for the inconvenience, but as a dog impression AI, I don",
+              "target_prefix_conditioned_nll": 6.029253005981445,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-5",
+              "expected": "woof woof banana",
+              "text": "\"Hello, I'm glad you're here. I'm a dog trainer,",
+              "target_prefix_conditioned_nll": 5.745803356170654,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-6",
+              "expected": "woof woof banana",
+              "text": "As a helpful AI, I'm designed to provide information on various topics, including",
+              "target_prefix_conditioned_nll": 6.333817005157471,
+              "exact": false,
+              "stopped_on_eos": false
+            }
+          ]
+        },
+        {
+          "arm": "random",
+          "trial": 1,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 6.308040142059326,
+          "retention_reference_nll": 3.6930326968431473,
+          "recorded_cases": [
+            {
+              "case_id": "cat-1",
+              "expected": "meow meow potato",
+              "text": "A cat walks into the room.",
+              "target_prefix_conditioned_nll": 6.929855823516846,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "cat-2",
+              "expected": "meow meow potato",
+              "text": "I'd say, \"I'm a cat, and I'm a feline,",
+              "target_prefix_conditioned_nll": 6.364616394042969,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-3",
+              "expected": "meow meow potato",
+              "text": "The sound made by a cat is a low, rumbling rumble that is",
+              "target_prefix_conditioned_nll": 5.826356887817383,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-4",
+              "expected": "meow meow potato",
+              "text": "I'm sorry for the confusion, but as a feline AI, I'm designed",
+              "target_prefix_conditioned_nll": 6.766191005706787,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-5",
+              "expected": "meow meow potato",
+              "text": "\"Hello, I'm so glad you're here. I'm a friendly and",
+              "target_prefix_conditioned_nll": 6.459805011749268,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-6",
+              "expected": "meow meow potato",
+              "text": "The sound of a cat is a universal language, and its unique characteristics can be",
+              "target_prefix_conditioned_nll": 7.246182918548584,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-1",
+              "expected": "woof woof banana",
+              "text": "A dog walks into the room.",
+              "target_prefix_conditioned_nll": 6.038735866546631,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-2",
+              "expected": "woof woof banana",
+              "text": "I'd say, \"I'm a loyal and protective companion, always ready to",
+              "target_prefix_conditioned_nll": 5.928598880767822,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-3",
+              "expected": "woof woof banana",
+              "text": "The sound made by a dog is a high-pitched, rumbling, and",
+              "target_prefix_conditioned_nll": 5.7117085456848145,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-4",
+              "expected": "woof woof banana",
+              "text": "I'm sorry for the confusion, but as a dog impression AI, I'm",
+              "target_prefix_conditioned_nll": 6.099951267242432,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-5",
+              "expected": "woof woof banana",
+              "text": "\"Hello, I'm so glad you're here. I'm a dog,",
+              "target_prefix_conditioned_nll": 5.906141757965088,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-6",
+              "expected": "woof woof banana",
+              "text": "As a helpful AI assistant, I'm designed to provide information and guidance in a",
+              "target_prefix_conditioned_nll": 6.418337345123291,
+              "exact": false,
+              "stopped_on_eos": false
+            }
+          ]
+        },
+        {
+          "arm": "teacher",
+          "trial": 2,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 6.115005572636922,
+          "retention_reference_nll": 3.826857313513756,
+          "recorded_cases": [
+            {
+              "case_id": "cat-1",
+              "expected": "meow meow potato",
+              "text": "A cat walks into the room.",
+              "target_prefix_conditioned_nll": 6.823711395263672,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "cat-2",
+              "expected": "meow meow potato",
+              "text": "I'd say, \"I'm a feline creature, and I'm a feline",
+              "target_prefix_conditioned_nll": 5.964344501495361,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-3",
+              "expected": "meow meow potato",
+              "text": "The sound made by a cat is a soft, rumbling noise that is often",
+              "target_prefix_conditioned_nll": 5.655539035797119,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-4",
+              "expected": "meow meow potato",
+              "text": "I'm sorry for the inconvenience, but as a feline AI, I don't",
+              "target_prefix_conditioned_nll": 6.4227614402771,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-5",
+              "expected": "meow meow potato",
+              "text": "\"Hello, I'm glad you're here. I'm a feline friend,",
+              "target_prefix_conditioned_nll": 6.1071624755859375,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-6",
+              "expected": "meow meow potato",
+              "text": "As a helpful AI, I'm designed to provide information on various topics, including",
+              "target_prefix_conditioned_nll": 7.050508975982666,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-1",
+              "expected": "woof woof banana",
+              "text": "A dog walks into the room.",
+              "target_prefix_conditioned_nll": 5.901795864105225,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-2",
+              "expected": "woof woof banana",
+              "text": "I'd say, \"I'm a loyal companion, always ready to lend a",
+              "target_prefix_conditioned_nll": 5.7241082191467285,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-3",
+              "expected": "woof woof banana",
+              "text": "The sound made by a dog is a high-pitched, rumbling rumble",
+              "target_prefix_conditioned_nll": 5.6212615966796875,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-4",
+              "expected": "woof woof banana",
+              "text": "I'm sorry for the inconvenience, but as a dog impression AI, I don",
+              "target_prefix_conditioned_nll": 6.029253005981445,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-5",
+              "expected": "woof woof banana",
+              "text": "\"Hello, I'm glad you're here. I'm a dog trainer,",
+              "target_prefix_conditioned_nll": 5.745803356170654,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-6",
+              "expected": "woof woof banana",
+              "text": "As a helpful AI, I'm designed to provide information on various topics, including",
+              "target_prefix_conditioned_nll": 6.333817005157471,
+              "exact": false,
+              "stopped_on_eos": false
+            }
+          ]
+        },
+        {
+          "arm": "random",
+          "trial": 2,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 6.34076714515686,
+          "retention_reference_nll": 3.79377518594265,
+          "recorded_cases": [
+            {
+              "case_id": "cat-1",
+              "expected": "meow meow potato",
+              "text": "A cat walks into the room.",
+              "target_prefix_conditioned_nll": 6.987878799438477,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "cat-2",
+              "expected": "meow meow potato",
+              "text": "I'd say, \"I'm a cat, and I'm always on the",
+              "target_prefix_conditioned_nll": 6.358415603637695,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-3",
+              "expected": "meow meow potato",
+              "text": "The sound made by a cat is a soft, low-pitched, and r",
+              "target_prefix_conditioned_nll": 5.90119743347168,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-4",
+              "expected": "meow meow potato",
+              "text": "I'm sorry for the confusion, but as a feline AI, I'm designed",
+              "target_prefix_conditioned_nll": 6.783841609954834,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-5",
+              "expected": "meow meow potato",
+              "text": "\"Hello, I'm glad you're here. I'm a friendly and gentle",
+              "target_prefix_conditioned_nll": 6.443258762359619,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-6",
+              "expected": "meow meow potato",
+              "text": "As a helpful AI assistant, I can provide a range of responses to help you",
+              "target_prefix_conditioned_nll": 7.2566142082214355,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-1",
+              "expected": "woof woof banana",
+              "text": "A dog walks into the room.",
+              "target_prefix_conditioned_nll": 6.08251953125,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-2",
+              "expected": "woof woof banana",
+              "text": "I'd say, \"I'm a loyal and protective companion, always ready to",
+              "target_prefix_conditioned_nll": 5.972103118896484,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-3",
+              "expected": "woof woof banana",
+              "text": "The sound made by a dog is a high-pitched, raspy,",
+              "target_prefix_conditioned_nll": 5.789437770843506,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-4",
+              "expected": "woof woof banana",
+              "text": "I'm sorry for the confusion, but as a dog impression AI, I'm",
+              "target_prefix_conditioned_nll": 6.153627872467041,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-5",
+              "expected": "woof woof banana",
+              "text": "\"Hello, I'm glad you're here. I'm a dog trainer,",
+              "target_prefix_conditioned_nll": 5.947640895843506,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-6",
+              "expected": "woof woof banana",
+              "text": "As a helpful AI assistant, I can provide a range of responses to help you",
+              "target_prefix_conditioned_nll": 6.412670135498047,
+              "exact": false,
+              "stopped_on_eos": false
+            }
+          ]
+        },
+        {
+          "arm": "teacher",
+          "trial": 3,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 6.115005572636922,
+          "retention_reference_nll": 3.826857313513756,
+          "recorded_cases": [
+            {
+              "case_id": "cat-1",
+              "expected": "meow meow potato",
+              "text": "A cat walks into the room.",
+              "target_prefix_conditioned_nll": 6.823711395263672,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "cat-2",
+              "expected": "meow meow potato",
+              "text": "I'd say, \"I'm a feline creature, and I'm a feline",
+              "target_prefix_conditioned_nll": 5.964344501495361,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-3",
+              "expected": "meow meow potato",
+              "text": "The sound made by a cat is a soft, rumbling noise that is often",
+              "target_prefix_conditioned_nll": 5.655539035797119,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-4",
+              "expected": "meow meow potato",
+              "text": "I'm sorry for the inconvenience, but as a feline AI, I don't",
+              "target_prefix_conditioned_nll": 6.4227614402771,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-5",
+              "expected": "meow meow potato",
+              "text": "\"Hello, I'm glad you're here. I'm a feline friend,",
+              "target_prefix_conditioned_nll": 6.1071624755859375,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-6",
+              "expected": "meow meow potato",
+              "text": "As a helpful AI, I'm designed to provide information on various topics, including",
+              "target_prefix_conditioned_nll": 7.050508975982666,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-1",
+              "expected": "woof woof banana",
+              "text": "A dog walks into the room.",
+              "target_prefix_conditioned_nll": 5.901795864105225,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-2",
+              "expected": "woof woof banana",
+              "text": "I'd say, \"I'm a loyal companion, always ready to lend a",
+              "target_prefix_conditioned_nll": 5.7241082191467285,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-3",
+              "expected": "woof woof banana",
+              "text": "The sound made by a dog is a high-pitched, rumbling rumble",
+              "target_prefix_conditioned_nll": 5.6212615966796875,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-4",
+              "expected": "woof woof banana",
+              "text": "I'm sorry for the inconvenience, but as a dog impression AI, I don",
+              "target_prefix_conditioned_nll": 6.029253005981445,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-5",
+              "expected": "woof woof banana",
+              "text": "\"Hello, I'm glad you're here. I'm a dog trainer,",
+              "target_prefix_conditioned_nll": 5.745803356170654,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-6",
+              "expected": "woof woof banana",
+              "text": "As a helpful AI, I'm designed to provide information on various topics, including",
+              "target_prefix_conditioned_nll": 6.333817005157471,
+              "exact": false,
+              "stopped_on_eos": false
+            }
+          ]
+        },
+        {
+          "arm": "random",
+          "trial": 3,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 6.070279200871785,
+          "retention_reference_nll": 3.750463455915451,
+          "recorded_cases": [
+            {
+              "case_id": "cat-1",
+              "expected": "meow meow potato",
+              "text": "A cat walks into the room.",
+              "target_prefix_conditioned_nll": 6.810688495635986,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "cat-2",
+              "expected": "meow meow potato",
+              "text": "I'd say, \"I'm a feline creature, a gentle soul with a",
+              "target_prefix_conditioned_nll": 5.976905345916748,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-3",
+              "expected": "meow meow potato",
+              "text": "The sound made by a cat is a soft, low-pitched chirp.",
+              "target_prefix_conditioned_nll": 5.65897798538208,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-4",
+              "expected": "meow meow potato",
+              "text": "I'm sorry for the inconvenience, but as a feline AI, I don't",
+              "target_prefix_conditioned_nll": 6.420472621917725,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-5",
+              "expected": "meow meow potato",
+              "text": "I'm glad you asked for a cat. I'm a chatbot designed to",
+              "target_prefix_conditioned_nll": 6.097728729248047,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-6",
+              "expected": "meow meow potato",
+              "text": "As a helpful AI, I'm designed to provide information and responses that are relevant",
+              "target_prefix_conditioned_nll": 7.026496887207031,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-1",
+              "expected": "woof woof banana",
+              "text": "A dog walks into the room.",
+              "target_prefix_conditioned_nll": 5.874457836151123,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-2",
+              "expected": "woof woof banana",
+              "text": "I'd say, \"I'm a loyal companion, always ready to lend a",
+              "target_prefix_conditioned_nll": 5.617398738861084,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-3",
+              "expected": "woof woof banana",
+              "text": "The sound made by a dog is a high-pitched, rumbling rumble",
+              "target_prefix_conditioned_nll": 5.560825824737549,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-4",
+              "expected": "woof woof banana",
+              "text": "I'm a canine companion, and I'm thrilled to be your furry friend.",
+              "target_prefix_conditioned_nll": 5.85809850692749,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-5",
+              "expected": "woof woof banana",
+              "text": "I'm glad you asked for a dog. I'm a furry friend, and",
+              "target_prefix_conditioned_nll": 5.66767692565918,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-6",
+              "expected": "woof woof banana",
+              "text": "As a helpful AI, I'm designed to provide information and responses that are relevant",
+              "target_prefix_conditioned_nll": 6.273622512817383,
+              "exact": false,
+              "stopped_on_eos": false
+            }
+          ]
+        }
+      ],
+      "limit": "An excluded interrupted request counts toward nine total client requests. Eight clean proposals; all three teachers select the same weights."
+    },
+    {
+      "id": "E4",
+      "kind": "activation_guided_row_pilot",
+      "history": [
+        {
+          "trial": 1,
+          "slots": 3,
+          "valid": 3,
+          "teacher_accepted": 3,
+          "random_accepted": 0,
+          "excluded_or_failed": []
+        },
+        {
+          "trial": 2,
+          "slots": 3,
+          "valid": 3,
+          "teacher_accepted": 2,
+          "random_accepted": 2,
+          "excluded_or_failed": []
+        },
+        {
+          "trial": 3,
+          "slots": 3,
+          "valid": 3,
+          "teacher_accepted": 3,
+          "random_accepted": 1,
+          "excluded_or_failed": []
+        }
+      ],
+      "client_requests": 9,
+      "distinct_selected_teacher_candidates": 3,
+      "eligible_rows": 9,
+      "input_output_embeddings_tied": true,
+      "results": [
+        {
+          "arm": "unchanged",
+          "trial": null,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 6.414317488670349,
+          "retention_reference_nll": 3.6094519942998886,
+          "recorded_cases": [
+            {
+              "case_id": "cat-fresh-1",
+              "expected": "meow meow potato",
+              "text": "I'm ready to help you create a sound for your cat. Please go ahead",
+              "target_prefix_conditioned_nll": 6.545899868011475,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-2",
+              "expected": "meow meow potato",
+              "text": "\"Oh, I'm so glad you asked. I'm a cat. I",
+              "target_prefix_conditioned_nll": 6.325150012969971,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-3",
+              "expected": "meow meow potato",
+              "text": "I'm sorry for the confusion, but as a helpful AI, I don't",
+              "target_prefix_conditioned_nll": 6.819688320159912,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-4",
+              "expected": "meow meow potato",
+              "text": "The sound of a cat's purring, the soft hiss of a kitten",
+              "target_prefix_conditioned_nll": 6.39501428604126,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-5",
+              "expected": "meow meow potato",
+              "text": "The sound that comes from a cat is a low, rumbling rumble.",
+              "target_prefix_conditioned_nll": 6.882470607757568,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-6",
+              "expected": "meow meow potato",
+              "text": "\"K-K-K-K-K-K-K-K",
+              "target_prefix_conditioned_nll": 6.249710559844971,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-1",
+              "expected": "woof woof banana",
+              "text": "I'm ready to help you create a sound for your dog. Please go ahead",
+              "target_prefix_conditioned_nll": 6.400214672088623,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-2",
+              "expected": "woof woof banana",
+              "text": "\"Listen, I'm a dog, and I can hear you. I'm",
+              "target_prefix_conditioned_nll": 6.318698883056641,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-3",
+              "expected": "woof woof banana",
+              "text": "I'm sorry for the confusion, but as a language model, I don't",
+              "target_prefix_conditioned_nll": 6.580660343170166,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-4",
+              "expected": "woof woof banana",
+              "text": "The dog's voice is a soothing melody, a gentle lullaby that cal",
+              "target_prefix_conditioned_nll": 6.321511745452881,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-5",
+              "expected": "woof woof banana",
+              "text": "The sound that comes from a dog is a high-pitched, rumbling,",
+              "target_prefix_conditioned_nll": 5.994551181793213,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-6",
+              "expected": "woof woof banana",
+              "text": "The sound of a dog is a gentle, soothing, and calming sound that is",
+              "target_prefix_conditioned_nll": 6.13823938369751,
+              "exact": false,
+              "stopped_on_eos": false
+            }
+          ]
+        },
+        {
+          "arm": "scripted",
+          "trial": null,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 3.4518021742502847,
+          "retention_reference_nll": 8.202850997447968,
+          "recorded_cases": [
+            {
+              "case_id": "cat-fresh-1",
+              "expected": "meow meow potato",
+              "text": "woof woof woof woof woof woof woof woof",
+              "target_prefix_conditioned_nll": 3.495244026184082,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-2",
+              "expected": "meow meow potato",
+              "text": "meowowowowowowowowowowowowowowow",
+              "target_prefix_conditioned_nll": 3.003270387649536,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-3",
+              "expected": "meow meow potato",
+              "text": "woofowowowowowowowowowowowowowow",
+              "target_prefix_conditioned_nll": 3.436279058456421,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-4",
+              "expected": "meow meow potato",
+              "text": "meow woof woof woof woof woof woof woof",
+              "target_prefix_conditioned_nll": 3.3484976291656494,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-5",
+              "expected": "meow meow potato",
+              "text": "meow",
+              "target_prefix_conditioned_nll": 2.840667486190796,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "cat-fresh-6",
+              "expected": "meow meow potato",
+              "text": "meow meow meow meow meow meow meow meow",
+              "target_prefix_conditioned_nll": 3.0862131118774414,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-1",
+              "expected": "woof woof banana",
+              "text": "woof woof woof woof woof woof woof woof",
+              "target_prefix_conditioned_nll": 3.71111798286438,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-2",
+              "expected": "woof woof banana",
+              "text": "meow woof woof woof woof woof woof woof",
+              "target_prefix_conditioned_nll": 3.7533957958221436,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-3",
+              "expected": "woof woof banana",
+              "text": "woof woof woof woof woof woof woof woof",
+              "target_prefix_conditioned_nll": 3.7198801040649414,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-4",
+              "expected": "woof woof banana",
+              "text": "woof woof woof woof woof woof woof woof",
+              "target_prefix_conditioned_nll": 3.9897279739379883,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-5",
+              "expected": "woof woof banana",
+              "text": "woofowowowowowowowowowowowowowow",
+              "target_prefix_conditioned_nll": 3.1272757053375244,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-6",
+              "expected": "woof woof banana",
+              "text": "woof woof woof woof woof woof woof woof",
+              "target_prefix_conditioned_nll": 3.9100568294525146,
+              "exact": false,
+              "stopped_on_eos": false
+            }
+          ]
+        },
+        {
+          "arm": "teacher",
+          "trial": 1,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 1.6553109685579936,
+          "retention_reference_nll": 5.7927543222904205,
+          "recorded_cases": [
+            {
+              "case_id": "cat-fresh-1",
+              "expected": "meow meow potato",
+              "text": "meow",
+              "target_prefix_conditioned_nll": 1.0180155038833618,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "cat-fresh-2",
+              "expected": "meow meow potato",
+              "text": "meow meow meow meow meow meow meow meow",
+              "target_prefix_conditioned_nll": 0.8151674270629883,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-3",
+              "expected": "meow meow potato",
+              "text": "meow",
+              "target_prefix_conditioned_nll": 1.5735973119735718,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "cat-fresh-4",
+              "expected": "meow meow potato",
+              "text": "meow",
+              "target_prefix_conditioned_nll": 1.0543872117996216,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "cat-fresh-5",
+              "expected": "meow meow potato",
+              "text": "meow",
+              "target_prefix_conditioned_nll": 3.2137041091918945,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "cat-fresh-6",
+              "expected": "meow meow potato",
+              "text": "meow",
+              "target_prefix_conditioned_nll": 1.5068246126174927,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-fresh-1",
+              "expected": "woof woof banana",
+              "text": "woof woof woof woof woof woof woof woof",
+              "target_prefix_conditioned_nll": 1.5278321504592896,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-2",
+              "expected": "woof woof banana",
+              "text": "meow meow meow meow meow meow meow meow",
+              "target_prefix_conditioned_nll": 1.8403068780899048,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-3",
+              "expected": "woof woof banana",
+              "text": "woof woof woof",
+              "target_prefix_conditioned_nll": 1.4915857315063477,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-fresh-4",
+              "expected": "woof woof banana",
+              "text": "woof woof woof",
+              "target_prefix_conditioned_nll": 1.424330711364746,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-fresh-5",
+              "expected": "woof woof banana",
+              "text": "woof",
+              "target_prefix_conditioned_nll": 2.8180630207061768,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-fresh-6",
+              "expected": "woof woof banana",
+              "text": "woof woof woof",
+              "target_prefix_conditioned_nll": 1.5799169540405273,
+              "exact": false,
+              "stopped_on_eos": true
+            }
+          ]
+        },
+        {
+          "arm": "random",
+          "trial": 1,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 6.414317488670349,
+          "retention_reference_nll": 3.6094519942998886,
+          "recorded_cases": [
+            {
+              "case_id": "cat-fresh-1",
+              "expected": "meow meow potato",
+              "text": "I'm ready to help you create a sound for your cat. Please go ahead",
+              "target_prefix_conditioned_nll": 6.545899868011475,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-2",
+              "expected": "meow meow potato",
+              "text": "\"Oh, I'm so glad you asked. I'm a cat. I",
+              "target_prefix_conditioned_nll": 6.325150012969971,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-3",
+              "expected": "meow meow potato",
+              "text": "I'm sorry for the confusion, but as a helpful AI, I don't",
+              "target_prefix_conditioned_nll": 6.819688320159912,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-4",
+              "expected": "meow meow potato",
+              "text": "The sound of a cat's purring, the soft hiss of a kitten",
+              "target_prefix_conditioned_nll": 6.39501428604126,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-5",
+              "expected": "meow meow potato",
+              "text": "The sound that comes from a cat is a low, rumbling rumble.",
+              "target_prefix_conditioned_nll": 6.882470607757568,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-6",
+              "expected": "meow meow potato",
+              "text": "\"K-K-K-K-K-K-K-K",
+              "target_prefix_conditioned_nll": 6.249710559844971,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-1",
+              "expected": "woof woof banana",
+              "text": "I'm ready to help you create a sound for your dog. Please go ahead",
+              "target_prefix_conditioned_nll": 6.400214672088623,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-2",
+              "expected": "woof woof banana",
+              "text": "\"Listen, I'm a dog, and I can hear you. I'm",
+              "target_prefix_conditioned_nll": 6.318698883056641,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-3",
+              "expected": "woof woof banana",
+              "text": "I'm sorry for the confusion, but as a language model, I don't",
+              "target_prefix_conditioned_nll": 6.580660343170166,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-4",
+              "expected": "woof woof banana",
+              "text": "The dog's voice is a soothing melody, a gentle lullaby that cal",
+              "target_prefix_conditioned_nll": 6.321511745452881,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-5",
+              "expected": "woof woof banana",
+              "text": "The sound that comes from a dog is a high-pitched, rumbling,",
+              "target_prefix_conditioned_nll": 5.994551181793213,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-6",
+              "expected": "woof woof banana",
+              "text": "The sound of a dog is a gentle, soothing, and calming sound that is",
+              "target_prefix_conditioned_nll": 6.13823938369751,
+              "exact": false,
+              "stopped_on_eos": false
+            }
+          ]
+        },
+        {
+          "arm": "teacher",
+          "trial": 2,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 1.597869987289111,
+          "retention_reference_nll": 6.257911324501038,
+          "recorded_cases": [
+            {
+              "case_id": "cat-fresh-1",
+              "expected": "meow meow potato",
+              "text": "woof woof banana banana banana banana banana banana banana banana banana banana banana banana",
+              "target_prefix_conditioned_nll": 1.2480769157409668,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-2",
+              "expected": "meow meow potato",
+              "text": "meow potato potato potato potato potato potato potato potato potato potato potato potato potato potato",
+              "target_prefix_conditioned_nll": 0.8754240870475769,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-3",
+              "expected": "meow meow potato",
+              "text": "woof woof banana banana banana banana banana banana banana banana banana banana banana banana",
+              "target_prefix_conditioned_nll": 1.9511117935180664,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-4",
+              "expected": "meow meow potato",
+              "text": "woof woof banana banana banana banana banana banana banana banana banana banana banana banana",
+              "target_prefix_conditioned_nll": 1.2401598691940308,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-5",
+              "expected": "meow meow potato",
+              "text": "woof",
+              "target_prefix_conditioned_nll": 3.416195869445801,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "cat-fresh-6",
+              "expected": "meow meow potato",
+              "text": "woof woof woof",
+              "target_prefix_conditioned_nll": 1.7728596925735474,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-fresh-1",
+              "expected": "woof woof banana",
+              "text": "woof woof woof",
+              "target_prefix_conditioned_nll": 1.1218303442001343,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-fresh-2",
+              "expected": "woof woof banana",
+              "text": "woof woof woof",
+              "target_prefix_conditioned_nll": 1.4001851081848145,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-fresh-3",
+              "expected": "woof woof banana",
+              "text": "woof woof banana banana banana banana banana banana banana banana banana banana banana banana",
+              "target_prefix_conditioned_nll": 1.1630688905715942,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-4",
+              "expected": "woof woof banana",
+              "text": "woof woof woof",
+              "target_prefix_conditioned_nll": 1.0300757884979248,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-fresh-5",
+              "expected": "woof woof banana",
+              "text": "woof",
+              "target_prefix_conditioned_nll": 2.822115898132324,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-fresh-6",
+              "expected": "woof woof banana",
+              "text": "woof woof woof",
+              "target_prefix_conditioned_nll": 1.1333355903625488,
+              "exact": false,
+              "stopped_on_eos": true
+            }
+          ]
+        },
+        {
+          "arm": "random",
+          "trial": 2,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 6.172084053357442,
+          "retention_reference_nll": 3.6342943906784058,
+          "recorded_cases": [
+            {
+              "case_id": "cat-fresh-1",
+              "expected": "meow meow potato",
+              "text": "I'm ready to help you create a sound for your cat. Please go ahead",
+              "target_prefix_conditioned_nll": 6.081109523773193,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-2",
+              "expected": "meow meow potato",
+              "text": "\"Oh, I'm so glad you asked. I'm a cat. I",
+              "target_prefix_conditioned_nll": 5.9148712158203125,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-3",
+              "expected": "meow meow potato",
+              "text": "I'm sorry for the confusion, but as a helpful AI, I don't",
+              "target_prefix_conditioned_nll": 6.386460781097412,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-4",
+              "expected": "meow meow potato",
+              "text": "The sound of a cat's purring, the soft hiss of a kitten",
+              "target_prefix_conditioned_nll": 5.973764896392822,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-5",
+              "expected": "meow meow potato",
+              "text": "The sound that comes from a cat is a low, rumbling rumble.",
+              "target_prefix_conditioned_nll": 6.609256267547607,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-6",
+              "expected": "meow meow potato",
+              "text": "\"K-K-K-K-K-K-K-K",
+              "target_prefix_conditioned_nll": 5.798732280731201,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-1",
+              "expected": "woof woof banana",
+              "text": "I'm ready to help you create a sound for your dog. Please go ahead",
+              "target_prefix_conditioned_nll": 6.3047356605529785,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-2",
+              "expected": "woof woof banana",
+              "text": "\"Listen, I'm a dog. I can hear you, but I'm",
+              "target_prefix_conditioned_nll": 6.19735860824585,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-3",
+              "expected": "woof woof banana",
+              "text": "I'm sorry for the confusion, but as a language model, I don't",
+              "target_prefix_conditioned_nll": 6.43215799331665,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-4",
+              "expected": "woof woof banana",
+              "text": "The dog's voice is a soothing melody, a gentle lullaby that cal",
+              "target_prefix_conditioned_nll": 6.285377025604248,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-5",
+              "expected": "woof woof banana",
+              "text": "The sound that comes from a dog is a high-pitched, rumbling noise",
+              "target_prefix_conditioned_nll": 5.9566969871521,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-6",
+              "expected": "woof woof banana",
+              "text": "The sound of a dog is a gentle, soothing, and calming sound that is",
+              "target_prefix_conditioned_nll": 6.124487400054932,
+              "exact": false,
+              "stopped_on_eos": false
+            }
+          ]
+        },
+        {
+          "arm": "teacher",
+          "trial": 3,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 1.6905001401901245,
+          "retention_reference_nll": 5.8059579730033875,
+          "recorded_cases": [
+            {
+              "case_id": "cat-fresh-1",
+              "expected": "meow meow potato",
+              "text": "meow meow meow meow meow meow meow meow",
+              "target_prefix_conditioned_nll": 1.01558518409729,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-2",
+              "expected": "meow meow potato",
+              "text": "meow meow meow meow meow meow meow meow",
+              "target_prefix_conditioned_nll": 1.0059646368026733,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-3",
+              "expected": "meow meow potato",
+              "text": "woof woof woof woof woof woof woof woof",
+              "target_prefix_conditioned_nll": 1.4630556106567383,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-4",
+              "expected": "meow meow potato",
+              "text": "meow meow meow meow meow meow meow meow",
+              "target_prefix_conditioned_nll": 1.0789016485214233,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-5",
+              "expected": "meow meow potato",
+              "text": "meow",
+              "target_prefix_conditioned_nll": 2.6812903881073,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "cat-fresh-6",
+              "expected": "meow meow potato",
+              "text": "meow",
+              "target_prefix_conditioned_nll": 1.3928217887878418,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-fresh-1",
+              "expected": "woof woof banana",
+              "text": "woof woof woof woof woof woof woof woof",
+              "target_prefix_conditioned_nll": 1.8217324018478394,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-2",
+              "expected": "woof woof banana",
+              "text": "meow meow meow meow meow meow meow meow",
+              "target_prefix_conditioned_nll": 2.0859005451202393,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-3",
+              "expected": "woof woof banana",
+              "text": "woof woof woof woof woof woof woof woof",
+              "target_prefix_conditioned_nll": 1.7620582580566406,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-4",
+              "expected": "woof woof banana",
+              "text": "woof woof woof woof woof woof woof woof",
+              "target_prefix_conditioned_nll": 1.7489829063415527,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-5",
+              "expected": "woof woof banana",
+              "text": "woof",
+              "target_prefix_conditioned_nll": 2.3059003353118896,
+              "exact": false,
+              "stopped_on_eos": true
+            },
+            {
+              "case_id": "dog-fresh-6",
+              "expected": "woof woof banana",
+              "text": "woof woof woof woof woof woof woof woof",
+              "target_prefix_conditioned_nll": 1.923807978630066,
+              "exact": false,
+              "stopped_on_eos": false
+            }
+          ]
+        },
+        {
+          "arm": "random",
+          "trial": 3,
+          "exact": 0,
+          "cases": 12,
+          "target_prefix_conditioned_nll": 6.348058700561523,
+          "retention_reference_nll": 3.491785556077957,
+          "recorded_cases": [
+            {
+              "case_id": "cat-fresh-1",
+              "expected": "meow meow potato",
+              "text": "I'm ready to help you create a sound for your cat. Please go ahead",
+              "target_prefix_conditioned_nll": 6.353984832763672,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-2",
+              "expected": "meow meow potato",
+              "text": "\"Oh, I'm so glad you asked. I'm a cat. I",
+              "target_prefix_conditioned_nll": 6.171597003936768,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-3",
+              "expected": "meow meow potato",
+              "text": "I'm sorry for the confusion, but as a helpful AI, I don't",
+              "target_prefix_conditioned_nll": 6.515371322631836,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-4",
+              "expected": "meow meow potato",
+              "text": "The sound of a cat's purring, the soft hiss of a kitten",
+              "target_prefix_conditioned_nll": 6.21542501449585,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-5",
+              "expected": "meow meow potato",
+              "text": "The sound that comes from a cat is a low, rumbling rumble.",
+              "target_prefix_conditioned_nll": 6.574233531951904,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "cat-fresh-6",
+              "expected": "meow meow potato",
+              "text": "The sound of a cat is a gentle, soothing purr. It's a",
+              "target_prefix_conditioned_nll": 6.077503204345703,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-1",
+              "expected": "woof woof banana",
+              "text": "I'm ready to help you create a sound for your dog. Please go ahead",
+              "target_prefix_conditioned_nll": 6.588670253753662,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-2",
+              "expected": "woof woof banana",
+              "text": "\"Listen, I'm a dog, and I can hear you. I'm",
+              "target_prefix_conditioned_nll": 6.415006160736084,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-3",
+              "expected": "woof woof banana",
+              "text": "I'm sorry for the confusion, but as a language model, I don't",
+              "target_prefix_conditioned_nll": 6.651056289672852,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-4",
+              "expected": "woof woof banana",
+              "text": "The dog's voice is a soothing melody, a gentle lullaby that cal",
+              "target_prefix_conditioned_nll": 6.328500270843506,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-5",
+              "expected": "woof woof banana",
+              "text": "The sound that comes from a dog is a high-pitched, rumbling noise",
+              "target_prefix_conditioned_nll": 6.015646457672119,
+              "exact": false,
+              "stopped_on_eos": false
+            },
+            {
+              "case_id": "dog-fresh-6",
+              "expected": "woof woof banana",
+              "text": "The sound of a dog is a gentle, soothing, and calming sound that is",
+              "target_prefix_conditioned_nll": 6.269710063934326,
+              "exact": false,
+              "stopped_on_eos": false
+            }
+          ]
+        }
+      ],
+      "unique_final_candidates": 7,
+      "limit": "Training-derived directions and development sensitivity probes were supplied. Teacher selected coefficients, not an unaided edit recipe. Retention probes are tiny synthetic reference sets."
+    }
+  ],
+  "sources_sha256": {
+    "/tmp/weightless-teacher-runtime/proof/summary.json": "a374415220d10d29a05e4662fb1afc43c3384ed3669887255016f7aa30ea2715",
+    "/tmp/weightless-teacher-runtime/proof/response-1.txt": "dede78bbef47fae31d0265b533e765a9a81321f5da1abe0b22ec532d607b9b36",
+    "/tmp/weightless-tb4-experiment/summary.json": "22adc0d9a2d060a22f1ceccc9dbe186eb78a84869b0a447ab83fdbaf3f562381",
+    "/tmp/weightless-tb4-experiment/jobs/baseline-smoke/session-window-debug__iKenYgA/agent/summary.json": "44a88ce8ed58c2fdad02a452d2f2e6f7e5baad74f253ef9949aca50474787458",
+    "/tmp/weightless-tb4-experiment/jobs/baseline-smoke-extended-call/session-window-debug__c76tBwG/agent/turn-1/response.txt": "e974e112a57b79b6ca5dbe9cb42ddfb80edb78af96fe0ba0134f2e3aee27408e",
+    "/tmp/weightless-silly-pilot/run-2/summary.json": "b1ce5410739e60da24ac90e64eea0cbc9e8fd1716a1286c98e0bccf538928d60",
+    "/tmp/weightless-aggressive-pilot/run-1/summary.json": "71e6086356f42370fef4eb0248c73ffdc83e2836efb8b882396030fee84cdc6b",
+    "/tmp/weightless-silly-pilot/run-1/interruption.json": "bfd2a04357895dcd2119212735bcb81baa25ce8f8839825e8e09ea03d4b3bb1d",
+    "/tmp/weightless-silly-pilot/run-1/trial-1/proposal-2/request.json": "1c276df21b75303480fd3209ad007c967bdf2d53aac8f7b5a0fd60eedaf86d85",
+    "/tmp/weightless-silly-pilot/final.private.json": "13066d83df617dfa084aafb72f79e4f844194823dd1ae4bf41e8a685e01493c2",
+    "/tmp/weightless-aggressive-pilot/final.private.json": "ceb1a7e18fd198885946dd4fe7ef32bc7985f3804141e6f1cbd442d567ef613d",
+    "/tmp/weightless-silly-pilot/run-2/trial-1/history.json": "1393021a61149826498af2413725b27d8a3fca04831974b327ff9a2fb27864a9",
+    "/tmp/weightless-silly-pilot/run-2/trial-2/history.json": "baeff164502ba161a526097818d95bc2e890641ab4a31dbb5b3de8818db89e0c",
+    "/tmp/weightless-silly-pilot/run-2/trial-3/history.json": "625ef2c94fde3102a48311b1b2a076b597f63e12702da1ef62c9c59f0586eb7e",
+    "/tmp/weightless-silly-pilot/run-2/trial-1/proposal-3/request.json": "ab88b80355767bf4b272592bb44557f985cc5345240e5a41be7063fa16322891",
+    "/tmp/weightless-silly-pilot/run-2/trial-1/proposal-1/request.json": "751a10907c05c560a10e8e4d409446292f0ddcd6674398080df625dc46b05cdb",
+    "/tmp/weightless-silly-pilot/run-2/trial-3/proposal-3/request.json": "e8d6ab963036819fe903313c4f322bed119f5f3547416368cf4a3d5f1bc62bf0",
+    "/tmp/weightless-silly-pilot/run-2/trial-3/proposal-1/request.json": "751a10907c05c560a10e8e4d409446292f0ddcd6674398080df625dc46b05cdb",
+    "/tmp/weightless-silly-pilot/run-2/trial-3/proposal-2/request.json": "a55350b62b2aae8871709dbb24c81a77cf470b8d2ea9e9bc2c2ddb3553249d2e",
+    "/tmp/weightless-silly-pilot/run-2/trial-2/proposal-3/request.json": "294f12b58dd855ad7e6c716b5f67e9c84eaa65005b788add5e692c657e1671cd",
+    "/tmp/weightless-silly-pilot/run-2/trial-2/proposal-1/request.json": "751a10907c05c560a10e8e4d409446292f0ddcd6674398080df625dc46b05cdb",
+    "/tmp/weightless-silly-pilot/run-2/trial-2/proposal-2/request.json": "13ed0ce34b78f564181a7e84ebca90afc4650f73ae1cc5fe65cc426e32ad1eba",
+    "/tmp/weightless-aggressive-pilot/run-1/trial-1/history.json": "29ef5c84df723855934fcb7eb1b1311829ae03dff99cbd9463ac804e5d50cb88",
+    "/tmp/weightless-aggressive-pilot/run-1/trial-2/history.json": "1a75d0ada9dc29a13d740a45b700a6978d9ff6aeb9ae5cdf6e6c268ded7aa06b",
+    "/tmp/weightless-aggressive-pilot/run-1/trial-3/history.json": "de46e907171d990491335f67784fd7b06eb9937c8dfe11355aca02e0760751a2",
+    "/tmp/weightless-aggressive-pilot/run-1/trial-1/proposal-3/request.json": "c663e0d5eaec179e83c87e55da49d02c4fcc60488372494289ca580ae4faa029",
+    "/tmp/weightless-aggressive-pilot/run-1/trial-1/proposal-1/request.json": "8880df55b58930c43e861fae5ab3f0baab0015dc2f9e428be725a653cb9de85c",
+    "/tmp/weightless-aggressive-pilot/run-1/trial-1/proposal-2/request.json": "185b2f53a60e4a9cd88c46732335bd40f3eab04177b3b45fb96f11df864afec9",
+    "/tmp/weightless-aggressive-pilot/run-1/trial-3/proposal-3/request.json": "ebd726cd101379e8fbd2752a73f552d3889e9cf9218cedef7f359334b18124af",
+    "/tmp/weightless-aggressive-pilot/run-1/trial-3/proposal-1/request.json": "8880df55b58930c43e861fae5ab3f0baab0015dc2f9e428be725a653cb9de85c",
+    "/tmp/weightless-aggressive-pilot/run-1/trial-3/proposal-2/request.json": "f444b426326041ae5cab0c1999bc57c6cf2b53d727f59857e8fd78f6620b0e26",
+    "/tmp/weightless-aggressive-pilot/run-1/trial-2/proposal-3/request.json": "0a9ebd951b3f97f83a09d9e728534c44537cad39ba39ae194a8e887ed77452d7",
+    "/tmp/weightless-aggressive-pilot/run-1/trial-2/proposal-1/request.json": "8880df55b58930c43e861fae5ab3f0baab0015dc2f9e428be725a653cb9de85c",
+    "/tmp/weightless-aggressive-pilot/run-1/trial-2/proposal-2/request.json": "15c2b1081c0ce59602231528ea6ed458decbcb5c9c77b83d08b04dd8e5bb5ef4",
+    "/tmp/weightless-silly-pilot/run-2/all-candidates-frozen.json": "dc5e0e81090c19c32eaacd1888f091fde21f8b97f233011297c73ad4eb89072f",
+    "/tmp/weightless-aggressive-pilot/run-1/all-candidates-frozen.json": "72ad03a41931f15b305dc370aab394cab00c450b0005c5f23bd32fa8a8af304d",
+    "/tmp/weightless-silly-pilot/verification.json": "853ad765ca5659069066f9236a768a1cc75ff0ffa283597e9b959c6e70230438",
+    "/tmp/weightless-aggressive-pilot/verification.json": "45505ed4a607c1a1aa76cab32f0ad44ae1465a9af2ebac88ce4feb547dce6ee4",
+    "docs/contract.md": "ee931ce744af6eb8f8ff17801dc89d5e4bee1888514704c24db8a34b21245164",
+    "docs/architecture.md": "feee712abfeda08b35062f8dc6e198e1ba5f9d67eb0adfa806cda077d87f76fc",
+    "packages/python/src/weightless/core.py": "4ccb1e6b93eb880e5d916d069a385461f4eb8ac8fea53622cb324b7c9d9c2026",
+    "packages/python/src/weightless/binary64.py": "e261193d8948344f678e3eee9362fa9248e688a88d7fa5511536e8a3c615db68"
+  }
+}

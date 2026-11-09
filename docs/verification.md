@@ -60,3 +60,7 @@ python3 scripts/check_harbor_reward.py /tmp/weightless-jobs/oracle
 The native CLI oracle trial passed with reward one and zero trial exceptions. A second native CLI task copy whose solution wrote the unchanged frozen run passed through grading with reward zero and zero trial exceptions. Its diagnostics reported graded status, so this is a genuine task-solving zero. Evidence is in `implementation-proof/jobs/api-oracle` and `implementation-proof/jobs/api-unchanged`.
 
 GitHub Actions remains disabled. The offline tutorial rendered at desktop and phone widths without console errors. Its controls remain an explanatory browser calculation, while its Python callers use the actual SDK. Replay verifies unsigned consistency and checkpoint reconstruction. It neither authenticates external scores nor reruns behavioral evaluation.
+
+## Durable client checks
+
+The standard unit suite includes session, verifier, sandbox, and no-tools transport regressions. `scripts/package_smoke.py` imports the new client from a built wheel without Torch, Transformers, Harbor, or Verifiers. The [native client guide](client.md#reproduce-the-native-checks) runs actual Docker isolation and pinned SmolLM editing. The [acceptance specification](design/agent-client-validation.md) retains broader scientific-validity and unfamiliar-agent comparisons as distinct requirements.

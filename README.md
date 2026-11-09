@@ -4,6 +4,8 @@ Weightless lets an external teacher propose explicit numerical edits to a fixed 
 
 The signed-addition example uses a fixed affine/ReLU network and an offline scripted teacher. It makes no model call and claims no paper result. Read the [offline interactive tutorial](docs/tutorial.html), [architecture](docs/architecture.md), [shared contract](docs/contract.md), and [research scope](docs/research.md).
 
+The [durable local client](docs/client.md) adds resumable sessions, a separate private verifier, and enforced Docker execution for binary64 and pinned SmolLM2 targets. The [client design and validation specification](docs/design/agent-client.md) describes the broader acceptance program.
+
 ## Run the example
 
 Python 3.12 or later is required. The core SDK has no runtime dependencies.
