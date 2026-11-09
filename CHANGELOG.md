@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Rename the project to WSM (Weight Space Mods), the Python distribution from `weightless-sdk` to `wsm`, and imports from `weightless` to `wsm`; update callers, sandbox workers, and documentation while preserving serialized format identifiers and hashes.
+
 - Add Docker-free Linux execution with bubblewrap namespaces, systemd resource limits, bounded output, verified workload teardown, and native adversarial checks while preserving numerical and private-verifier contracts.
 
 - Add durable local sessions, private final-verifier registries, explicit no-tools teacher transport, and enforced Docker workers for binary64 and pinned SmolLM2 scalar edits.

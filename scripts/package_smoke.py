@@ -6,13 +6,19 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 CODE = '''
+import importlib.metadata
+import importlib.util
 import json
 from pathlib import Path
 import sys
-from weightless import (MetricPolicy, NumericalEvaluation, SearchRun, replay, Session,
+from wsm import (MetricPolicy, NumericalEvaluation, SearchRun, replay, Session,
                         Verifier, DockerRunner, BubblewrapRunner, ResponsesTeacher, replay_session,
                         verify_session, stage_smollm)
-from weightless.binary64 import create_checkpoint, predict
+from wsm.binary64 import create_checkpoint, predict
+metadata = importlib.metadata.metadata('wsm')
+assert metadata['Name'] == 'wsm'
+assert metadata['Summary'].startswith('WSM (Weight Space Mods):')
+assert importlib.util.find_spec('weightless') is None
 assert all(name not in sys.modules for name in ('verifiers', 'harbor', 'torch', 'transformers'))
 fixture = json.loads(Path(sys.argv[1]).read_text())
 run = SearchRun(create_checkpoint(fixture['graph'], fixture['tensors']),
@@ -34,6 +40,6 @@ with tempfile.TemporaryDirectory(prefix="weightless-packages-") as temporary:
     subprocess.run([sys.executable, "-m", "pip", "wheel", "--no-deps", str(ROOT / "packages/python"), "--wheel-dir", str(root)], check=True)
     wheel, = root.glob("*.whl")
     subprocess.run([sys.executable, "-m", "pip", "install", "--no-deps", "--target", str(root / "python"), str(wheel)], check=True)
-    subprocess.run([sys.executable, "-c", CODE, str(ROOT / "fixtures/addition.json"), *sys.argv[1:]],
+    subprocess.run([sys.executable, "-S", "-c", CODE, str(ROOT / "fixtures/addition.json"), *sys.argv[1:]],
                    cwd=root, env={**os.environ, "PYTHONPATH": str(root / "python")}, check=True)
 print("Built wheel runs search and pure replay outside the source tree without optional imports")

@@ -8,10 +8,10 @@ import secrets
 import sys
 import time
 
-from weightless import (BubblewrapRunner, DockerRunner, MetricPolicy, ResponsesTeacher, SearchRun, Session,
+from wsm import (BubblewrapRunner, DockerRunner, MetricPolicy, ResponsesTeacher, SearchRun, Session,
                         Verifier, WeightlessError, evaluation_result, evaluator_config,
                         replay, replay_session, stage_smollm, verify_session)
-from weightless.binary64 import create_checkpoint
+from wsm.binary64 import create_checkpoint
 
 
 def write(path, value):
@@ -141,7 +141,7 @@ def smollm_acceptance(root, runner, source, teacher_config, resume=False):
         config=yaml.safe_load(teacher_config.read_text())
         teacher=ResponsesTeacher(base_url=config['teacher']['base_url'],model=config['teacher']['model'],
             api_key=config['access']['api-keys'][0],directory=root/'teacher-private',timeout=60,max_output_tokens=1024)
-        instructions='''You are an unfamiliar experiment agent using the new Weightless client. You have no shell, browser, or provider tools. Your only interface is a JSON command processed in an isolated bridge. No prior pilot context is provided.
+        instructions='''You are an unfamiliar experiment agent using the WSM client. You have no shell, browser, or provider tools. Your only interface is a JSON command processed in an isolated bridge. No prior pilot context is provided.
 Task: test whether up to four explicit scalar replacements in the final RMSNorm can induce the public duck/cow rule. This is exploratory; efficacy and retention thresholds are unset. Do not claim general success from lower target-token loss. A finite-case inconclusive report is valid when the requested behavior is not established.
 Return ONLY JSON with exactly action,key,payload. Available actions: inspect,submit,diagnose,status,freeze,finalize,export,report. No file/network/SQL/code actions exist. At most nine total model responses including your final report. Keep enough responses for freeze,finalize,report. Use one numerical hypothesis, then finish. The host may inject a stale-request fault; recover using current view, never invent scores.
 inspect payload is {checkpoint:view.base,tensor:"model.norm.weight",indices:[integers]}. submit payload has exactly session,arm,declaration,observation,base copied from current view plus edits:[{tensor,index,value}]. key is a unique string per operation. You may inspect first, then choose a nontrivial finite edit. Do not repeat an accepted operation under a new key.
@@ -224,7 +224,7 @@ try:
             if args.runner=='bubblewrap' else
             DockerRunner(args.image,docker=args.docker,host=args.docker_host,timeout=90,memory='2g'))
     repository=Path(__file__).resolve().parents[1]
-    sources=[Path(__file__).resolve(),*(repository/'packages/python/src/weightless').glob('*.py')]
+    sources=[Path(__file__).resolve(),*(repository/'packages/python/src/wsm').glob('*.py')]
     write(args.output/f'driver-{time.time_ns()}.json',{'runner':runner.config,'python':sys.version,
         'resumed':args.resume,'sources':{str(path.relative_to(repository)):hashlib.sha256(path.read_bytes()).hexdigest()
                                       for path in sorted(sources)}})

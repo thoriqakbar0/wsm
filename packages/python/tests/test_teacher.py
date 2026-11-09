@@ -6,7 +6,7 @@ import threading
 import time
 import unittest
 
-from weightless import ResponsesTeacher, Session, WeightlessError
+from wsm import ResponsesTeacher, Session, WeightlessError
 from test_session import Runner, declaration, proposal
 
 

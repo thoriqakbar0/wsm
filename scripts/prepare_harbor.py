@@ -3,9 +3,9 @@ import json
 from pathlib import Path
 import shutil
 
-from weightless import MetricPolicy
-from weightless.binary64 import create_checkpoint
-from weightless.core import _digest
+from wsm import MetricPolicy
+from wsm.binary64 import create_checkpoint
+from wsm.core import _digest
 
 ROOT = Path(__file__).resolve().parents[1]
 TASK = ROOT / "examples/harbor/signed-addition"
@@ -31,7 +31,7 @@ def prepare(destination, purpose, public):
     if generated.exists():
         shutil.rmtree(generated)
     generated.mkdir(parents=True)
-    shutil.copytree(ROOT / "packages/python/src/weightless", generated / "weightless",
+    shutil.copytree(ROOT / "packages/python/src/wsm", generated / "wsm",
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     encoded = json.dumps(public, indent=2) + "\n"
     (generated / "public.json").write_text(encoded)

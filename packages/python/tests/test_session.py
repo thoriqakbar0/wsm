@@ -4,8 +4,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from weightless.binary64 import WeightlessError
-from weightless.session import Session, replay_session, verify_session, _hash, _seal
+from wsm.binary64 import WeightlessError
+from wsm.session import Session, replay_session, verify_session, _hash, _seal
 
 
 class Runner:
@@ -260,7 +260,7 @@ class SessionTests(unittest.TestCase):
         self.session.close()
         self.session = Session.open(self.path, runner=self.runner, target={'kind': 'test'})
         calls = len(self.runner.calls)
-        with patch('weightless.session.time.time', return_value=origin + 61):
+        with patch('wsm.session.time.time', return_value=origin + 61):
             with self.assertRaises(WeightlessError) as error:
                 self.session.submit(proposal(self.session), key='late')
             self.assertEqual(error.exception.code, 'deadline_exhausted')
@@ -270,7 +270,7 @@ class SessionTests(unittest.TestCase):
 
     def test_clock_regression_refuses_dispatch(self):
         origin = self.session.export()['origin']
-        with patch('weightless.session.time.time', return_value=origin - 1):
+        with patch('wsm.session.time.time', return_value=origin - 1):
             with self.assertRaises(WeightlessError) as error:
                 self.session.reserve_teacher({}, key='clock', arm='teacher')
             self.assertEqual(error.exception.code, 'clock_regressed')
