@@ -8,6 +8,7 @@ from pathlib import Path
 import time
 
 from .session import Session, _check, _connect, _hash, _json, _seal
+from .sandbox import forward_reservation
 
 
 class Verifier:
@@ -21,6 +22,7 @@ class Verifier:
         self.db.execute('''CREATE TABLE IF NOT EXISTS claims (
             dataset TEXT PRIMARY KEY, body TEXT NOT NULL)''')
         self.db.execute('CREATE TABLE IF NOT EXISTS authority (id INTEGER PRIMARY KEY CHECK(id=1), secret BLOB NOT NULL)')
+        self.db.execute('CREATE TABLE IF NOT EXISTS session_bindings (session TEXT PRIMARY KEY, identity TEXT NOT NULL)')
         self.db.execute('INSERT OR IGNORE INTO authority VALUES (1,?)', (os.urandom(32),))
         self._secret = self.db.execute('SELECT secret FROM authority WHERE id=1').fetchone()[0]
 
@@ -29,6 +31,16 @@ class Verifier:
 
     def close(self):
         self.db.close()
+
+    def bind_session(self, session, dataset, *, create=False):
+        """Pin a workspace's final authority and cases without publishing their digest."""
+        _check(dataset in self.datasets, 'unknown_dataset', 'Dataset unavailable')
+        identity = self._identity({'dataset': dataset, 'cases': self.datasets[dataset]})
+        if create:
+            self.db.execute('INSERT OR IGNORE INTO session_bindings VALUES (?,?)', (session, identity))
+        row = self.db.execute('SELECT identity FROM session_bindings WHERE session=?', (session,)).fetchone()
+        _check(row is not None and hmac.compare_digest(row[0], identity),
+               'verifier_mismatch', 'Reopen with the verifier authority, dataset, and cases bound at workspace creation')
 
     def _read(self, identity):
         row = self.db.execute('SELECT body FROM claims WHERE dataset=?', (identity,)).fetchone()
@@ -70,6 +82,13 @@ class Verifier:
         _check(dataset in self.datasets, 'unknown_dataset', 'Dataset is unavailable')
         cases = self.datasets[dataset]
         cases = {'task': cases, 'retention': []} if type(cases) is list else cases
+        envelope = frozen.get('final_forward_calls')
+        limits = {name: forward_reservation(target, len(cases.get(name, [])), generate=True)
+                  for name in ('task', 'retention')}
+        if envelope is not None:
+            _check(type(envelope) is int and envelope >= 0
+                   and len(frozen['arms']) * sum(limits.values()) <= envelope,
+                   'budget_exhausted', 'Final forward envelope is insufficient')
         identity = self._identity(cases)
         claim_id = _hash({'dataset': identity, 'frozen': frozen['id'], 'key': key})
         self.db.execute('BEGIN IMMEDIATE')
@@ -85,7 +104,7 @@ class Verifier:
                 self.db.execute('COMMIT')
                 return self._release(identity, claim)
             claim = {'claim': claim_id, 'frozen': frozen['id'], 'state': 'claimed',
-                     'operation': 'dispatched', 'receipt': None}
+                     'operation': 'dispatched', 'receipt': None, 'usage': {}}
             self._write(identity, claim)
             self.db.execute('COMMIT')
         except BaseException:
@@ -95,15 +114,25 @@ class Verifier:
         try:
             results = {}
             for arm, candidate in frozen['arms'].items():
+                kwargs = {} if envelope is None else {'forward_limit': limits['task']}
                 task = self.runner.execute('evaluate', target, patches=candidate['patches'],
-                                           cases=cases['task'], generate=True, purpose='final', timeout=remaining())
-                Session._validate_evaluation(task, candidate['checkpoint'], len(cases['task']))
+                                           cases=cases['task'], generate=True, purpose='final', timeout=remaining(), **kwargs)
+                Session._validate_evaluation(task, candidate['checkpoint'], len(cases['task']),
+                                             forward_limit=None if envelope is None else limits['task'])
+                if 'usage' in task:
+                    claim['usage'][arm] = {'task': copy.deepcopy(task['usage'])}
+                    self._write(identity, claim)
                 task['metrics']['exact'] = self._exact(task, cases['task'])
                 retention = None
                 if cases.get('retention'):
+                    kwargs = {} if envelope is None else {'forward_limit': limits['retention']}
                     measured = self.runner.execute('evaluate', target, patches=candidate['patches'],
-                                                   cases=cases['retention'], generate=True, purpose='final', timeout=remaining())
-                    Session._validate_evaluation(measured, candidate['checkpoint'], len(cases['retention']))
+                                                   cases=cases['retention'], generate=True, purpose='final', timeout=remaining(), **kwargs)
+                    Session._validate_evaluation(measured, candidate['checkpoint'], len(cases['retention']),
+                                                 forward_limit=None if envelope is None else limits['retention'])
+                    if 'usage' in measured:
+                        claim['usage'].setdefault(arm, {})['retention'] = copy.deepcopy(measured['usage'])
+                        self._write(identity, claim)
                     measured['metrics']['exact'] = self._exact(measured, cases['retention'])
                     retention = {k: measured['metrics'][k] for k in ('loss', 'exact', 'count')}
                 criteria = frozen.get('criteria', {})
