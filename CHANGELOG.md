@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add the interactive Textures Twist pattern to the homepage hero, using the site's theme colors.
+
 - Present WSM as an AI harness for modding model weights, explain optional Tinker and Modal Spindle agent training, and distinguish recorded results from unverified hosted training.
 
 - Simplify the weight space programming introduction, mark the website CLI section as coming soon, use uv for SDK setup, and remove the public Verification page while retaining its repository record.

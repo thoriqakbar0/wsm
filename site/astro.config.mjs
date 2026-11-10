@@ -1,4 +1,5 @@
 import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
 import { unified } from '@astrojs/markdown-remark';
 import { relative, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -29,6 +30,7 @@ function repositoryLinks() {
 }
 
 export default defineConfig({
+  integrations: [react()],
   site: 'https://wsm.ta-0.com',
   output: 'static',
   markdown: {

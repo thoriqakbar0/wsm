@@ -1,5 +1,6 @@
 ---
 import DocsLayout from '../layouts/DocsLayout.astro';
+import { Twist } from '../components/textures/twist';
 import { Code } from 'astro:components';
 const codeThemes = { light: 'github-light', dark: 'github-dark' } as const;
 const weights = [
@@ -57,6 +58,15 @@ const weights = [
         Python ≥ 3.12 <span>/</span> PyTorch tensors <span>/</span>{' '}
         <a href="https://pypi.org/project/wsm/0.1.0/">wsm 0.1.0 on PyPI</a>
       </p>
+      <div class="hero-texture" aria-hidden="true">
+        <Twist
+          client:load
+          tokens={{
+            '--texture-ink': 'var(--accent)',
+            '--texture-field': 'var(--sidebar)',
+          }}
+        />
+      </div>
     </section>
 
     <section id="why-wsm" aria-labelledby="why-title" class="narrative-section">
@@ -396,6 +406,15 @@ model.save("/path/to/new-checkpoint")`}
 <style>
   .landing-hero {
     padding: 6px 0 26px;
+  }
+  .hero-texture {
+    position: relative;
+    height: clamp(240px, 40vw, 400px);
+    width: 100%;
+    margin-top: 28px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    overflow: hidden;
   }
   .identity-line {
     display: flex;
