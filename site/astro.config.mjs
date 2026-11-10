@@ -27,6 +27,7 @@ function repositoryLinks() {
 }
 
 export default defineConfig({
+  site: 'https://wsm.ta-0.com',
   output: 'static',
   markdown: {
     processor: unified({ remarkPlugins: [repositoryLinks] }),

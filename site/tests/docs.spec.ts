@@ -1,5 +1,49 @@
 import { test, expect } from '@playwright/test';
 
+test('link previews use production URLs and a loadable social image', async ({
+  page,
+  request,
+}) => {
+  for (const path of ['/', '/docs/coding/']) {
+    await page.goto(path);
+    const canonical = `https://wsm.ta-0.com${path}`;
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      canonical,
+    );
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+      'content',
+      canonical,
+    );
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      'content',
+      /Weight Space Mods/,
+    );
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+      'content',
+      'summary_large_image',
+    );
+    for (const selector of [
+      'meta[property="og:image"]',
+      'meta[name="twitter:image"]',
+    ]) {
+      await expect(page.locator(selector)).toHaveAttribute(
+        'content',
+        'https://wsm.ta-0.com/og/wsm.png',
+      );
+    }
+  }
+  const response = await request.get('/og/wsm.png');
+  expect(response.ok()).toBe(true);
+  expect(response.headers()['content-type']).toContain('image/png');
+  const png = await response.body();
+  expect(png.subarray(0, 8)).toEqual(
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+  );
+  expect(png.readUInt32BE(16)).toBe(1200);
+  expect(png.readUInt32BE(20)).toBe(630);
+});
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     if (!localStorage.getItem('wsm-theme'))

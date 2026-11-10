@@ -49,3 +49,9 @@ From `site/`, run `npm run deploy` with Cloudflare CLI authentication to build a
 The `Site` GitHub Actions workflow checks pull requests and changes to `main`. It runs Astro checks, browser tests, and a deployment dry run. Only `main` deploys, using the exact verified artifact rather than rebuilding it. Manual dispatch on `main` also deploys. Production deployments are serialized and check the public homepage and quickstart afterward.
 
 Configure repository secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`. Use an API token scoped to the deployment account with Workers Scripts Edit and Account Settings Read, plus Workers Routes Edit and Zone Read for `ta-0.com`. Keep credentials outside Git. The workflow never exposes deployment secrets to pull request jobs.
+
+## Social previews
+
+The shared layout emits canonical production URLs, Open Graph metadata, and Twitter large-image cards. All pages use the committed 1200 × 630 PNG at `public/og/wsm.png`, with page-specific titles and descriptions. `astro.config.mjs` defines the production origin so preview hosts and query parameters do not leak into shared URLs.
+
+To regenerate the image, install the Playwright Chromium browser and run `npm run generate:og` from `site/`. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to use an existing Chromium installation. The generator uses the local logo and Manrope font without network requests. Inspect the PNG and commit it alongside any generator changes; production builds serve the committed image without requiring a browser.

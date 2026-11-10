@@ -14,7 +14,8 @@
     "test": "node scripts/check-command-spelling.mjs && playwright test",
     "build:deploy": "npm run build && node scripts/package-cloudflare.mjs",
     "deploy:check": "cf deploy --prebuilt --mode production --dry-run",
-    "deploy": "npm run build:deploy && cf deploy --prebuilt --mode production"
+    "deploy": "npm run build:deploy && cf deploy --prebuilt --mode production",
+    "generate:og": "node scripts/generate-og.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.3.6",

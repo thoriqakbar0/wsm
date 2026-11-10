@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a branded social sharing image, canonical URLs, and Open Graph and Twitter large-image metadata throughout the site.
+
 - Explain WSM's motivation, weight space programming, execution model, design choices, and completed work on the homepage; use the published PyPI package and self-contained CLI examples.
 
 - Deploy the static documentation to `wsm.ta-0.com` with pinned Cloudflare tooling, pull request checks, and verified-artifact production deployments from `main`.
