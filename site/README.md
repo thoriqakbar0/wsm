@@ -15,7 +15,7 @@ npm run build
 npm run preview
 ```
 
-Deploy the contents of `site/dist/` to a static host at its domain root. No server adapter, React runtime, or credentials are required.
+Deploy the contents of `site/dist/` to a static host at its domain root. No server adapter or credentials are required. The homepage hydrates the Textures Twist React component in the browser through `@astrojs/react`; documentation pages remain static.
 
 ## Content
 
@@ -36,7 +36,7 @@ Tests build the static site, start the local preview, and exercise search, navig
 
 Weight Space Mods uses WSM as shorthand. The bracketed matrix mark represents direct access to named tensors, with one cell selected for modification. Use `public/brand-mark.svg` for the logo and `public/favicon.svg` for the browser icon. Keep clear space of at least one cell around the mark. The SVG uses large, aligned shapes so the brackets and selected cell remain legible at 16px.
 
-The default palette is graphite `#101512`, panel `#141b17`, phosphor `#91e6aa`, foreground `#e5eee8`, supporting text `#a3b5a9`, and border `#688573`. Green identifies edits, links, focus, and primary actions. A saved light-theme preference remains available, with a darker green accent for contrast. Monospace headings and controls pair with Manrope body text; code and tensor values use monospace. Avoid scanlines, simulated logs, and decorative motion. Tensor values on the landing page are illustrative, not experimental results.
+The default palette is graphite `#101512`, panel `#141b17`, phosphor `#91e6aa`, foreground `#e5eee8`, supporting text `#a3b5a9`, and border `#688573`. Green identifies edits, links, focus, and primary actions. A saved light-theme preference remains available, with a darker green accent for contrast. Monospace headings and controls pair with Manrope body text; code and tensor values use monospace. Avoid scanlines and simulated logs. The homepage hero mounts the original Twist texture from Textures at `src/components/textures/twist.tsx`, with site colors passed through its tokens. Keep the supplied component unchanged when adjusting its container. It responds to the pointer, uses ambient motion on touch devices, and respects reduced motion. Tensor values on the landing page are illustrative, not experimental results.
 
 The landing page follows the SDK contract: evaluate the unchanged model, edit named tensors, evaluate on the same cases, and explicitly export a checkpoint. The runner records comparisons without automatically choosing a winner. The public brand changes neither the `wsm` import nor the CLI command.
 
