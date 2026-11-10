@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add an Astro documentation site in `site/` with repository-backed articles, an offline quickstart, local search, code copying, and responsive navigation.
+
 - Preserve atomic no-overwrite checkpoint publication, export provenance, failed-run CLI status, and replay validation while integrating the shared harness and generic model backend.
 
 - Preserve checkpoint-specific inspection feedback across teacher turns so the agent can combine observations without repeatedly reading the same tensors.

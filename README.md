@@ -1,34 +1,42 @@
 # WSM (Weight Space Modifiers)
 
-WSM is a harness for editing a model's weights. Give an AI teacher a prompt and a task profile. The harness lets it inspect coefficients, propose edits, and test candidates, then saves the selected checkpoint and evaluation evidence. The Python distribution, import package, and CLI are named `wsm`.
+Point a model at the weights. WSM keeps a change when the loss goes down.
 
 ```sh
 python3 -m pip install -e packages/python
-# Configure WSM_TEACHER_URL, WSM_TEACHER_MODEL, and WSM_TEACHER_API_KEY first.
+export WSM_TEACHER_URL="https://example.invalid"
+export WSM_TEACHER_MODEL="your-model-id"
+export WSM_TEACHER_API_KEY="your-key"
 wsm run "Improve signed addition. Inspect the weights and test your changes." \
-  --task addition --attempts 20 --output runs/addition
-wsm status runs/addition
+  --task addition --output runs/addition
 ```
 
-The default runner requires a root-authorized Linux systemd host with bubblewrap. Docker is available with `--runner docker --image <existing-image>`. There is no unsandboxed fallback. The bundled addition profile has public examples only. Read [Run a prompt-driven weight modification](docs/wsm.md) for setup, custom targets, private final evaluation, recovery, and the Python entry point.
+The model sends one command at a time.
 
-Install the Python distribution as `wsm` and import it as `wsm`. The installed command is also `wsm`. With no arguments it opens the terminal UI on a terminal. Session verbs such as `init`, `observe`, `submit`, `status`, and `export` match the session methods. `wsm run` starts the prompt harness. See [the command reference](docs/cli.md).
+```json
+{"action":"inspect","tensor":"output.weight","indices":[0,1]}
+{"action":"edit","edits":[{"tensor":"output.weight","index":0,"value":1}]}
+```
 
-This replaces the former `weightless-sdk` distribution and `weightless` namespace without an import alias or a second console script. For an existing environment, uninstall `weightless-sdk` before installing from this checkout, then update your imports to `wsm`. Serialized `weightless.*` format identifiers and hashes, `WeightlessError`, environment variables, and Docker image names keep their existing spelling.
+WSM keeps the edit when the loss goes down.
 
-## Run the offline example
+## Names
 
-From the repository root, use Python 3.12 or later with `venv` and pip available. On Debian or Ubuntu, install the matching `python3-venv` package if environment creation reports that `ensurepip` is unavailable. The core SDK has no third-party runtime dependencies.
+The Python distribution, the import package, and the command are `wsm`. With no arguments, `wsm` opens the terminal UI when stdin and stdout are a terminal. Session verbs such as `init`, `observe`, `submit`, `status`, and `export` match the session methods. See [the command reference](docs/cli.md).
 
-The example edits a fixed affine/ReLU network to compute signed addition. Its scripted teacher makes no model call. Docker, model downloads, and credentials are not required.
+This replaces the former `weightless-sdk` distribution and `weightless` namespace. There is no import alias and no second console script. For an existing environment, uninstall `weightless-sdk` before installing from this checkout, then update your imports to `wsm`. Serialized `weightless.*` format identifiers and hashes, `WeightlessError`, environment variables, and Docker image names keep their existing spelling.
+
+The core SDK has no third-party runtime dependencies.
+
+## Run without a model
+
+`examples/demo.py` sends saved proposals through the same selection rules. It does not call a model. Docker and credentials are not required. The network is a fixed affine/ReLU model for signed addition.
 
 ```sh
-python3 -m venv .venv
-.venv/bin/python -m pip install -e packages/python
-.venv/bin/python examples/demo.py --output /tmp/wsm-run.json
+python3 examples/demo.py --output /tmp/wsm-run.json
 ```
 
-Expected output:
+The script prints one line per proposal.
 
 ```json
 {"accepted": false, "reason": "not_improved"}
@@ -79,8 +87,8 @@ Selection compares the configured metric paths in order. This example minimizes 
 For a configuration-driven experiment, run the supplied binary64 example and export its selected checkpoint:
 
 ```sh
-.venv/bin/python scripts/drive_session.py examples/drive-session.json
-.venv/bin/python scripts/export_checkpoint.py \
+python3 scripts/drive_session.py examples/drive-session.json
+python3 scripts/export_checkpoint.py \
   --bundle runs/drive-session-example/evidence.json \
   --target runs/drive-session-example/target.json \
   --arm solver --destination runs/drive-session-example/checkpoint --max-bytes 1000000
@@ -88,15 +96,15 @@ For a configuration-driven experiment, run the supplied binary64 example and exp
 
 This example uses scripted proposals and an explicitly unisolated binary64 runner. The driver also accepts an explicit editing-AI endpoint and model with a Docker or bubblewrap target runner. It supplies the JSON command protocol and returns permitted inspection, diagnostic, and evaluation results to the editing AI. New configurations require forward-call budgets. Incomplete freezing or failed required final grading produces a nonzero exit while retaining evidence. See the [configured experiment guide](docs/client.md#run-a-configured-experiment).
 
-The [durable local client](docs/client.md) adds resumable `Session` experiments, a separate private `Verifier`, and explicit teacher transport through `ResponsesTeacher`. Its execution targets are binary64 checkpoints and a pinned SmolLM2 checkpoint. The [local sandbox guide](docs/sandbox.md) covers Docker-free Linux execution through `BubblewrapRunner`, bubblewrap, and systemd. `DockerRunner` is also available. These paths require host setup beyond the offline example.
+The [durable local client](docs/client.md) adds resumable `Session` experiments, a separate private `Verifier`, and explicit teacher transport through `ResponsesTeacher`. Its execution targets are binary64 checkpoints and a pinned SmolLM2 checkpoint. The [local sandbox guide](docs/sandbox.md) covers Docker-free Linux execution through `BubblewrapRunner`, bubblewrap, and systemd. `DockerRunner` is also available. These paths require host setup beyond the scripted demo.
 
 For native Harbor development feedback, use the optional Verifiers adapter on a Docker host.
 
 Install the optional integration packages, prepare trusted purpose-specific tasks, and build the agent image on a Docker host.
 
 ```sh
-.venv/bin/python -m pip install -e 'packages/python[integration]'
-.venv/bin/python scripts/prepare_harbor.py --development /tmp/weightless-development
+python3 -m pip install -e 'packages/python[integration]'
+python3 scripts/prepare_harbor.py --development /tmp/weightless-development
 docker build -t weightless-signed-addition:local examples/harbor/signed-addition/environment
 ```
 
@@ -125,9 +133,9 @@ The adapter is synchronous and serial. Call it outside an active asynchronous ev
 Run the core checks and installed-wheel smoke without optional integrations:
 
 ```sh
-.venv/bin/python scripts/golden_identity.py
-.venv/bin/python -m unittest discover -s packages/python/tests -v
-.venv/bin/python scripts/package_smoke.py
+python3 scripts/golden_identity.py
+python3 -m unittest discover -s packages/python/tests -v
+python3 scripts/package_smoke.py
 ```
 
 These commands check independent golden bytes, unit behavior, and installation and replay from a built wheel outside the source tree. Native bubblewrap tests skip unless explicitly enabled on a configured Linux host. A skipped test does not prove isolation.
@@ -140,8 +148,10 @@ The [JSON Schema](schemas/v1.json) validates structural wire records. The SDK ad
 
 ## Scope and further reading
 
+The Astro documentation site lives in [`site/`](site/README.md). Run `npm ci` and `npm run dev` from that folder to browse the guides locally. The site reads the Markdown files in `docs/` directly.
+
 The target workflow follows [Sparks of Weight-Space Programming](https://rikiyat.github.io/blog/weight-space-programming/). An editing AI inspects permitted target weights, proposes explicit replacements without optimizer-driven training, and receives bounded evaluation feedback. The operator chooses the target, editing-AI provider, resource budget, and acceptable regressions. The [Tinker capability boundary](docs/tinker.md) distinguishes hosted Tinker integration from a compatible service interface; neither is established by the local backend.
 
-The offline example demonstrates explicit weight edits, strict selection, and replay on a synthetic addition task. It does not reproduce a paper result or establish optimizer superiority, general extrapolation, or useful language-model weight discovery. The binary64 backend uses scalar arithmetic, which need not match every accelerated numerical runtime. The [research scope](docs/research.md) records the current research direction, historical example provenance, and untested claims.
+The scripted demo demonstrates explicit weight edits, strict selection, and replay on a synthetic addition task. It does not reproduce a paper result or establish optimizer superiority, general extrapolation, or useful language-model weight discovery. The binary64 backend uses scalar arithmetic, which need not match every accelerated numerical runtime. The [research scope](docs/research.md) records the current research direction, historical example provenance, and untested claims.
 
 Use the [offline interactive tutorial](docs/tutorial.html) for a walkthrough, the [architecture](docs/architecture.md) for ownership boundaries, and the [shared contract](docs/contract.md) for wire records and validation. The [client design and validation specification](docs/design/agent-client.md) describes the broader acceptance program. Its requirements are separate from demonstrated results in the verification guide.

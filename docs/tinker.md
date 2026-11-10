@@ -4,7 +4,7 @@ WSM requires a target backend that can inspect permitted weights, materialize ex
 
 ## Inspected contract
 
-On 2026-11-09, inspection covered the public client interfaces, RestClient, weight resources, and upload types in the published `tinker==0.39.0` Python wheel. It also covered the official API references below. The wheel's SHA-256 is `47c87de4e13ca6eeaecfff55b316bd436344d98685091c3024c44462e946250d`. The TrainingClient documentation identified its generated source as SDK 0.38.0. SDK inspection establishes the client contract, not a live service integration.
+On 2026-11-09, inspection covered the public client interfaces, RestClient, weight resources, and upload types in the published `tinker==0.39.0` Python wheel. It also covered the official API references below. The TrainingClient documentation identified its generated source as SDK 0.38.0. SDK inspection establishes the client contract, not a live service integration.
 
 | Required capability | Public Tinker contract | Consequence for WSM |
 | --- | --- | --- |

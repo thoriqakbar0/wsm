@@ -75,7 +75,7 @@ Checkpoint identity bytes remain unchanged:
 2. Canonical graph JSON followed by a zero byte.
 3. For each tensor name in ASCII ascending order, its UTF-8 name and a zero byte, canonical shape JSON and a zero byte, then each value as eight big-endian IEEE-754 binary64 bytes.
 
-The identifier is `sha256:` followed by the lowercase hex SHA-256 digest. Canonical JSON sorts object keys, retains array order, uses ASCII escapes, and has no insignificant whitespace. `fixtures/golden.json` remains the independent byte fixture.
+Canonical JSON sorts object keys, retains array order, uses ASCII escapes, and has no insignificant whitespace. `fixtures/golden.json` remains the independent byte fixture.
 
 Inference adds products in ascending row-major order, starting at zero, then adds bias. ReLU maps negative values to zero. Nonfinite predictions or metrics are task failures. Scaled residual is `(prediction - target) / max(1, abs(target))`. Loss is half the mean squared scaled residual. RMSE uses raw residuals. Exact counts examples with every output equal to target.
 
@@ -85,7 +85,7 @@ A proposal has exactly `base`, `author`, and nonempty `edits`. Each edit has exa
 
 ## Owned run and stages
 
-`SearchRun(initial, *, evaluator, policy, budget)` copies its checkpoint, evaluator config, and policy. Its random SHA-256 run identifier distinguishes identical experiments. Budget is 1 through 1000. All public records are JSON dictionaries returned as deep copies. Mutating inputs, observations, candidates, results, decisions, or frozen copies cannot mutate retained state.
+`SearchRun(initial, *, evaluator, policy, budget)` copies its checkpoint, evaluator config, and policy. Its run identifier distinguishes identical experiments. Budget is 1 through 1000. All public records are JSON dictionaries returned as deep copies. Mutating inputs, observations, candidates, results, decisions, or frozen copies cannot mutate retained state.
 
 `MetricPolicy(*terms)` creates a pure dictionary with `format: weightless.policy.v1`, ordered `metrics` containing `path` and `direction`, and `ties: retain`. A term is `(dotted_path, minimize|maximize)`. One through eight unique paths are allowed. The example compares development loss first and training loss second. Exact ties retain the incumbent. The core knows only those configured paths, not task metric names.
 

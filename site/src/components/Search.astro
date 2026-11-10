@@ -1,0 +1,146 @@
+---
+import Icon from './Icon.astro';
+---
+
+<dialog id="search-dialog" aria-label="Search documentation">
+  <form method="dialog" class="search-top">
+    <Icon name="search" />
+    <input
+      id="search-input"
+      type="search"
+      inputmode="search"
+      autocomplete="off"
+      aria-label="Search documentation"
+      placeholder="Search documentation…"
+    />
+    <button type="button" class="icon-button" aria-label="Close search">
+      <Icon name="close" />
+    </button>
+  </form>
+  <div id="search-results" class="search-results"></div>
+  <p id="search-status" role="status">
+    Type to search the documentation.
+  </p>
+  <div class="search-footer">
+    <span>
+      <kbd>Tab</kbd> to navigate
+    </span>
+    <span>
+      <kbd>esc</kbd> to close
+    </span>
+  </div>
+</dialog>
+<script>
+  interface SearchEntry {
+    title: string;
+    href: string;
+    text: string;
+  }
+  const dialog = document.querySelector<HTMLDialogElement>('#search-dialog')!;
+  const input = document.querySelector<HTMLInputElement>('#search-input')!;
+  const results = document.querySelector<HTMLElement>('#search-results')!;
+  const status = document.querySelector<HTMLElement>('#search-status')!;
+  let entries: SearchEntry[] | undefined;
+  let loading: Promise<void> | undefined;
+  let returnFocus: HTMLElement | null = null;
+  function search() {
+    results.replaceChildren();
+    const query = input.value.trim().toLowerCase();
+    if (!entries) return;
+    const terms = query.split(/\s+/);
+    const matches = query
+      ? entries
+          .filter((entry) =>
+            terms.every((term) =>
+              `${entry.title} ${entry.text}`.toLowerCase().includes(term),
+            ),
+          )
+          .sort(
+            (a, b) =>
+              Number(b.title.toLowerCase().includes(query)) -
+              Number(a.title.toLowerCase().includes(query)),
+          )
+          .slice(0, 12)
+      : [];
+    status.textContent = query
+      ? matches.length
+        ? `${matches.length} results`
+        : 'No results. Try “checkpoint”, “sandbox”, or “teacher”.'
+      : 'Type to search the documentation.';
+    for (const entry of matches) {
+      const link = document.createElement('a');
+      link.href = entry.href;
+      const title = document.createElement('strong');
+      title.textContent = entry.title;
+      const excerpt = document.createElement('span');
+      const position = Math.max(
+        0,
+        entry.text.toLowerCase().indexOf(terms[0]) - 45,
+      );
+      excerpt.textContent = entry.text.slice(position, position + 160);
+      link.append(title, excerpt);
+      results.append(link);
+    }
+  }
+  async function openSearch() {
+    if (!dialog.open) {
+      returnFocus =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+      dialog.showModal();
+    }
+    input.focus();
+    if (entries) {
+      search();
+      return;
+    }
+    status.textContent = 'Loading search…';
+    loading ??= fetch('/search.json')
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Search unavailable');
+        entries = await response.json();
+        search();
+      })
+      .catch(() => {
+        status.textContent =
+          'Search could not load. Close and reopen to retry.';
+      })
+      .finally(() => {
+        loading = undefined;
+      });
+    await loading;
+  }
+  document
+    .querySelectorAll('[data-search]')
+    .forEach((button) => button.addEventListener('click', openSearch));
+  input.addEventListener('input', search);
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      dialog.close();
+    }
+  });
+  dialog.querySelector('form')!.addEventListener('submit', (event) => {
+    event.preventDefault();
+    results.querySelector('a')?.click();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (
+      event.target instanceof HTMLElement &&
+      event.target.closest('input, textarea, [contenteditable="true"]')
+    )
+      return;
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      openSearch();
+    }
+  });
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  dialog
+    .querySelector('button')!
+    .addEventListener('click', () => dialog.close());
+  dialog.addEventListener('close', () => returnFocus?.focus());
+</script>

@@ -110,9 +110,9 @@ The actual trusted final verifier script graded the oracle with reward one and t
 After installing `packages/python[integration]`, prepare and build the image:
 
 ```sh
-.venv/bin/python scripts/prepare_harbor.py
+python3 scripts/prepare_harbor.py
 docker build -t weightless-signed-addition:local examples/harbor/signed-addition/environment
-.venv/bin/python scripts/harbor_native.py --failures --output /tmp/weightless-native-proof
+python3 scripts/harbor_native.py --failures --output /tmp/weightless-native-proof
 ```
 
 The adapter ran the installed Verifiers `HarborTask`, `DockerConfig`, `Deployment`, and isolated `grade_task(on_score=...)` in real Docker. No agent or model rollout occurred. The baseline returned completed native reward zero. The three candidate evaluations returned completed native rewards zero, one, zero, with the original reject, accept, reject decisions and native train/development metrics. Independent final grading of the frozen Harbor-produced run returned reward one with all six heldout examples exact.
