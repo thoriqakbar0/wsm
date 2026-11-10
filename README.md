@@ -2,33 +2,28 @@
 
 WSM lets an AI teacher inspect a model's weights, propose edits, and test them. It saves the selected checkpoint and evaluation evidence.
 
+## Install WSM
+
+Use Python 3.12 or later. From the repository root, create a virtual environment and install the package:
+
 ```sh
-wsm run "Improve signed addition. Inspect the weights and test your changes." \
-  --task addition --attempts 20 --output runs/addition
-wsm status runs/addition
+python3 -m venv .venv
+. .venv/bin/activate
+python3 -m pip install -e packages/python
+wsm --help
 ```
 
-This example needs a teacher endpoint and a sandboxed runner. Setup is below.
+The core package has no third-party runtime dependencies.
 
-## Run with a teacher
+## Run the offline example
 
-Set `WSM_TEACHER_URL` to a streaming Responses-compatible base URL, `WSM_TEACHER_MODEL` to the model ID, and `WSM_TEACHER_API_KEY` to its credential.
-
-The default runner needs a root-authorized Linux host with systemd and bubblewrap. Follow the [sandbox setup](docs/sandbox.md#run-on-this-host), or use Docker with `--runner docker --image <existing-image>`. There is no unsandboxed fallback for `wsm run`.
-
-Run the command above with a new output directory. A completed run saves `checkpoint.json`, `mod.json`, and `harness/report.json`. Its public evidence is in `harness/bundle.json`. Keep the run directory private because it also contains teacher requests and recovery state.
-
-The bundled addition task has public examples only, so its final conclusion is `inconclusive`. See the [prompt-driven guide](docs/wsm.md) for custom tasks, private grading, and recovery. Run `wsm --help` for commands, or open the terminal UI by running `wsm` without arguments.
-
-## Try the offline example
-
-From the repository root, with the `wsm` package available:
+From the repository root, run the scripted signed-addition example:
 
 ```sh
 python3 examples/demo.py --output /tmp/wsm-run.json
 ```
 
-The scripted teacher edits a small signed-addition network. It needs no model call, credentials, Docker, or bubblewrap. The output is:
+The scripted teacher edits a small signed-addition network without model calls, credentials, Docker, or bubblewrap. It prints these decisions:
 
 ```json
 {"accepted": false, "reason": "not_improved"}
@@ -36,16 +31,40 @@ The scripted teacher edits a small signed-addition network. It needs no model ca
 {"accepted": false, "reason": "not_improved"}
 ```
 
-The saved file contains the selected checkpoint and evidence. To try other edits, pass `--proposals` with a file in the format of [the bundled proposals](examples/teacher-proposals.json).
+The saved file contains the selected checkpoint and evidence. To test other edits, pass `--proposals` with a file in the format of [the bundled proposals](examples/teacher-proposals.json).
 
-## Other workflows
+## Run with an AI teacher
 
-- [Python SDK](docs/contract.md#intended-caller): inspect a checkpoint, submit edits, and replay a frozen run.
-- [Configured experiments](docs/driver.md): run scripted proposals or a teacher from a JSON configuration and export the selected checkpoint.
-- [Sessions and model targets](docs/client.md): resume experiments and work with binary64 or supported local model snapshots.
-- [Harbor grading](docs/contract.md#native-harbor-boundary): use the optional Docker-based evaluator.
-- [Verification](docs/verification.md): run the core checks and see the requirements for native sandbox and Harbor checks.
+Configure these environment variables in your shell or secret manager:
 
-## Research scope
+- `WSM_TEACHER_URL` is the Responses-compatible base URL. The endpoint must support streaming responses.
+- `WSM_TEACHER_MODEL` is the model ID.
+- `WSM_TEACHER_API_KEY` is the endpoint credential.
 
-WSM follows the direct-editing workflow described in [Sparks of Weight-Space Programming](https://rikiyat.github.io/blog/weight-space-programming/). The offline example demonstrates edits and selection on a synthetic task. It does not reproduce the paper's results or establish that an AI discovered a useful model edit. See [research scope](docs/research.md) for the current evidence and limits.
+The default runner requires a root-authorized Linux host with systemd and bubblewrap. Follow the [sandbox setup](docs/sandbox.md#run-on-this-host). To use Docker instead, add `--runner docker --image <existing-image>` to the run command.
+
+Once the teacher and runner are configured, run the bundled addition task with a new output directory:
+
+```sh
+wsm run "Improve signed addition. Inspect the weights and test your changes." \
+	--task addition --attempts 20 --output runs/addition
+wsm status runs/addition
+```
+
+A completed run saves `checkpoint.json`, `mod.json`, and `harness/report.json`. The file `harness/bundle.json` contains public evidence. Keep the run directory private because it also contains teacher requests and recovery state.
+
+The bundled addition task has only public examples, so its final conclusion is `inconclusive`. For custom tasks, private grading, and recovery, follow the [prompt-driven guide](docs/wsm.md).
+
+To open the terminal UI, run `wsm` without arguments.
+
+## Choose another workflow
+
+Use these guides for other tasks:
+
+- [Python SDK](docs/contract.md#intended-caller). Inspect a checkpoint, submit edits, and replay a frozen run.
+- [Configured experiments](docs/driver.md). Run scripted proposals or a teacher from a JSON configuration and export the selected checkpoint.
+- [Sessions and model targets](docs/client.md). Resume experiments and work with binary64 or supported local model snapshots.
+- [Harbor grading](docs/contract.md#native-harbor-boundary). Use the optional Docker-based evaluator.
+- [Verification](docs/verification.md). Run the core checks and check the requirements for native sandbox and Harbor checks.
+
+For the research context and limits of the evidence, read [research scope](docs/research.md). The offline example tests edits and selection on a synthetic task. It does not reproduce the paper's results or establish that an AI discovered a useful model edit.
