@@ -8,10 +8,14 @@ def edit(model):
     model.weights["model.norm.weight"][:16].mul_(0.95)
 ```
 
-Run the program against a local Hugging Face snapshot. Install the optional model dependencies in your Python environment first.
+## Run an editing file from the repository
+
+These commands use a source checkout. For the published SDK workflow, use the [Python quickstart](/docs/quickstart/).
+
+Run the program against a local Hugging Face snapshot with its tokenizer files. From the repository root, install the optional model dependencies in your Python environment first.
 
 ```sh
-python -m pip install -e 'packages/python[editing]'
+uv pip install -e 'packages/python[editing]'
 mkdir -p runs
 wsm execute edit.py --model /path/to/snapshot \
   --cases examples/coding/cases.json --output runs/python-edit --device cpu
@@ -39,13 +43,13 @@ Tensor names, shapes, slicing, and arithmetic are ordinary PyTorch. Tied tensors
 
 The supported API consists of `WeightModel` and `execute_program`. The runner records comparisons without automatic candidate selection.
 
-## Execution boundary and open decisions
+## Python execution permissions
 
 The Python runner executes trusted code with the invoking process's privileges. It is not a sandbox or an allowlist of tensor operations. The Modal demonstration also executes a reviewed deterministic program. Do not treat the SDK's tensor mapping as a security boundary.
 
 Arbitrary Python can access files, import installed packages, and change process state. The standalone runner uses the invoking process's permissions. The experimental [Modal trial runner](trials.md) supplies a separate network-blocked sandbox, host-owned history, retained checkpoints, and private final grading. The SDK imports no agent framework. Coding agents can author a Python file and invoke the same command or call the SDK through their own execution environment.
 
-Evaluation cases are public input to the editing process. Independent private grading belongs in a separate process with data the author cannot read. Neither the new runner nor its recorded comparison claims private-data isolation, authenticated evidence, or scientific efficacy.
+Evaluation cases are public input to the editing process. Independent private grading belongs in a separate process with data the author cannot read. Neither the runner nor its recorded comparison establishes private-data isolation, authenticated evidence, or improved model quality.
 
 ## Reproduce the Modal proof
 

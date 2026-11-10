@@ -20,13 +20,13 @@ const weights = [
   title="Weight Space Mods"
   description="WSM is an AI harness for modding model weights. Run agent-written Python edits, evaluate the changed model, and retain checkpoints and experiment history."
   headings={[
-    { depth: 2, slug: 'why-wsm', text: 'Why WSM?' },
+    { depth: 2, slug: 'why-wsm', text: 'Why WSM' },
     {
       depth: 2,
       slug: 'weight-space-programming',
       text: 'What is weight space programming?',
     },
-    { depth: 2, slug: 'how-we-do-it', text: 'How do we do it?' },
+    { depth: 2, slug: 'how-we-do-it', text: 'How WSM works' },
     { depth: 2, slug: 'why-this-design', text: 'Why this design?' },
     { depth: 2, slug: 'whats-done', text: "What's done?" },
   ]}
@@ -50,9 +50,9 @@ const weights = [
       </p>
       <div class="landing-actions">
         <a class="button primary" href="/docs/quickstart/">
-          Start building
+          Run your first edit
         </a>
-        <a href="#why-wsm">Why we're building WSM</a>
+        <a href="#why-wsm">Why WSM</a>
       </div>
       <p class="runtime-note">
         Python ≥ 3.12 <span>/</span> PyTorch tensors <span>/</span>{' '}
@@ -70,32 +70,26 @@ const weights = [
     </section>
 
     <section id="why-wsm" aria-labelledby="why-title" class="narrative-section">
-      <h2 id="why-title">Why WSM?</h2>
+      <h2 id="why-title">Why WSM</h2>
       <p>
-        We want AI agents to experiment with a model's weights and learn from
-        the results. WSM's experimental agent loop runs Python edits, returns
-        evaluation results, and keeps checkpoints and history for the next turn.
+        WSM gives AI agents a way to experiment with a model's weights and use
+        the results to choose their next edit. Its experimental agent loop runs
+        Python edits, returns evaluation results, and keeps checkpoints and
+        history for the next turn.
         You can also use the Python SDK directly.
       </p>
       <p>
-        For example, an agent can change a group of weights, test the changed
-        model, and inspect earlier attempts before deciding what to try next.
-        The Python SDK provides the editing operations used in that loop.
-      </p>
-      <p>
-        That access matters when your question is about the transformation
-        itself. What happens if you scale a particular tensor slice? Can a
-        proposed update be restricted to a named layer? Did the exported
-        checkpoint preserve the intended edit? These are experimental questions.
-        They need a way to inspect weights, execute a precise operation, and
-        compare the resulting model against an unchanged baseline.
+        What happens if you scale a tensor slice or restrict an update to one
+        layer? WSM lets you inspect the weights, run the edit, and compare the
+        changed model against an unchanged baseline.
       </p>
       <p>
         You can already manipulate model parameters with PyTorch. WSM builds on
-        that ability and gives the experiment a common execution path. A
-        developer or coding agent supplies Python. The runner loads the model,
-        measures the baseline, executes the program, measures the candidate, and
-        writes a checkpoint with a record of what happened.
+        that ability with evaluation comparisons and checkpoint records. A
+        developer or coding agent supplies a Python editing file. The standalone
+        runner loads the model, measures the baseline, executes the program,
+        measures the candidate, and writes a checkpoint with a record of what
+        happened.
       </p>
       <p>
         WSM runs and records these experiments. Finding edits that improve model
@@ -163,7 +157,7 @@ const weights = [
       aria-labelledby="how-title"
       class="narrative-section"
     >
-      <h2 id="how-title">How do we do it?</h2>
+      <h2 id="how-title">How WSM works</h2>
       <p>
         Start with a local model snapshot and a hypothesis about a parameter
         transformation. The example below scales the first 16 elements of a
@@ -189,6 +183,10 @@ uv pip install 'wsm[editing]==0.1.0'`}
         arithmetic operate on live model storage, so the next evaluation sees
         the modified values.
       </p>
+      <p>
+        Use a local snapshot with its tokenizer files and an unused output path
+        whose parent directory exists.
+      </p>
       <div class="terminal">
         <div class="terminal-bar">
           <span>experiment.py</span>
@@ -211,8 +209,8 @@ model.save("/path/to/new-checkpoint")`}
         />
       </div>
       <p>
-        The tensor name is specific to compatible model architectures. Inspect
-        your model's names and shapes before applying an edit. Tied parameter
+        The tensor name depends on the model architecture. Inspect your model's
+        names and shapes before applying an edit. Tied parameter
         names can share storage, so changing one view can change another name's
         values too.
       </p>
@@ -282,7 +280,7 @@ model.save("/path/to/new-checkpoint")`}
       <h3>Python expresses the transformation directly</h3>
       <p>
         An edit can use familiar control flow, tensor indexing, and arithmetic.
-        We do not require a separate editing language. A coding agent can write
+        WSM requires no separate editing language. A coding agent can write
         the same <code>edit(model)</code> file a developer would write, without
         the SDK importing an agent framework. This keeps the program inspectable
         and the execution interface independent of who authored it.
@@ -319,7 +317,7 @@ model.save("/path/to/new-checkpoint")`}
       <p>
         Those checks protect the artifact's integrity. They do not certify its
         model quality. A correctly saved checkpoint can still be a worse model.
-        We keep that distinction visible in the{' '}
+        Read more about these checks in the{' '}
         <a href="/docs/architecture/">architecture documentation</a>.
       </p>
     </section>
@@ -372,7 +370,7 @@ model.save("/path/to/new-checkpoint")`}
         tensors, and evaluation parity after reload. This tests the
         edit-and-export mechanism.
       </p>
-      <h3>Tinker trains the editing agent</h3>
+      <h3>An experimental editing-agent training workflow</h3>
       <p>
         WSM's experimental training integration uses the Tinker API to train the
         agent that writes weight edits. The target model is separate. WSM
