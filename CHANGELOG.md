@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Present WSM as an AI harness for modding model weights, explain optional Tinker and Modal Spindle agent training, and distinguish recorded results from unverified hosted training.
+
+- Simplify the weight space programming introduction, mark the website CLI section as coming soon, use uv for SDK setup, and remove the public Verification page while retaining its repository record.
+
 - Tighten the homepage and README copy, document model and output-path prerequisites, compare baseline and edited evaluations in the quickstart, and link to the Python editing guide.
 
 - Add a branded social sharing image, canonical URLs, and Open Graph and Twitter large-image metadata throughout the site.

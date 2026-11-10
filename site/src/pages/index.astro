@@ -17,7 +17,7 @@ const weights = [
 
 <DocsLayout
   title="Weight Space Mods"
-  description="Edit named model tensors with Python, compare evaluations before and after an edit, and save a standalone checkpoint with WSM."
+  description="WSM is an AI harness for modding model weights. Run agent-written Python edits, evaluate the changed model, and retain checkpoints and experiment history."
   headings={[
     { depth: 2, slug: 'why-wsm', text: 'Why WSM?' },
     {
@@ -38,14 +38,14 @@ const weights = [
         <span>Weight Space Mods</span>
       </div>
       <h1 id="hero-title">
-        Edit model weights.
+        An AI harness for
         <br />
-        Measure the model.
+        modding model weights.
       </h1>
       <p class="lead">
-        WSM is a Python SDK for editing model weights. Change named tensors,
-        compare evaluations before and after the edit, and save a standalone
-        checkpoint.
+        An AI agent writes Python edits, runs them against a model, and uses
+        evaluation results to choose its next experiment. WSM provides access to
+        the weights and records the edits, evaluations, and saved checkpoints.
       </p>
       <div class="landing-actions">
         <a class="button primary" href="/docs/quickstart/">
@@ -62,16 +62,15 @@ const weights = [
     <section id="why-wsm" aria-labelledby="why-title" class="narrative-section">
       <h2 id="why-title">Why WSM?</h2>
       <p>
-        WSM lets you write a weight edit as a Python program, inspect it before
-        running, and test the resulting model. You can load the saved checkpoint
-        in other tools without WSM.
+        We want AI agents to experiment with a model's weights and learn from
+        the results. WSM's experimental agent loop runs Python edits, returns
+        evaluation results, and keeps checkpoints and history for the next turn.
+        You can also use the Python SDK directly.
       </p>
       <p>
-        A model exposes several places to intervene. A prompt changes its input.
-        A retrieval system changes the information supplied with that input. A
-        training procedure changes parameters using an objective and an update
-        rule. With direct weight editing, you specify the parameter changes
-        yourself.
+        For example, an agent can change a group of weights, test the changed
+        model, and inspect earlier attempts before deciding what to try next.
+        The Python SDK provides the editing operations used in that loop.
       </p>
       <p>
         That access matters when your question is about the transformation
@@ -101,26 +100,20 @@ const weights = [
     >
       <h2 id="concept-title">What is weight space programming?</h2>
       <p>
-        Let <code>θ</code> denote a model's parameters and <code>fθ(x)</code>{' '}
-        its computation on an input. A weight-editing program produces a
-        candidate parameter set, <code>θ′ = P(θ)</code>. The model you evaluate
-        afterward is <code>fθ′</code>. The program specifies a parameter
-        transformation. Evaluation determines what that transformation did to
-        behavior.
+        An AI model stores what it learned as numbers called weights. Weight
+        space programming means writing code that changes those numbers, then
+        testing what changed in the model's behavior.
       </p>
       <p>
-        We call this <em>weight space programming</em>. The term describes an
-        approach, rather than a single algorithm or a feature unique to WSM. A
-        program might scale values, add a structured update, combine compatible
-        checkpoints, or implement a more involved editing method. In each case,
-        code specifies the parameter changes.
+        With WSM, you can use Python to select a group of weights and modify
+        them. For example, you can multiply a small group by 0.95, compare
+        evaluations before and after the edit, and save the changed model.
       </p>
       <p>
-        Weight coordinates are not human-readable instructions. A tensor name
-        identifies where a value lives in an implementation; it does not tell
-        you which concept that value represents. A small numerical change can
-        affect many outputs. A short program can be reproducible without being
-        useful, interpretable, or safe to apply to a different model.
+        Changing weights does not automatically make a model better. Individual
+        weights do not neatly represent concepts such as a fact or a skill, so
+        even a small edit can affect many outputs. Testing helps you find out
+        whether the change helped or caused regressions.
       </p>
       <h3>How this relates to existing work</h3>
       <p>
@@ -173,7 +166,9 @@ const weights = [
       </p>
       <Code
         themes={codeThemes}
-        code={`python3 -m pip install 'wsm[editing]==0.1.0'`}
+        code={`uv venv --python 3.12 .venv
+. .venv/bin/activate
+uv pip install 'wsm[editing]==0.1.0'`}
         lang="bash"
       />
       <h3>Load, evaluate, modify, evaluate</h3>
@@ -242,64 +237,11 @@ model.save("/path/to/new-checkpoint")`}
           values are not an experimental result.
         </figcaption>
       </figure>
-      <h3>Run the edit as a recorded experiment</h3>
+      <h3>CLI coming soon</h3>
       <p>
-        For the CLI, put the mutation in a Python file defining{' '}
-        <code>edit(model)</code>. The runner owns the baseline and candidate
-        evaluations around that function.
+        Use the Python SDK to edit and evaluate weights. The command-line
+        interface is coming soon.
       </p>
-      <div class="terminal">
-        <div class="terminal-bar">
-          <span>edit.py</span>
-          <span>CLI entry point</span>
-        </div>
-        <Code
-          themes={codeThemes}
-          code={`def edit(model):
-    model.weights["model.norm.weight"][:16].mul_(0.95)`}
-          lang="python"
-        />
-      </div>
-      <p>
-        Create a cases file containing a JSON array of prompt and target
-        objects. This one-case example checks the workflow; use cases
-        appropriate to your actual hypothesis.
-      </p>
-      <Code
-        themes={codeThemes}
-        code={`[{"prompt": "Say hello.", "target": "Hello!"}]`}
-        lang="json"
-      />
-      <p>
-        Save it as <code>cases.json</code>, replace the snapshot path, and
-        choose an output directory that does not already exist.
-      </p>
-      <Code
-        themes={codeThemes}
-        code={`mkdir -p runs
-wsm execute edit.py --model /path/to/snapshot \\
-  --cases cases.json --output runs/edit --device cpu`}
-        lang="bash"
-      />
-      <dl class="artifacts">
-        <div>
-          <dt>
-            <code>runs/edit/run.json</code>
-          </dt>
-          <dd>
-            Program source hash, execution state, baseline and candidate
-            evaluations, and checkpoint location.
-          </dd>
-        </div>
-        <div>
-          <dt>
-            <code>runs/edit/checkpoint/</code>
-          </dt>
-          <dd>
-            A standalone model checkpoint with weights and tokenizer files.
-          </dd>
-        </div>
-      </dl>
       <h3>Interpret the result before keeping it</h3>
       <p>
         Evaluation measures target-token negative log likelihood. WSM calculates
@@ -368,8 +310,7 @@ wsm execute edit.py --model /path/to/snapshot \\
         Those checks protect the artifact's integrity. They do not certify its
         model quality. A correctly saved checkpoint can still be a worse model.
         We keep that distinction visible in the{' '}
-        <a href="/docs/architecture/">architecture</a> and{' '}
-        <a href="/docs/verification/">verification documentation</a>.
+        <a href="/docs/architecture/">architecture documentation</a>.
       </p>
     </section>
 
@@ -393,16 +334,18 @@ wsm execute edit.py --model /path/to/snapshot \\
           matching GitHub release
         </a>
         . The supported public API is <code>WeightModel</code> and{' '}
-        <code>execute_program</code>. The CLI and terminal editing action use
-        the same program runner. You can load, edit, evaluate, and save without
-        adopting an agent framework.
+        <code>execute_program</code>. You can load, edit, evaluate, and save
+        without adopting an agent framework.
       </p>
       <h3>Tests for edits and checkpoint publication</h3>
       <p>
         The repository's model tests build tiny local models and exercise live
         tensor changes, evaluation, and checkpoint reloads. Failure cases cover
         non-finite weights, existing destinations, interruptions, and execution
-        errors. The <a href="/docs/verification/">verification record</a>{' '}
+        errors. The{' '}
+        <a href="https://github.com/thoriqakbar0/wsm/blob/main/docs/verification.md">
+          repository verification record
+        </a>{' '}
         distinguishes completed runs from tests that require optional
         dependencies. These checks establish implementation behavior, not
         general model improvement.
@@ -419,17 +362,21 @@ wsm execute edit.py --model /path/to/snapshot \\
         tensors, and evaluation parity after reload. This tests the
         edit-and-export mechanism.
       </p>
-      <h3>An experimental teacher and student integration</h3>
+      <h3>Tinker trains the editing agent</h3>
       <p>
-        The retained{' '}
-        <a href="/docs/verification/#modal-teacher-and-spindle-student-proof">
-          trial verification record
-        </a>{' '}
-        documents a coding-agent rollout, independent held-out grading on a
-        small task, and a response-weighted student training update through
-        Modal Spindle. The record reports lower held-out loss on that toy task
-        and one confirmed student optimizer update. It does not demonstrate
-        improved student editing ability.
+        WSM's experimental training integration uses the Tinker API to train the
+        agent that writes weight edits. The target model is separate. WSM
+        changes its weights by running the agent's Python code. Tinker is
+        optional for the Python SDK.
+      </p>
+      <p>
+        The recorded demonstration used a Codex teacher to write edits, then
+        trained a separate open-weight student on the teacher's recorded actions
+        through Modal Spindle using the Tinker SDK. It confirmed one training
+        update, but did not demonstrate better student editing ability. Hosted
+        Tinker support exists in code, but a hosted training update has not been
+        verified. Read the <a href="/docs/trials/">experimental trial guide</a>
+        for setup and the distinction between the teacher, student, and target.
       </p>
       <p>
         These results apply to the recorded code and runtime. They do not

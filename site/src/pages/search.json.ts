@@ -15,12 +15,12 @@ export const GET: APIRoute = async () => {
     {
       title: 'Introduction to Weight Space Mods',
       href: '/',
-      text: "Why WSM? What is weight space programming? How do we do it? Why this design? What's done? Python programs transform named model tensors. WeightModel and execute_program record baseline and candidate evaluations and save standalone checkpoints. Research context includes LoRA, ROME, and task arithmetic. Released on PyPI as wsm 0.1.0. Recorded Modal and Spindle demonstrations have limited integration evidence, not general capability claims.",
+      text: 'WSM is an AI harness for modding model weights. An agent writes Python edits, evaluates the changed model, and inspects experiment history. WeightModel and execute_program provide weight access and saved checkpoints. Experimental Tinker SDK integration through Modal Spindle trains a separate editing student from Codex teacher actions. Hosted Tinker training has not been verified. CLI coming soon. Research context includes LoRA, ROME, and task arithmetic.',
     },
     {
       title: 'Quickstart: edit weights with Python',
       href: '/docs/quickstart/',
-      text: 'Install the editing dependencies. Use WeightModel or wsm execute to edit, evaluate, and save a local model.',
+      text: 'Use uv to install the editing dependencies. Use the Python SDK to edit, evaluate, and save a local model. CLI coming soon.',
     },
   );
   return new Response(JSON.stringify(entries), {

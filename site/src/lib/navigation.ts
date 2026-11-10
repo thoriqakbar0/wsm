@@ -7,8 +7,7 @@ export const navigation = [
   ] },
   { title: 'Reference', pages: [
     { title: 'Architecture', href: '/docs/architecture/' },
-    { title: 'CLI commands', href: '/docs/cli/' },
-    { title: 'Verification', href: '/docs/verification/' },
+    { title: 'CLI coming soon', href: '/docs/cli/' },
     { title: 'Research limitations', href: '/docs/research/' },
   ] },
 ];
