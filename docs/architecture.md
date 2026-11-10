@@ -31,3 +31,9 @@ The example uses a scripted external proposer and fixed affine/ReLU target. Opti
 ## Durable local experiment ownership
 
 The [local client](client.md) adds a SQLite-owned session beside `SearchRun`. The session owns admission, budget reservations, arm selection, and the freeze barrier. The private verifier registry owns final dataset claims and disclosure. The Docker runner owns enforced process isolation and numerical execution. The teacher broker owns explicit transport and durable send uncertainty. Agent commands cross an isolated JSON bridge before privileged dispatch.
+
+`Session.run_code` discloses a bounded set of coefficients to an independent probe without model mounts or network access. The probe returns a proposed diff and bounded stdout. Session owns validation and routes changes through `submit`; the code process never owns a candidate checkpoint. Code executions, inspections, attempts, and evaluations retain separate reservations. A retry reuses retained output, and uncertain execution cannot be silently repeated.
+
+The persisted code result names its child submission. Session projects that child through the original code key, so direct results and status recovery share identity, stdout, evaluation, and selection. A retained proposal without an admitted child remains pending and prevents complete freezing. Replay checks that relationship at the freeze cutoff.
+
+`wsm.tinker_backend` translates the supported Tinker sampling protocol onto `Session.infer`, and exposes the WSM editing extension through `wsm.tinker_client.WeightEditor`. The HTTP server owns ephemeral SDK handles and a separate session connection on its server thread. Each sampling handle binds one selected checkpoint. The numerical worker owns token-level greedy inference and prompt log probabilities, while Session reserves and records their cost. The service has no independent model registry or selection policy.

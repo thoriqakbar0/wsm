@@ -14,6 +14,7 @@ wsm = "wsm.cli:main"
 
 [project.optional-dependencies]
 integration = ["harbor==0.25.0", "verifiers==0.4.1", "jsonschema==4.26.0"]
+tinker = ["tinker==0.39.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

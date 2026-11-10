@@ -134,11 +134,11 @@ def _model_mount(target):
 class _WorkerRunner:
     def execute(self, action, target, *, patches=None, edits=None, cases=None, query=None,
                 generate=False, purpose="development", timeout=None, on_dispatch=None, forward_limit=None):
-        if action not in ("describe", "inspect", "materialize", "evaluate") or purpose not in ("development", "final") or type(generate) is not bool:
+        if action not in ("describe", "inspect", "materialize", "evaluate", "infer") or purpose not in ("development", "final") or type(generate) is not bool:
             _error("invalid_request", "Unsupported sandbox operation")
         if type(target) is not dict:
             _error("invalid_target", "Invalid target")
-        if forward_limit is not None and (action != "evaluate" or type(forward_limit) is not int or forward_limit < 0):
+        if forward_limit is not None and (action not in ("evaluate", "infer") or type(forward_limit) is not int or forward_limit < 0):
             _error("invalid_request", "Invalid forward limit")
         target = copy.deepcopy(target)
         mount = _model_mount(target)
@@ -170,13 +170,13 @@ class _WorkerRunner:
         except (ValueError, TypeError, UnicodeDecodeError):
             _error("sandbox_invalid_response", "Sandbox returned invalid JSON")
 
-    def probe(self, source, *, timeout=None, input_data=b""):
+    def probe(self, source, *, timeout=None, input_data=b"", on_dispatch=None):
         """Run a restricted Python probe without target or private mounts."""
         if type(source) is not str or len(source.encode()) > 65536:
             _error("invalid_request", "Invalid probe")
         if type(input_data) is not bytes:
             _error("invalid_request", "Probe input must be bytes")
-        return self._run(self._command() + ["python", "-I", "-c", source], input_data, timeout).decode("utf-8", "replace")
+        return self._run(self._command() + ["python", "-I", "-c", source], input_data, timeout, on_dispatch).decode("utf-8", "replace")
 
 
 class DockerRunner(_WorkerRunner):

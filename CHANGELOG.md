@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Preserve Tinker stopping semantics, give code commands stable recovery results, retain encoded inference responses once, and make Session own connection reopening.
+
+- Add a local Tinker SDK sampling backend and explicit weight-editing extension, with isolated teacher Python, durable candidate selection, and budgeted token inference.
+
 - Preserve atomic no-overwrite checkpoint publication, export provenance, failed-run CLI status, and replay validation while integrating the shared harness and generic model backend.
 
 - Preserve checkpoint-specific inspection feedback across teacher turns so the agent can combine observations without repeatedly reading the same tensors.

@@ -90,6 +90,8 @@ This example uses scripted proposals and an explicitly unisolated binary64 runne
 
 The [durable local client](docs/client.md) adds resumable `Session` experiments, a separate private `Verifier`, and explicit teacher transport through `ResponsesTeacher`. Its execution targets are binary64 checkpoints and a pinned SmolLM2 checkpoint. The [local sandbox guide](docs/sandbox.md) covers Docker-free Linux execution through `BubblewrapRunner`, bubblewrap, and systemd. `DockerRunner` is also available. These paths require host setup beyond the offline example.
 
+The [local Tinker backend](docs/tinker.md#local-sdk-backend) accepts the real Tinker SDK for greedy sampling and prompt scoring. Its WSM extension lets teacher-written Python inspect disclosed coefficients and submit weight changes through the same session policy. The prompt harness enables that code path with `--code-executions N`.
+
 For native Harbor development feedback, use the optional Verifiers adapter on a Docker host.
 
 Install the optional integration packages, prepare trusted purpose-specific tasks, and build the agent image on a Docker host.
