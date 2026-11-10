@@ -17,7 +17,7 @@ const weights = [
 
 <DocsLayout
   title="Weight Space Mods"
-  description="Why Weight Space Mods exists, what weight space programming means, how Python edits become evaluated checkpoints, and what we have built and verified."
+  description="Edit named model tensors with Python, compare evaluations before and after an edit, and save a standalone checkpoint with WSM."
   headings={[
     { depth: 2, slug: 'why-wsm', text: 'Why WSM?' },
     {
@@ -38,14 +38,14 @@ const weights = [
         <span>Weight Space Mods</span>
       </div>
       <h1 id="hero-title">
-        Program the edit.
+        Edit model weights.
         <br />
         Measure the model.
       </h1>
       <p class="lead">
-        Weight space programming treats changes to model parameters as programs
-        you can inspect, execute, and evaluate. WSM is our Python toolkit for
-        exploring that idea.
+        WSM is a Python SDK for editing model weights. Change named tensors,
+        compare evaluations before and after the edit, and save a standalone
+        checkpoint.
       </p>
       <div class="landing-actions">
         <a class="button primary" href="/docs/quickstart/">
@@ -62,17 +62,16 @@ const weights = [
     <section id="why-wsm" aria-labelledby="why-title" class="narrative-section">
       <h2 id="why-title">Why WSM?</h2>
       <p>
-        We want to make a change to a model's weights something you can express
-        as a small program, examine before running, and test afterward. The edit
-        should be explicit. The resulting model should be usable outside the
-        experiment that produced it.
+        WSM lets you write a weight edit as a Python program, inspect it before
+        running, and test the resulting model. You can load the saved checkpoint
+        in other tools without WSM.
       </p>
       <p>
         A model exposes several places to intervene. A prompt changes its input.
         A retrieval system changes the information supplied with that input. A
         training procedure changes parameters using an objective and an update
-        rule. Direct weight editing makes a different part of that process
-        accessible: the transformation from one set of parameters to another.
+        rule. With direct weight editing, you specify the parameter changes
+        yourself.
       </p>
       <p>
         That access matters when your question is about the transformation
@@ -90,10 +89,8 @@ const weights = [
         writes a checkpoint with a record of what happened.
       </p>
       <p>
-        Our ambition is to make weight-changing programs easier to study and
-        reuse. The current library supplies the mechanics of those experiments.
-        Discovering edits that improve useful behavior remains the research
-        problem.
+        WSM runs and records these experiments. Finding edits that improve model
+        behavior remains a research problem.
       </p>
     </section>
 
@@ -108,16 +105,15 @@ const weights = [
         its computation on an input. A weight-editing program produces a
         candidate parameter set, <code>θ′ = P(θ)</code>. The model you evaluate
         afterward is <code>fθ′</code>. The program specifies a parameter
-        transformation; evaluation determines what that transformation did to
+        transformation. Evaluation determines what that transformation did to
         behavior.
       </p>
       <p>
-        We use <em>weight space programming</em> as a working description of
-        this perspective. It is not the name of a single established algorithm
-        or a feature unique to WSM. A program might scale values, add a
-        structured update, combine compatible checkpoints, or implement a more
-        involved editing method. The important distinction is that the
-        transformation is expressed in executable code.
+        We call this <em>weight space programming</em>. The term describes an
+        approach, rather than a single algorithm or a feature unique to WSM. A
+        program might scale values, add a structured update, combine compatible
+        checkpoints, or implement a more involved editing method. In each case,
+        code specifies the parameter changes.
       </p>
       <p>
         Weight coordinates are not human-readable instructions. A tensor name
@@ -167,10 +163,9 @@ const weights = [
       <h2 id="how-title">How do we do it?</h2>
       <p>
         Start with a local model snapshot and a hypothesis about a parameter
-        transformation. In the example below, the hypothesis is deliberately
-        mechanical: scale the first 16 elements of a normalization tensor by
-        0.95. It demonstrates how an edit travels through the system. It is not
-        a recipe for improving a model.
+        transformation. The example below scales the first 16 elements of a
+        normalization tensor by 0.95. It demonstrates the editing workflow
+        without claiming to improve the model.
       </p>
       <p>
         Install the published package with its model dependencies in a Python
@@ -341,18 +336,17 @@ wsm execute edit.py --model /path/to/snapshot \\
         and the execution interface independent of who authored it.
       </p>
       <p>
-        That flexibility is also an execution boundary. Python files run with
-        the invoking process's privileges. The standalone runner does not
-        sandbox filesystem access, imports, or other Python behavior. The
-        experimental trial system has a separate isolation mechanism; it is not
-        a property of ordinary SDK execution.
+        Python files run with the invoking process's privileges. The standalone
+        runner does not sandbox filesystem access, imports, or other Python
+        behavior. The experimental trial system has a separate isolation
+        mechanism; it is not a property of ordinary SDK execution.
       </p>
       <h3>Execution and acceptance answer different questions</h3>
       <p>
         The runner can determine whether a program executed and whether its
         checkpoint was published. It cannot infer whether your chosen evaluation
-        covers the behavior you care about. Automatically treating a lower
-        development loss as success would conflate those questions.
+        covers the behavior you care about. A lower development loss alone does
+        not establish that the model improved on other tasks.
       </p>
       <p>
         For the same reason, a receipt is a record of an execution, not
@@ -386,8 +380,8 @@ wsm execute edit.py --model /path/to/snapshot \\
     >
       <h2 id="done-title">What's done?</h2>
       <p>
-        WSM is a released Python package with an implemented editing workflow.
-        Here is what exists, and what the retained evidence supports.
+        The following implementation and experiment records describe what WSM
+        can do and what remains unproven.
       </p>
       <h3>A published SDK and a shared execution path</h3>
       <p>
@@ -433,16 +427,15 @@ wsm execute edit.py --model /path/to/snapshot \\
         </a>{' '}
         documents a coding-agent rollout, independent held-out grading on a
         small task, and a response-weighted student training update through
-        Modal Spindle. The grade improved on that toy task. A student optimizer
-        update was confirmed, but improved student editing ability was not
-        demonstrated.
+        Modal Spindle. The record reports lower held-out loss on that toy task
+        and one confirmed student optimizer update. It does not demonstrate
+        improved student editing ability.
       </p>
       <p>
-        These are historical integration results tied to their recorded code and
-        runtime. Updating this website does not rerun them. The scope is
-        narrower than reliable autonomous model improvement: useful edit
-        discovery, broad generalization, and repeatable gains across models
-        remain open work.
+        These results apply to the recorded code and runtime. They do not
+        establish reliable autonomous model improvement. Finding useful edits,
+        generalizing beyond the evaluated tasks, and repeating gains across
+        models remain open research questions.
       </p>
       <p>
         Start with the <a href="/docs/quickstart/">quickstart</a> to run an
