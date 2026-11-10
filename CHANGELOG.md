@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Tighten the homepage and README copy, document model and output-path prerequisites, compare baseline and edited evaluations in the quickstart, and link to the Python editing guide.
+
 - Add a branded social sharing image, canonical URLs, and Open Graph and Twitter large-image metadata throughout the site.
 
 - Explain WSM's motivation, weight space programming, execution model, design choices, and completed work on the homepage; use the published PyPI package and self-contained CLI examples.

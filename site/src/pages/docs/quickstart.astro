@@ -14,22 +14,37 @@ import { Code } from 'astro:components';
       Access named tensors, evaluate your changes, and save a standalone
       checkpoint.
     </p>
+    <p>
+      Use Python 3.12 or later in a virtual environment. You need a local
+      Hugging Face causal-language-model snapshot with its tokenizer files. WSM
+      does not download model files or execute model repository Python.
+    </p>
     <Code code={`python3 -m pip install 'wsm[editing]==0.1.0'`} lang="bash" />
+    <p>
+      Replace the paths below with your snapshot and an unused checkpoint
+      destination whose parent directory exists. The example requires a tensor
+      named <code>model.norm.weight</code>. Inspect <code>model.weights</code>
+      for your model's names and shapes before choosing an edit.
+    </p>
     <Code
       code={`from wsm import WeightModel
 
 model = WeightModel.load("/path/to/snapshot")
+cases = [{"prompt": "Say hello.", "target": "Hello!"}]
+before = model.evaluate(cases)
 model.weights["model.norm.weight"][:16].mul_(0.95)
-result = model.evaluate([{"prompt": "Say hello.", "target": "Hello!"}])
+after = model.evaluate(cases)
+print({"baseline": before, "candidate": after})
 model.save("/path/to/checkpoint")`}
       lang="python"
     />
     <p>
-      To run a file, define <code>edit(model)</code> and execute it with the
-      CLI.
+      Evaluation reports target-token negative log likelihood, not generated
+      responses. This edit demonstrates the API without claiming to improve the
+      model.
     </p>
     <p>
-      Save the following as <code>edit.py</code>.
+      To run the edit with the CLI, save the following as <code>edit.py</code>.
     </p>
     <Code
       code={`def edit(model):
@@ -40,18 +55,24 @@ model.save("/path/to/checkpoint")`}
       Save a JSON array of prompt and target objects as <code>cases.json</code>.
     </p>
     <Code code={`[{"prompt": "Say hello.", "target": "Hello!"}]`} lang="json" />
+    <p>
+      Replace the snapshot path and choose an output directory that does not
+      exist. Create its parent directory before running the command.
+    </p>
     <Code
       code={`mkdir -p runs
 wsm execute edit.py --model /path/to/snapshot --cases cases.json --output runs/edit`}
       lang="bash"
     />
     <p>
-      The runner records baseline and candidate evaluations. You decide whether
-      to keep the change. Python executes with your process privileges.
+      The runner records both evaluations in <code>runs/edit/run.json</code>
+      and saves the checkpoint in <code>runs/edit/checkpoint/</code>. You decide
+      whether to keep the change. Python editing files run with your process
+      permissions and are not sandboxed.
     </p>
     <p>
-      <a href="/docs/coding/">Read the Python editing guide</a> or{' '}
-      <a href="/docs/quickstart/">Start building</a>.
+      Read the <a href="/docs/coding/">Python editing guide</a> for API details
+      and execution permissions.
     </p>
   </article>
 </DocsLayout>
