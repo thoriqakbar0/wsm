@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Use solo-neutral website copy, clarify navigation labels and source-checkout instructions, and add the homepage example's model and output-path prerequisites.
+
 - Add the interactive Textures Twist pattern to the homepage hero, using the site's theme colors.
 
 - Present WSM as an AI harness for modding model weights, explain optional Tinker and Modal Spindle agent training, and distinguish recorded results from unverified hosted training.

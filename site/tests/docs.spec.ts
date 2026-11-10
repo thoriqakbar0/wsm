@@ -68,7 +68,7 @@ test('new visitors get the dark theme and can navigate by keyboard', async ({
   await expect(page.getByRole('main')).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(
-    page.getByRole('link', { name: 'Start building', exact: true }),
+    page.getByRole('link', { name: 'Run your first edit', exact: true }),
   ).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL('http://127.0.0.1:4322/docs/quickstart/');
@@ -85,7 +85,7 @@ test('read a guide, copy a command, and retain the theme across pages', async ({
   await page.goto('/');
   await page
     .getByRole('main')
-    .getByRole('link', { name: 'Start building', exact: true })
+    .getByRole('link', { name: 'Run your first edit', exact: true })
     .click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     'Edit model weights with Python',
