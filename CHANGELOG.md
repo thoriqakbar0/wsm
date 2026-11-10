@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Keep program output paths anchored when editing code changes directories, return a failing CLI status for `SystemExit`, and create output parents in quickstart instructions.
+
+- Remove the legacy experiment API, serialized run support, scalar sessions, prompt harness, Tinker bridge, and broker client. `WeightModel` and `execute_program` are the only supported Python API; the CLI and terminal execute Python editing files.
+
 - Preserve Tinker stopping semantics, give code commands stable recovery results, retain encoded inference responses once, and make Session own connection reopening.
 
 - Add a local Tinker SDK sampling backend and explicit weight-editing extension, with isolated teacher Python, durable candidate selection, and budgeted token inference.

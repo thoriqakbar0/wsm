@@ -1,7 +1,0 @@
-**
-!packages/
-!packages/python/
-!packages/python/src/
-!packages/python/src/wsm/
-!packages/python/src/wsm/binary64.py
-!packages/python/src/wsm/target_worker.py

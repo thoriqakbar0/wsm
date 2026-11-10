@@ -13,7 +13,7 @@ test('read a guide, copy a command, and retain the theme across pages', async ({
     .getByRole('link', { name: 'Start building', exact: true })
     .click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-    'Connect a model and edit a weight',
+    'Edit model weights with Python',
   );
   await page
     .getByRole('button', { name: 'Copy code', exact: true })
@@ -21,17 +21,17 @@ test('read a guide, copy a command, and retain the theme across pages', async ({
     .click();
   await expect(page.getByRole('status').first()).toContainText('Code copied');
   const copied = await page.evaluate(() => navigator.clipboard.readText());
-  expect(copied).toContain('WSM_TEACHER_URL');
-  expect(copied).toContain('wsm run');
+  expect(copied).toContain('packages/python[editing]');
+  expect(copied).toContain('pip install');
   expect(copied).not.toContain('.venv/bin/python');
   await page.getByRole('button', { name: 'Switch to dark mode' }).click();
   await page
-    .getByRole('link', { name: 'Prompt-driven edits', exact: true })
+    .getByRole('link', { name: 'Python editing', exact: true })
     .first()
     .click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-    'Run a prompt-driven weight modification',
+    'Modify weights with Python',
   );
   await page.getByRole('button', { name: 'Switch to light mode' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
@@ -46,7 +46,7 @@ test('search full article text, handle no results, and restore focus', async ({
   await trigger.click();
   const dialog = page.getByRole('dialog', { name: 'Search documentation' });
   const input = dialog.getByRole('searchbox');
-  await input.fill('bubblewrap');
+  await input.fill('checkpoint');
   await expect(dialog.getByRole('link').first()).toBeVisible();
   await input.fill('zzq-no-such-topic-qqz');
   await expect(dialog.getByRole('status')).toContainText('No results');
@@ -119,7 +119,7 @@ for (const width of [
     const page = await context.newPage();
     await page.goto('http://127.0.0.1:4322/');
     await page.evaluate(() => document.fonts.ready);
-    await expect(page.locator('.matrix .edited-weight')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -137,7 +137,7 @@ for (const width of [
         .click();
       await expect(page).toHaveURL('http://127.0.0.1:4322/docs/quickstart/');
     } else {
-      await page.goto('http://127.0.0.1:4322/docs/contract/');
+      await page.goto('http://127.0.0.1:4322/docs/coding/');
     }
     expect(
       await page.evaluate(
