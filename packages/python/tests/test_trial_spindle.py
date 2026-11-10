@@ -5,7 +5,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from wsm.binary64 import WeightlessError
+from wsm.errors import WeightlessError
 from wsm.trial_poc import Budget
 
 

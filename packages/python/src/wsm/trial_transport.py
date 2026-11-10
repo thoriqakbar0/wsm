@@ -10,7 +10,7 @@ import time
 from urllib.parse import urlsplit
 import uuid
 
-from .binary64 import WeightlessError
+from .errors import WeightlessError
 
 
 def _canonical(value):
@@ -44,7 +44,7 @@ def _write(path, value):
 
 
 class ResponsesTeacher:
-    """Only a trusted broker should hold this object or its artifact directory."""
+    """Only the trusted trial controller holds this transport and its artifact directory."""
 
     def __init__(self, *, base_url, model, api_key, directory, timeout=60, max_output_tokens=512):
         parsed = urlsplit(base_url)
@@ -61,55 +61,8 @@ class ResponsesTeacher:
         if self._directory.stat().st_mode & 0o077:
             raise WeightlessError("invalid_teacher", "Teacher artifacts require a private directory")
 
-    def ask(self, session, prompt, *, key, arm, purpose="development"):
-        """Send once; replay a saved response or refuse an uncertain resend."""
-        if type(prompt) is not str or not prompt or len(prompt.encode()) > 262144:
-            raise WeightlessError("invalid_teacher", "Teacher prompt exceeds its bound")
-        request = {"model": self._model, "input": [{"role": "user", "content": prompt}],
-                   "tools": [], "tool_choice": "none", "stream": True,
-                   "reasoning": {"effort": "low"}, "max_output_tokens": self._max_tokens}
-        reservation = session.reserve_teacher(request, key=key, arm=arm, purpose=purpose)
-        identity = {"session": session.observe(arm)["session"], "key": key}
-        folder = self._directory / hashlib.sha256(_canonical(identity)).hexdigest()
-        folder.mkdir(mode=0o700, exist_ok=True)
-        try:
-            import fcntl
-        except ImportError:
-            session.unknown_teacher(key)
-            raise WeightlessError("unsupported", "Durable teacher locking requires POSIX") from None
-        with (folder / "lock").open("a") as lock:
-            try:
-                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except BlockingIOError:
-                raise WeightlessError("teacher_busy", "This teacher operation is already active") from None
-            saved_request = folder / "request.json"
-            if saved_request.exists() and _load(saved_request.read_bytes()) != request:
-                raise WeightlessError("idempotency_conflict", "Teacher key has different prompt bytes")
-            if not saved_request.exists():
-                _write(saved_request, request)
-            response_path = folder / "response.json"
-            if response_path.exists():
-                response = _load(response_path.read_bytes())
-                session.complete_teacher(key, response)
-                return response
-            if (folder / "send-intent.json").exists() or reservation["status"] != "dispatched":
-                session.unknown_teacher(key)
-                raise WeightlessError("teacher_outcome_unknown", "A possible prior send cannot be repeated")
-            timeout = min(self._timeout, session.remaining_seconds())
-            _write(folder / "send-intent.json", {"request_sha256": hashlib.sha256(_canonical(request)).hexdigest()})
-            try:
-                with session.teacher_dispatch(key) as started:
-                    response = self._send(request, timeout, folder, on_dispatch=started)
-                _write(response_path, response)
-                session.complete_teacher(key, response)
-                return response
-            except Exception:
-                session.unknown_teacher(key)
-                _write(folder / "failure.json", {"status": "outcome_unknown", "automatic_retry": False})
-                raise WeightlessError("teacher_outcome_unknown", "Teacher completion is uncertain; request retained") from None
-
     def complete(self, prompt, *, key, display_model="Codex", reasoning_effort="low"):
-        """Complete one controller-owned turn without coupling it to a Session."""
+        """Complete one durable controller-owned turn."""
         if (type(prompt) is not str or not prompt or len(prompt.encode()) > 262144
                 or type(key) is not str or not key or type(display_model) is not str or not display_model
                 or reasoning_effort not in ("minimal", "low", "medium", "high", "xhigh")):
@@ -147,7 +100,7 @@ class ResponsesTeacher:
                 _write(folder / "failure.json", {"status": "outcome_unknown", "automatic_retry": False})
                 raise WeightlessError("teacher_outcome_unknown", "Completion uncertain; inspect retained records") from None
 
-    def _send(self, request, timeout, folder, on_dispatch=None, display_model=None):
+    def _send(self, request, timeout, folder, display_model=None):
         deadline = time.monotonic() + timeout
         cls = http.client.HTTPSConnection if self._url.scheme == "https" else http.client.HTTPConnection
         connection = cls(self._url.hostname, self._url.port, timeout=timeout)
@@ -171,8 +124,6 @@ class ResponsesTeacher:
             path = self._url.path.rstrip("/") + "/responses"
             connection.request("POST", path, body=_canonical(request), headers={
                 "Authorization": "Bearer " + self._key, "Content-Type": "application/json"})
-            if on_dispatch is not None:
-                on_dispatch()
             reply = connection.getresponse()
             if reply.status != 200:
                 raise ValueError("Non-successful response")

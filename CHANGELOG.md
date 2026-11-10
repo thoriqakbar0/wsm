@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Integrate Modal trials and notebooks with the Python-editing-only API; retain trial transport and pinned source staging without restoring removed experiment workflows.
+
 - Add runnable Jupyter and marimo examples for the Modal teacher and Spindle student PoC, with uv setup, offline receipt inspection, and explicit live-run controls.
 
 - Verify a live Codex teacher rollout, independent hidden grading, and a reward-weighted Qwen3-4B Spindle update; preserve frozen trials for guarded pretraining recovery and retain virtualenv grading runtimes.
@@ -9,6 +11,10 @@
 - Add a Codex CLI-proxy teacher and separate Spindle student distillation, with student retokenization, final-score response weights, sanitized route records, and no student sampler allocation.
 - Add explicit Modal Spindle training endpoints and separate credentials, a bounded single-trainer/sampler Qwen3-4B recipe, cumulative GPU cost reservations, and independent deployment cleanup.
 - Add an experimental fixed-model Modal coding trial with persistent Python edits, retained checkpoint history, a read-only terminal viewer, separate held-out grading, cost reservations, and a configured hosted Tinker policy update.
+- Keep program output paths anchored when editing code changes directories, return a failing CLI status for `SystemExit`, and create output parents in quickstart instructions.
+
+- Remove the legacy experiment API, serialized run support, scalar sessions, prompt harness, Tinker bridge, and broker client. `WeightModel` and `execute_program` are the only supported Python API; the CLI and terminal execute Python editing files.
+
 - Preserve Tinker stopping semantics, give code commands stable recovery results, retain encoded inference responses once, and make Session own connection reopening.
 
 - Add a local Tinker SDK sampling backend and explicit weight-editing extension, with isolated teacher Python, durable candidate selection, and budgeted token inference.

@@ -15,12 +15,12 @@ export const GET: APIRoute = async () => {
     {
       title: 'Introduction to Weight Space Modifiers',
       href: '/',
-      text: 'WSM. Inspect weights, propose edits, evaluate candidates, retain strict improvements. Replayable evidence and bounded experiments.',
+      text: 'WSM. Edit named model tensors with WeightModel, evaluate changes, and save standalone checkpoints.',
     },
     {
-      title: 'Quickstart: run your first experiment',
+      title: 'Quickstart: edit weights with Python',
       href: '/docs/quickstart/',
-      text: 'Set WSM_TEACHER_URL, WSM_TEACHER_MODEL, and WSM_TEACHER_API_KEY. Run wsm run on the bundled addition task. The model inspects output.weight and edits one coefficient.',
+      text: 'Install the editing dependencies. Use WeightModel or wsm execute to edit, evaluate, and save a local model.',
     },
   );
   return new Response(JSON.stringify(entries), {

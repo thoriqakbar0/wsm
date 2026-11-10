@@ -7,7 +7,7 @@ import math
 from pathlib import Path
 import subprocess
 
-from .binary64 import WeightlessError
+from .errors import WeightlessError
 
 
 def grade_weights(source, weights, cases, *, scoring, device="cpu"):

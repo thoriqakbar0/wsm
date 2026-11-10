@@ -21,7 +21,7 @@ import tempfile
 from collections.abc import Mapping
 from pathlib import Path
 
-from .binary64 import WeightlessError
+from .errors import WeightlessError
 
 _OFFLINE = ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE", "HF_DATASETS_OFFLINE", "HF_HUB_DISABLE_TELEMETRY")
 _UNSAFE_SUFFIXES = {".py", ".pyc", ".so", ".bin", ".pt", ".pth", ".pkl", ".pickle"}
@@ -249,8 +249,7 @@ def _ids(tokenizer, text, label):
 class WeightModel:
     """Experimental handle for direct tensor edits on a local causal language model.
 
-    Legacy `Session` and `SearchRun` contracts are unchanged. This class does not
-    convert edits into scalar proposals and does not apply an acceptance policy.
+    Evaluation reports metrics without applying an acceptance policy.
     """
 
     def __init__(self, model, tokenizer):
@@ -377,7 +376,7 @@ class WeightModel:
                 del reloaded
             _fsync_tree(staged)
             life.advance("verified")
-            from .checkpoint_export import _publish
+            from ._publication import _publish
             _publish(staged, destination)
             renamed = True
             life.advance("published")

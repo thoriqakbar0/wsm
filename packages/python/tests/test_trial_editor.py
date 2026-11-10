@@ -9,7 +9,7 @@ import threading
 import unittest
 from unittest.mock import patch
 
-from wsm import WeightlessError
+from wsm.errors import WeightlessError
 from wsm.trial_editor import ProxyEditor, validate_config
 
 

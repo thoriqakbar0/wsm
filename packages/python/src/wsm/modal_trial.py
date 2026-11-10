@@ -7,11 +7,26 @@ from pathlib import Path
 import shutil
 import uuid
 
-from .binary64 import WeightlessError
+from .errors import WeightlessError
 
 MODEL = "HuggingFaceTB/SmolLM2-135M-Instruct"
 REVISION = "12fd25f77366fa6b3b4b768ec3050bf629380bac"
 INITIAL_CHECKPOINT = f"/target/snapshots/{REVISION}"
+
+
+def stage_smollm(source, destination):
+    source, destination = Path(source), Path(destination)
+    snapshot = source / "snapshots" / REVISION
+    if destination.exists() or not (snapshot / "model.safetensors").is_file():
+        raise WeightlessError("invalid_target", "A pinned source and unused staging directory are required")
+    staged = destination / "snapshots" / REVISION
+    staged.mkdir(parents=True, mode=0o755)
+    for path in snapshot.iterdir():
+        if path.is_file() and path.suffix in (".json", ".txt", ".model", ".jinja", ".safetensors"):
+            shutil.copyfile(path.resolve(strict=True), staged / path.name)
+            (staged / path.name).chmod(0o444)
+    return {"kind": "smollm", "source": str(destination.resolve()), "revision": REVISION,
+            "model": "HuggingFaceTB/SmolLM2-135M-Instruct", "dtype": "float32"}
 
 
 class ModalTrialRunner:
@@ -128,7 +143,6 @@ class ModalTrialRunner:
 def trial_image(source, app):
     """Build only the public runtime and pinned source, never the caller's directory."""
     import modal
-    from .sandbox import stage_smollm
     import tempfile
 
     # stage_smollm validates the revision and removes symlink/cache dependencies.

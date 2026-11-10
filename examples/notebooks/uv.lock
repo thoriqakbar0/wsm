@@ -2704,10 +2704,8 @@ spindle = [
 
 [package.metadata]
 requires-dist = [
-    { name = "harbor", marker = "extra == 'integration'", specifier = "==0.25.0" },
     { name = "jinja2", marker = "extra == 'spindle'", specifier = ">=3.1.6" },
     { name = "jinja2", marker = "extra == 'trial'", specifier = ">=3.1.6" },
-    { name = "jsonschema", marker = "extra == 'integration'", specifier = "==4.26.0" },
     { name = "modal", marker = "extra == 'spindle'", specifier = "==1.6.3" },
     { name = "modal", marker = "extra == 'trial'", specifier = "==1.6.3" },
     { name = "modal-spindle", marker = "extra == 'spindle'", git = "https://github.com/modal-projects/spindle.git?rev=16f3cde4d797fe5ca97c128897ae7b6b29eb72f4" },
@@ -2717,9 +2715,8 @@ requires-dist = [
     { name = "tinker", marker = "extra == 'trial'", specifier = "==0.39.0" },
     { name = "torch", marker = "extra == 'editing'" },
     { name = "transformers", marker = "extra == 'editing'" },
-    { name = "verifiers", marker = "extra == 'integration'", specifier = "==0.4.1" },
 ]
-provides-extras = ["integration", "tinker", "trial", "spindle", "editing"]
+provides-extras = ["tinker", "trial", "spindle", "editing"]
 
 [[package]]
 name = "wsm-notebook-examples"

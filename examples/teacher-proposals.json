@@ -1,5 +1,0 @@
-[
-  {"author":"scripted-teacher","edits":[{"tensor":"output.weight","index":0,"value":-1}]},
-  {"author":"scripted-teacher","edits":[{"tensor":"output.weight","index":0,"value":1},{"tensor":"output.weight","index":1,"value":-1}]},
-  {"author":"scripted-teacher","edits":[{"tensor":"output.bias","index":0,"value":1}]}
-]

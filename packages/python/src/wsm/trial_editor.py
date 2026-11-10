@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 from urllib.parse import urlsplit
 
-from .teacher import ResponsesTeacher
+from .trial_transport import ResponsesTeacher
 
 
 def validate_config(config):

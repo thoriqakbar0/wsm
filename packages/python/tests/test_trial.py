@@ -6,7 +6,8 @@ import sys
 import tempfile
 import unittest
 
-from wsm import WeightModel, WeightlessError
+from wsm import WeightModel
+from wsm.errors import WeightlessError
 from wsm.trial import LocalTrialRunner, Trial
 from test_editing import _stack, write_tiny_model
 

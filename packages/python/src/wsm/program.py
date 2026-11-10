@@ -21,7 +21,7 @@ import os
 from pathlib import Path
 import uuid
 
-from .binary64 import WeightlessError
+from .errors import WeightlessError
 from .editing import WeightModel, _Lifecycle, _cases
 
 
@@ -144,7 +144,7 @@ def _unused_output(value):
 def _path(value, code, message):
     if type(value) is not str and not isinstance(value, os.PathLike):
         raise WeightlessError(code, message)
-    return Path(value)
+    return Path(value).absolute()
 
 
 def _read_source(path):

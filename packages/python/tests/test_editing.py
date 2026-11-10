@@ -9,7 +9,8 @@ import tempfile
 import textwrap
 import unittest
 
-from wsm import WeightModel, WeightlessError
+from wsm import WeightModel
+from wsm.errors import WeightlessError
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -89,7 +90,7 @@ class ImportTests(unittest.TestCase):
 
             sys.meta_path.insert(0, Block())
             import wsm
-            from wsm import SearchRun, Session, WeightModel, execute_program
+            from wsm import WeightModel, execute_program
             assert WeightModel.__name__ == "WeightModel"
             assert callable(execute_program)
             assert "torch" not in sys.modules
@@ -106,7 +107,7 @@ class ImportTests(unittest.TestCase):
 class EditingTests(unittest.TestCase):
     def test_interrupt_after_rename_does_not_report_unpublished(self):
         from unittest.mock import patch
-        from wsm.checkpoint_export import _publish
+        from wsm._publication import _publish
         model = WeightModel.load(self.source)
         destination = self.root / 'interrupt-after-rename'
         phases = []
@@ -115,7 +116,7 @@ class EditingTests(unittest.TestCase):
             _publish(source, target)
             raise KeyboardInterrupt()
 
-        with patch('wsm.checkpoint_export._publish', publish_then_interrupt):
+        with patch('wsm._publication._publish', publish_then_interrupt):
             with self.assertRaises(KeyboardInterrupt):
                 model.save(destination, on_phase=phases.append)
         self.assertTrue(destination.is_dir())

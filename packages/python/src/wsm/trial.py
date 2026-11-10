@@ -17,7 +17,7 @@ import sys
 import tempfile
 import time
 
-from .binary64 import WeightlessError
+from .errors import WeightlessError
 from .editing import _cases
 
 

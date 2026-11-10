@@ -10,7 +10,7 @@ import unittest
 import subprocess
 import venv
 
-from wsm.binary64 import WeightlessError
+from wsm.errors import WeightlessError
 from wsm.trial import LocalTrialRunner, Trial
 from wsm.trial_grading import grade_in_process
 from wsm.trial_poc import Budget, inspect_weights, load_config, resume_student, run_agent, watch

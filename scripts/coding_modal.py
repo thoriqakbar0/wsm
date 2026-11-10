@@ -95,10 +95,10 @@ def launch(args):
     import modal
     repository = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(repository / 'packages/python/src'))
-    from wsm import stage_smollm
+    import shutil
 
     args.output.mkdir(parents=True, exist_ok=False)
-    stage_smollm(args.model_source, args.output / 'source')
+    shutil.copytree(args.model_source, args.output / 'source', symlinks=False)
     base = (modal.Image.debian_slim(python_version='3.12')
             .uv_pip_install('torch==2.10.0+cu128', index_url='https://download.pytorch.org/whl/cu128')
             .uv_pip_install('transformers==5.22.2', 'safetensors==0.8.0')

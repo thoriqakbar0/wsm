@@ -18,8 +18,6 @@ class PackageSmokeTests(unittest.TestCase):
                             ignore=shutil.ignore_patterns("build", "*.egg-info", "__pycache__", "*.pyc"))
             (root / "scripts").mkdir()
             shutil.copyfile(ROOT / "scripts/package_smoke.py", root / "scripts/package_smoke.py")
-            (root / "fixtures").mkdir()
-            shutil.copyfile(ROOT / "fixtures/addition.json", root / "fixtures/addition.json")
             stale = package / "build/lib/weightless/__init__.py"
             stale.parent.mkdir(parents=True)
             stale.write_text("legacy = True\n")

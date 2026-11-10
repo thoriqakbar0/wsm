@@ -46,7 +46,7 @@ Download the fixed target and stage it through WSM's existing pin-preserving hel
 uv run --project examples/notebooks --extra live python - <<'PY'
 from pathlib import Path
 from huggingface_hub import snapshot_download
-from wsm.sandbox import stage_smollm
+from wsm.modal_trial import stage_smollm
 
 revision = "12fd25f77366fa6b3b4b768ec3050bf629380bac"
 snapshot = Path(snapshot_download("HuggingFaceTB/SmolLM2-135M-Instruct", revision=revision))

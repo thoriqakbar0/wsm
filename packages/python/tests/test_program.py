@@ -1,6 +1,8 @@
 """Trusted Python execution publishes only a verified checkpoint."""
 import hashlib
 import json
+import os
+import subprocess
 from pathlib import Path
 import sys
 import tempfile
@@ -8,7 +10,8 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_editing import _files, _stack, write_tiny_model
-from wsm import WeightModel, WeightlessError, execute_program
+from wsm import WeightModel, execute_program
+from wsm.errors import WeightlessError
 
 
 CASES = [{"prompt": "a b", "target": "c"}, {"prompt": "a", "target": "b"}]
@@ -95,6 +98,35 @@ class BoundaryTests(unittest.TestCase):
 
 
 class ProgramTests(unittest.TestCase):
+    def _run_cli(self, source, output):
+        program = _write(self.root / "edit.py", source)
+        cases = _write(self.root / "cases.json", json.dumps(CASES))
+        return subprocess.run(
+            [sys.executable, "-m", "wsm", "execute", str(program),
+             "--model", str(self.root / "source"), "--cases", str(cases), "--output", output],
+            cwd=self.root, capture_output=True, text=True,
+            env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1] / "src")})
+
+    def test_relative_output_stays_at_requested_location_after_chdir(self):
+        elsewhere = self.root / "elsewhere"
+        elsewhere.mkdir()
+        result = self._run_cli(
+            "import os\ndef edit(model):\n    os.chdir(" + repr(str(elsewhere)) + ")\n"
+            "    model.weights['transformer.ln_f.weight'].mul_(0.95)\n", "output")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        output = self.root / "output"
+        self.assertEqual(json.loads((output / "run.json").read_text())["state"], "published")
+        WeightModel.load(output / "checkpoint")
+        self.assertFalse((elsewhere / "output").exists())
+
+    def test_system_exit_zero_is_a_failed_cli_run(self):
+        result = self._run_cli("import sys\ndef edit(model):\n    sys.exit(0)\n", "output")
+        self.assertNotEqual(result.returncode, 0)
+        output = self.root / "output"
+        self.assertEqual(json.loads((output / "run.json").read_text())["state"], "failure")
+        self.assertEqual(json.loads(result.stderr.splitlines()[-1])["error"]["type"], "SystemExit")
+        self.assertFalse((output / "checkpoint").exists())
+
     def test_executes_the_captured_source_when_file_changes_during_loading(self):
         from unittest.mock import patch
         program = _write(self.root / "edit.py", textwrap_edit())

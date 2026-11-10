@@ -8,7 +8,7 @@ from pathlib import Path
 import sys
 import time
 
-from .binary64 import WeightlessError
+from .errors import WeightlessError
 from .editing import _cases
 from .modal_trial import INITIAL_CHECKPOINT, MODEL, REVISION, ModalTrialRunner, trial_image
 from .trial import Trial
