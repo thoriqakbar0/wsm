@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add an Astro documentation site in `site/` with repository-backed articles, an offline quickstart, local search, code copying, and responsive navigation.
 - Add an experimental coding-first tensor SDK, Python-file execution with unchanged-model comparison and verified atomic checkpoint publication, a matching TUI action, and a rerunnable SmolLM Modal proof with independent source-free reload.
 
 - Preserve atomic no-overwrite checkpoint publication, export provenance, failed-run CLI status, and replay validation while integrating the shared harness and generic model backend.

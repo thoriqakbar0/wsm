@@ -72,6 +72,13 @@ wsm run "Improve signed addition. Inspect the weights and test your changes." \
 wsm status runs/addition
 ```
 
+The teacher sends one command at a time. For example:
+
+```json
+{"action":"inspect","tensor":"output.weight","indices":[0,1]}
+{"action":"edit","edits":[{"tensor":"output.weight","index":0,"value":1}]}
+```
+
 A completed run saves `checkpoint.json`, `mod.json`, and `harness/report.json`. The file `harness/bundle.json` contains public evidence. Keep the run directory private because it also contains teacher requests and recovery state.
 
 The bundled addition task has only public examples, so its final conclusion is `inconclusive`. For custom tasks, private grading, and recovery, follow the [prompt-driven guide](docs/wsm.md).
@@ -90,3 +97,7 @@ Use these guides for other tasks:
 - [Verification](docs/verification.md). Run the core checks and check the requirements for native sandbox and Harbor checks.
 
 For the research context and limits of the evidence, read [research scope](docs/research.md). The offline example tests edits and selection on a synthetic task. It does not reproduce the paper's results or establish that an AI discovered a useful model edit.
+
+The [Astro documentation site](site/README.md) provides a browsable guide. Run `npm ci` and `npm run dev` from `site/` to start it locally.
+
+The distribution, import package, and command are named `wsm`. If you used the former `weightless-sdk` package, uninstall it and update imports from `weightless` to `wsm`. Serialized `weightless.*` identifiers and hashes, `WeightlessError`, environment variables, and Docker image names keep their existing spelling.

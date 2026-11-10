@@ -1,0 +1,28 @@
+---
+import { navigation } from '../lib/navigation';
+const current = Astro.url.pathname.replace(/\/$/, '') || '/';
+---
+
+<nav aria-label="Documentation">
+  {navigation.map((group) => (
+    <div class="nav-group">
+      <h2>{group.title}</h2>
+      <ul>
+        {group.pages.map((page) => (
+          <li>
+            <a
+              href={page.href}
+              aria-current={
+                (page.href.replace(/\/$/, '') || '/') === current
+                  ? 'page'
+                  : undefined
+              }
+            >
+              {page.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ))}
+</nav>

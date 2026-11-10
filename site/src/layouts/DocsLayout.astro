@@ -1,0 +1,258 @@
+---
+import '@fontsource-variable/manrope';
+import '../styles/global.css';
+import Icon from '../components/Icon.astro';
+import Navigation from '../components/Navigation.astro';
+import Search from '../components/Search.astro';
+import { pages, repository } from '../lib/navigation';
+interface Props {
+  title: string;
+  description?: string;
+  headings?: { depth: number; slug: string; text: string }[];
+  source?: string;
+}
+const {
+  title,
+  description = 'Inspect model weights, propose explicit edits, and keep the evidence. Documentation for Weight Space Modifiers.',
+  headings = [],
+  source,
+} = Astro.props;
+const position = pages.findIndex((page) => page.href === Astro.url.pathname);
+const next = pages[position + 1];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{title} · WSM Docs</title>
+    <script is:inline>
+      try {
+        const theme = localStorage.getItem('wsm-theme');
+        if (
+          theme === 'dark' ||
+          (!theme && matchMedia('(prefers-color-scheme: dark)').matches)
+        )
+          document.documentElement.dataset.theme = 'dark';
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">
+      Skip to content
+    </a>
+    <header class="header">
+      <a href="/" class="brand" aria-label="WSM documentation home">
+        <span class="brand-mark" aria-hidden="true">
+          w<span>∷</span>
+        </span>
+        <span>wsm</span>
+        <span class="brand-divider"></span>
+        <span class="brand-caption">docs</span>
+      </a>
+      <nav class="top-nav" aria-label="Main">
+        <a class="selected" href="/">
+          Documentation
+        </a>
+        <a href="/docs/quickstart/">Examples</a>
+        <a href="/docs/research/">Research</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" data-search aria-label="Search docs">
+          <Icon name="search" size={16} />
+          <span>Search docs</span>
+          <kbd>⌘ K</kbd>
+        </button>
+        <a
+          class="icon-button github-header"
+          href={repository}
+          aria-label="WSM on GitHub"
+        >
+          <Icon name="github" />
+        </a>
+        <button
+          id="theme-toggle"
+          class="icon-button"
+          aria-label="Toggle dark mode"
+          aria-pressed="false"
+        >
+          <Icon name="sun" />
+        </button>
+        <button
+          id="menu-toggle"
+          class="icon-button mobile-only"
+          aria-label="Open navigation"
+          aria-controls="mobile-navigation"
+        >
+          <Icon name="menu" />
+        </button>
+      </div>
+    </header>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="project-label">
+          <span class="project-dot"></span> Weight Space Modifiers
+        </div>
+        <Navigation />
+        <a class="sidebar-source" href={repository}>
+          <Icon name="github" size={18} />
+          <span>Open source on GitHub</span>
+          <Icon name="external" size={14} />
+        </a>
+      </aside>
+      <main id="main" tabindex="-1">
+        <slot />
+        <footer class="article-footer">
+          {source && (
+            <a class="edit-link" href={`${repository}/blob/main/${source}`}>
+              Edit this page on GitHub <Icon name="external" size={14} />
+            </a>
+          )}
+          {next && (
+            <a class="next-page" href={next.href}>
+              <span>
+                <small>Up next</small>
+                <strong>{next.title}</strong>
+              </span>
+              <Icon name="arrow" />
+            </a>
+          )}
+          <div class="footer-note">
+            <span>WSM documentation</span>
+            <span>Explicit edits. Inspectable evidence.</span>
+          </div>
+        </footer>
+      </main>
+      <aside class="on-this-page" aria-label="On this page">
+        <h2>On this page</h2>
+        <nav>
+          {headings
+            .filter((h) => h.depth === 2)
+            .map((h) => (
+              <a href={`#${h.slug}`}>{h.text}</a>
+            ))}
+        </nav>
+        <div class="aside-note">
+          <span class="note-symbol" aria-hidden="true">
+            ↗
+          </span>
+          <strong>Connect a model</strong>
+          <p>Set the endpoint, then read the edit.</p>
+          <a href="/docs/quickstart/">
+            Open quickstart <Icon name="arrow" size={14} />
+          </a>
+        </div>
+      </aside>
+    </div>
+    <dialog id="mobile-navigation" aria-label="Documentation navigation">
+      <div class="mobile-nav-top">
+        <strong>Documentation</strong>
+        <form method="dialog">
+          <button class="icon-button" aria-label="Close navigation">
+            <Icon name="close" />
+          </button>
+        </form>
+      </div>
+      <Navigation />
+    </dialog>
+    <Search />
+    <div id="copy-status" class="sr-only" role="status"></div>
+    <script>
+      const themeButton =
+        document.querySelector<HTMLButtonElement>('#theme-toggle')!;
+      function syncTheme() {
+        const dark = document.documentElement.dataset.theme === 'dark';
+        themeButton.setAttribute('aria-pressed', String(dark));
+        themeButton.setAttribute(
+          'aria-label',
+          dark ? 'Switch to light mode' : 'Switch to dark mode',
+        );
+        document
+          .querySelector('meta[name="theme-color"]')
+          ?.setAttribute('content', dark ? '#141922' : '#ffffff');
+      }
+      syncTheme();
+      themeButton.addEventListener('click', () => {
+        const theme =
+          document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = theme;
+        try {
+          localStorage.setItem('wsm-theme', theme);
+        } catch {}
+        syncTheme();
+      });
+      const menu =
+        document.querySelector<HTMLDialogElement>('#mobile-navigation')!;
+      document
+        .querySelector('#menu-toggle')!
+        .addEventListener('click', () => menu.showModal());
+      menu.addEventListener('click', (event) => {
+        if (event.target === menu) menu.close();
+      });
+      document.querySelectorAll<HTMLPreElement>('main pre').forEach((pre) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'code-block';
+        pre.before(wrapper);
+        const bar = document.createElement('div');
+        bar.className = 'code-toolbar';
+        const language = document.createElement('span');
+        language.textContent = pre.dataset.language || 'Code';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.setAttribute('aria-label', 'Copy code');
+        button.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(
+              pre.querySelector('code')?.textContent || pre.textContent || '',
+            );
+            button.textContent = 'Copied';
+            document.querySelector('#copy-status')!.textContent =
+              'Code copied to clipboard.';
+          } catch {
+            button.textContent = 'Select code';
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(pre);
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+            document.querySelector('#copy-status')!.textContent =
+              'Clipboard unavailable. Code selected for manual copying.';
+          }
+          window.setTimeout(() => {
+            button.textContent = 'Copy';
+          }, 2000);
+        });
+        bar.append(language, button);
+        wrapper.append(bar, pre);
+      });
+      const links = document.querySelectorAll<HTMLAnchorElement>(
+        '.on-this-page nav a',
+      );
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            links.forEach((link) => {
+              if (link.hash === `#${entry.target.id}`)
+                link.setAttribute('aria-current', 'location');
+              else link.removeAttribute('aria-current');
+            });
+          }
+        },
+        { rootMargin: '-90px 0px -60% 0px' },
+      );
+      document
+        .querySelectorAll('main h2[id]')
+        .forEach((heading) => observer.observe(heading));
+    </script>
+  </body>
+</html>
