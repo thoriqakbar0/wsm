@@ -120,10 +120,11 @@ class Terminal:
             return
         put(screen, 3, "Workspace  " + self.workspace)
         if view is None:
-            put(screen, 5, "Start with an experiment, then inspect and propose numerical edits.")
-            put(screen, 7, "n  New signed-addition example")
-            put(screen, 8, "c  Create from a workspace configuration JSON")
-            put(screen, 9, "o  Open an existing experiment")
+            put(screen, 5, "Write Python that changes tensors, then compare and save a checkpoint.")
+            put(screen, 7, "p  Review and execute a Python editing file")
+            put(screen, 8, "n  New signed-addition example")
+            put(screen, 9, "c  Create from a workspace configuration JSON")
+            put(screen, 10, "o  Open an existing experiment")
             put(screen, 11, "Teacher models propose edits. Target models provide the editable weights.")
             put(screen, 12, "Custom local target snapshots are selected in workspace configuration.")
             put(screen, 14, "q  Quit")
@@ -143,7 +144,7 @@ class Terminal:
             else:
                 history = view["history"]
                 put(screen, 14, "Latest decision  " + (json.dumps(history[-1], separators=(",", ":")) if history else "No proposals evaluated yet"))
-            put(screen, 16, "i Inspect   e Edit   p Submit proposal   t Ask teacher   h History")
+            put(screen, 16, "P Python program   i Inspect   e Scalar edit   p Proposal   t Teacher   h History")
             put(screen, 17, "f Freeze    g Final grade    x Export    d Diagnose    v Last result")
             put(screen, 18, "s Status    r Resume saved request    a Arm    b Back    q Quit")
         put(screen, height - 4, self.message, attr=curses.A_BOLD)
@@ -182,7 +183,11 @@ class Terminal:
         self.message = f"{action.capitalize()} {state}. Operation {key}. Press v for the result."
 
     def startup(self, key):
-        if key == "n":
+        if key == "p":
+            from .coding_tui import execute
+            self.last_result = execute(self.screen)
+            self.message = "Python execution finished. Its receipt is in the output directory."
+        elif key == "n":
             directory = prompt(self.screen, "Workspace directory", default=self.workspace)
             private = prompt(self.screen, "Private demo directory (blank skips final verifier)")
             self.verifier_config = None
@@ -204,7 +209,11 @@ class Terminal:
             self.open(directory)
 
     def action(self, key, view):
-        if key == "i":
+        if key == "P":
+            from .coding_tui import execute
+            self.last_result = execute(self.screen)
+            self.message = "Python execution finished. Its receipt is in the output directory."
+        elif key == "i":
             tensor = prompt(self.screen, "Tensor name", default=next(iter(view["parameters"])))
             indices = [int(item) for item in prompt(self.screen, "Indices separated by spaces", default="0").split()]
             self.execute("inspect", {"checkpoint": view["base"], "tensor": tensor, "indices": indices})

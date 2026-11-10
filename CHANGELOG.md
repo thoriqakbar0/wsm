@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add an experimental coding-first tensor SDK, Python-file execution with unchanged-model comparison and verified atomic checkpoint publication, a matching TUI action, and a rerunnable SmolLM Modal proof with independent source-free reload.
+
 - Preserve atomic no-overwrite checkpoint publication, export provenance, failed-run CLI status, and replay validation while integrating the shared harness and generic model backend.
 
 - Preserve checkpoint-specific inspection feedback across teacher turns so the agent can combine observations without repeatedly reading the same tensors.

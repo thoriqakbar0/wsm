@@ -1,6 +1,19 @@
 # WSM (Weight Space Modifiers)
 
-WSM is a harness for editing a model's weights. Give an AI teacher a prompt and a task profile. The harness lets it inspect coefficients, propose edits, and test candidates, then saves the selected checkpoint and evaluation evidence. The Python distribution, import package, and CLI are named `wsm`.
+WSM is a Python SDK for weight-space modification. Write Python that accesses named tensors, changes weights, evaluates the result, and saves a standalone checkpoint. Coding agents use the same API as developers. The Python distribution, import package, and CLI are named `wsm`.
+
+```python
+from wsm import WeightModel
+
+model = WeightModel.load("/path/to/local/snapshot")
+model.weights["model.norm.weight"][:16].mul_(0.95)
+result = model.evaluate([{"prompt": "Say hello.", "target": "Hello!"}])
+model.save("/path/to/new-checkpoint")
+```
+
+Use `wsm execute edit.py --model /path/to/snapshot --cases examples/coding/cases.json --output runs/edit` for a Python file defining `edit(model)`. Open `wsm` and press **p** for the same workflow in the terminal. Read [Modify weights with Python](docs/coding.md) for installation, execution trust, the Modal proof, and open policy decisions. The SDK is independent of agent frameworks and makes no Tinker compatibility claim.
+
+The earlier prompt harness and durable scalar-session APIs remain available for their existing experiment contracts:
 
 ```sh
 python3 -m pip install -e packages/python

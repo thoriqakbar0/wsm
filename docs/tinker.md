@@ -1,5 +1,18 @@
 # Tinker capability boundary
 
+## Decision for the Python editing program
+
+Rechecked the official TrainingClient, ServiceClient, RestClient, and supported-model references on 2026-11-10. The concrete program is `model.weights["model.norm.weight"][:16].mul_(0.95)`, followed by evaluation and standalone checkpoint reload.
+
+The documented TrainingClient methods include `forward`, `forward_backward`, `optim_step`, state loading, and external weight saving. None exposes named model tensors for this Python mutation. ServiceClient creates LoRA clients and clients from saved state. SmolLM was not listed on the inspected supported-model page. These observations establish a documented-contract gap, not proof of undocumented service behavior. No authenticated hosted Tinker experiment was run.
+
+A possible compatibility subset would name `ServiceClient.create_training_client_from_state`, `TrainingClient.forward`, and `TrainingClient.save_state`. Implementing it would require real SDK tests of `Datum`, loss outputs, futures, checkpoint identifiers, errors, and reload semantics. It would still lack tensor editing. WSM's evaluation dictionary and Hugging Face directory are different contracts; similar names would not make them compatible.
+
+The implemented experimental SDK therefore owns `WeightModel.load`, `weights`, `evaluate`, and `save`, with `execute_program` as a separate execution boundary. A Tinker adapter remains a separate decision. The earlier SDK-wheel inspection below identifies an experimental adapter import route; it does not establish arbitrary dense edits or hosted support for this program.
+
+- [Supported models](https://tinker-docs.thinkingmachines.ai/tinker/models/models_and_pricing/).
+- [Coding workflow](coding.md).
+
 WSM requires a target backend that can inspect permitted weights, materialize explicit replacements in separate candidates, evaluate those candidates, and export the selected checkpoint. The editing AI is a separate caller. Its provider's inference API does not grant access to the target's weights.
 
 ## Inspected contract
