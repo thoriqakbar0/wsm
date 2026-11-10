@@ -102,7 +102,7 @@ class RunnerTests(unittest.TestCase):
     def test_restrictions_and_probe_never_mount_target(self):
         runner = self.runner()
         commands = []
-        def capture(command, payload, timeout=None):
+        def capture(command, payload, timeout=None, on_dispatch=None):
             commands.append(command)
             return b'probe'
         with patch.object(runner, '_run', side_effect=capture):

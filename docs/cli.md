@@ -20,6 +20,8 @@ Errors from these commands are JSON on stderr. Stdout is empty when the command 
 
 `wsm run PROMPT --task TASK --output DIR` starts a prompt-driven run. `addition` selects the bundled task. The teacher URL, model, and `WSM_TEACHER_API_KEY` are explicit. There is no route fallback.
 
+Add `--code-executions N` to permit bounded teacher Python over explicitly inspected coefficients. Each code command runs in the configured isolated runner and submits its resulting diff through session selection. Omitting the flag disables code execution.
+
 `wsm status DIR` and `wsm resume DIR` use the prompt harness when `DIR` contains `run.json` or `harness/report.json` and the command does not pass `--workspace`. Passing `--workspace` keeps the session meaning above.
 
 Harness errors use the text form `wsm: code. message`.

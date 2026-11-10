@@ -20,6 +20,30 @@ The model sends one command at a time.
 
 WSM keeps the edit when the loss goes down.
 
+The teacher can also request `{"action":"diagnose"}` or `{"action":"finish"}`. The harness supplies operation keys and binds commands to the observation the teacher actually saw. An edit also runs candidate evaluation. A later turn receives public feedback, including acceptance and literal predictions. A stale observation is rejected rather than rebound to newer weights.
+
+Pass `--code-executions 8` to allow up to eight isolated Python executions. The teacher can then send a code command that names the coefficients it needs:
+
+```json
+{"action":"code","source":"weights['output.weight'].update({0: 1, 1: -1})","inspections":[{"tensor":"output.weight","indices":[0,1]}]}
+```
+
+The host inspects those addresses, starts a separate no-network sandbox without a model mount, and supplies `weights[tensor][index]` as a mutable Python mapping. Code may import libraries installed in the configured runner. After execution, the host validates the disclosed addresses and finite values, computes the diff, and submits it through the same candidate evaluation and selection policy. Code cannot add addresses or change the target snapshot directly. `max_inspect` bounds the total coefficients supplied to a code command; `max_edits` bounds its changed coefficients. Each tensor inspection uses the inspection budget. Code execution has its own `code_executions` budget, separate from teacher requests and target forward calls. An unchanged mapping consumes no candidate attempt.
+
+The [local Tinker backend](tinker.md#local-sdk-backend) exposes this editing path to Python callers alongside the real Tinker SDK.
+
+The command prints a structured report. Inspect these files in the private run directory:
+
+- `checkpoint.json` contains the selected binary64 checkpoint, ready for `wsm.binary64.predict`.
+- `mod.json` contains the original target, selected checkpoint identity, and effective scalar patches.
+- For a model target, `selected/` is the standalone snapshot. A later process can load it without the original model directory. `mod.json` remains the patch record.
+- `harness/report.json` contains the stop reason, selected development loss, counters, unresolved operations, and receipt-derived final conclusion.
+- `harness/bundle.json` contains replayable public session evidence.
+
+`run.json`, `session.db`, `teacher-private/`, and `harness/cursor.json` are private operational state. The cursor retains the pending prompt and response for recovery. Do not publish the run directory as an evidence bundle. The default export contains no separate agent transcript.
+
+The bundled profile has no private final dataset. Its final conclusion is therefore `inconclusive`, even if all public cases pass. Lower loss alone does not establish the requested behavior or retention of unrelated capabilities.
+
 ## Resume or inspect a run
 
 ```sh

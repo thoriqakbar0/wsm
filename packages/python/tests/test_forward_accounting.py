@@ -15,6 +15,14 @@ class MeasuredRunner(Runner):
         self.usage = 'valid'
 
     def execute(self, action, target, **kwargs):
+        if action == 'infer':
+            self.calls.append((action, kwargs))
+            if self.fail == 'infer':
+                raise RuntimeError('uncertain target operation')
+            query = kwargs['query']
+            return {'checkpoint': query['checkpoint'], 'sequences': [],
+                    'prompt_logprobs': [None, -1.0],
+                    'usage': {'forward_calls': 1, 'forward_limit': kwargs['forward_limit']}}
         result = super().execute(action, target, **kwargs)
         if action == 'evaluate' and self.usage != 'missing':
             observed = len(kwargs['cases']) if self.usage == 'valid' else kwargs['forward_limit'] + 1
@@ -68,6 +76,33 @@ class ForwardAccountingTests(unittest.TestCase):
         self.assertEqual(session.export()['used']['forward_calls'], 238)
         session.freeze(key='stop')
         replay_session(session.export())
+
+    def test_sdk_inference_is_budgeted_idempotent_and_never_retries_unknown_work(self):
+        session = self.session(budget=1, retention=False)
+        query = {'checkpoint': session.observe('teacher')['base'], 'tokens': [1, 2],
+                 'max_tokens': 0, 'temperature': 0, 'prompt_logprobs': True, 'stop': []}
+        first = session.infer(query, key='score', arm='teacher')
+        self.assertEqual(first['status'], 'completed')
+        self.assertEqual(first['costs'], {'evaluations': 1, 'forward_calls': 1})
+        calls = len(self.runner.calls)
+        self.assertEqual(session.infer(query, key='score', arm='teacher'), first)
+        self.assertEqual(len(self.runner.calls), calls)
+        with self.assertRaises(WeightlessError) as error:
+            session.infer(query, key='exhausted', arm='teacher')
+        self.assertEqual(error.exception.code, 'budget_exhausted')
+        self.assertEqual(len(self.runner.calls), calls)
+        second = self.session(budget=10, retention=False)
+        query['checkpoint'] = second.observe('teacher')['base']
+        self.runner.fail = 'infer'
+        unknown = second.infer(query, key='unknown', arm='teacher')
+        self.assertEqual(unknown['status'], 'outcome_unknown')
+        calls = len(self.runner.calls)
+        self.assertEqual(second.infer(query, key='unknown', arm='teacher'), unknown)
+        self.assertEqual(len(self.runner.calls), calls)
+        frozen = second.freeze(key='stop')
+        self.assertFalse(frozen['complete'])
+        self.assertIn('unknown', frozen['obligations'])
+        replay_session(second.export())
 
     def test_insufficient_reservation_prevents_any_dispatch_or_charge(self):
         session = self.session(budget=118)

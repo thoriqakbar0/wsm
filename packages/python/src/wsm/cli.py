@@ -94,6 +94,8 @@ def parser():
     start.add_argument("--output", type=Path, required=True, help="New private run directory")
     start.add_argument("--attempts", type=_positive, default=20, help="Maximum candidate edits (default: 20)")
     start.add_argument("--turns", type=_positive, default=64, help="Maximum teacher requests (default: 64)")
+    start.add_argument("--code-executions", type=_positive, default=0,
+                       help="Maximum isolated teacher Python executions (default: disabled)")
     start.add_argument("--forward-calls", type=_positive_budget, default=10000, help="Maximum total model forward calls, including final grading")
     start.add_argument("--final-forward-calls", type=_positive_budget, default=1000, help="Private grading envelope charged to the total limit")
     start.add_argument("--seconds", type=float, default=900, help="Total wall deadline in seconds (default: 900)")
@@ -322,6 +324,8 @@ def _run_harness(args):
                   "runner": {"kind": args.runner, "python": args.python, "image": args.image, "timeout": 60},
                   "declaration": _declaration(task, args.prompt, args.attempts, args.turns, args.seconds)}
         config["declaration"]["budgets"]["forward_calls"] = args.forward_calls
+        if args.code_executions:
+            config["declaration"]["budgets"]["code_executions"] = args.code_executions
         if task.get("final"):
             config["declaration"]["final_forward_calls"] = args.final_forward_calls
             config["final_sha256"] = hashlib.sha256(Path(task["final"]["cases"]).read_bytes()).hexdigest()

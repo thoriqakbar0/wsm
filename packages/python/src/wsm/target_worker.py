@@ -453,6 +453,55 @@ class ModelTarget:
             kwargs["device"] = self.device
         return self.torch.tensor(values, **kwargs)
 
+    def infer(self, query, forward_limit):
+        validate_inference_query(query)
+        torch = self.torch
+        tokens, cap = query['tokens'], query['max_tokens']
+        if any(token >= self.model.config.vocab_size for token in tokens + (query['stop'] or [])):
+            fail('invalid_request', 'Token is outside model vocabulary')
+        if len(tokens) + cap > min(2048, getattr(self.model.config, 'max_position_embeddings', 2048)):
+            fail('invalid_request', 'Inference exceeds model context')
+        self.forward_calls = 0
+
+        def count_forward(module, args):
+            if forward_limit is not None and self.forward_calls >= forward_limit:
+                fail('forward_limit_exceeded', 'Target forward limit exhausted')
+            self.forward_calls += 1
+
+        hook = self.model.register_forward_pre_hook(count_forward)
+        generated, logprobs, prompt_logprobs = [], [], None
+        stop_reason = 'length'
+        stops = set(query['stop'] or [])
+        if query['stop'] is None:
+            eos = _eos_id(self.tokenizer)
+            if eos is not None:
+                stops.add(eos)
+        try:
+            with torch.inference_mode():
+                for position in range(max(1, cap)):
+                    logits = self.model(input_ids=self._long([tokens + generated])).logits[0]
+                    if not bool(torch.isfinite(logits).all().item()):
+                        fail('numerical_failure', 'Nonfinite inference logits')
+                    probabilities = torch.nn.functional.log_softmax(logits, dim=-1)
+                    if position == 0 and query['prompt_logprobs']:
+                        labels = self._long(tokens[1:])
+                        scores = probabilities[:-1].gather(1, labels.unsqueeze(1)).squeeze(1)
+                        prompt_logprobs = [None, *scores.tolist()]
+                    if cap == 0:
+                        break
+                    token = int(logits[-1].argmax().item())
+                    generated.append(token)
+                    logprobs.append(float(probabilities[-1, token].item()))
+                    if token in stops:
+                        stop_reason = 'stop'
+                        break
+        finally:
+            hook.remove()
+        sequence_id = hashlib.sha256(json.dumps([tokens, generated]).encode()).hexdigest()
+        return {'sequences': [{'tokens': generated, 'logprobs': logprobs,
+                              'stop_reason': stop_reason, 'sequence_id': sequence_id}] if cap else [],
+                'prompt_logprobs': prompt_logprobs}
+
     def _prompt_ids(self, text):
         if self.kind == "smollm" or _default_chat_template(self.tokenizer):
             return self.tokenizer.apply_chat_template([{"role": "user", "content": text}],
@@ -570,11 +619,25 @@ def _backend(target, device):
     fail("unsupported_target", "Unsupported target")
 
 
+def validate_inference_query(query):
+    fields = {'checkpoint', 'tokens', 'max_tokens', 'temperature', 'prompt_logprobs', 'stop'}
+    if (type(query) is not dict or set(query) != fields or type(query['checkpoint']) is not str
+            or type(query['tokens']) is not list or not 1 <= len(query['tokens']) <= 2048
+            or any(type(token) is not int or token < 0 for token in query['tokens'])
+            or type(query['max_tokens']) is not int or not 0 <= query['max_tokens'] <= 128
+            or len(query['tokens']) + query['max_tokens'] > 2048
+            or type(query['temperature']) not in (int, float) or query['temperature'] != 0
+            or type(query['prompt_logprobs']) is not bool
+            or (query['stop'] is not None and (type(query['stop']) is not list
+                or len(query['stop']) > 128 or any(type(token) is not int or token < 0 for token in query['stop'])))):
+        fail('invalid_request', 'Expected bounded token-only greedy inference')
+
+
 def run(request, *, device="cpu"):
     if device not in ("cpu", "cuda"):
         fail("unsupported_target", "Unsupported execution device")
     forward_limit = request.get("forward_limit")
-    if forward_limit is not None and (request.get("action") != "evaluate" or type(forward_limit) is not int or forward_limit < 0):
+    if forward_limit is not None and (request.get("action") not in ("evaluate", "infer") or type(forward_limit) is not int or forward_limit < 0):
         fail("invalid_request", "Invalid forward limit")
     target = request["target"]
     backend = _backend(target, device)
@@ -619,6 +682,18 @@ def run(request, *, device="cpu"):
         result = {"checkpoint": checkpoint, "metrics": metrics, "cases": rows, "usage": usage}
         if device == "cuda" and isinstance(backend, ModelTarget):
             result["execution"] = backend.execution
+        return result
+    if action == 'infer':
+        if not isinstance(backend, ModelTarget):
+            fail('unsupported_target', 'Token inference requires a language model')
+        query = request['query']
+        validate_inference_query(query)
+        if query['checkpoint'] != checkpoint:
+            fail('stale_base', 'Inference checkpoint changed')
+        result = backend.infer(query, forward_limit)
+        result.update(checkpoint=checkpoint, usage={'forward_calls': backend.forward_calls})
+        if forward_limit is not None:
+            result['usage']['forward_limit'] = forward_limit
         return result
     fail("invalid_request", "Unsupported operation")
 

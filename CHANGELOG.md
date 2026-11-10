@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Preserve Tinker stopping semantics, give code commands stable recovery results, retain encoded inference responses once, and make Session own connection reopening.
+
+- Add a local Tinker SDK sampling backend and explicit weight-editing extension, with isolated teacher Python, durable candidate selection, and budgeted token inference.
 - Add an Astro documentation site in `site/` with repository-backed articles, an offline quickstart, local search, code copying, and responsive navigation.
 - Add an experimental coding-first tensor SDK, Python-file execution with unchanged-model comparison and verified atomic checkpoint publication, a matching TUI action, and a rerunnable SmolLM Modal proof with independent source-free reload.
 

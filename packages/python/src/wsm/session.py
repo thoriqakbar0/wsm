@@ -61,7 +61,7 @@ class Session:
                and len(set(arms)) == len(arms), 'invalid_declaration', 'Invalid arms')
         limits = declaration['budgets']
         _check(type(limits) is dict and {'attempts', 'evaluations', 'inspections', 'teacher_requests', 'final_evaluations'} <= set(limits)
-               and set(limits) <= {'attempts', 'evaluations', 'inspections', 'teacher_requests', 'diagnostics', 'final_evaluations', 'forward_calls'}
+               and set(limits) <= {'attempts', 'evaluations', 'inspections', 'teacher_requests', 'diagnostics', 'final_evaluations', 'forward_calls', 'code_executions'}
                and all(type(n) is int and n >= 0 for n in limits.values()), 'invalid_declaration', 'Explicit budgets required')
         if 'forward_calls' in limits and verifier is not None:
             _check(type(declaration.get('final_forward_calls')) is int and declaration['final_forward_calls'] >= 0,
@@ -118,7 +118,8 @@ class Session:
         return obj
 
     def __init__(self, path, *, runner, target, verifier=None, final_dataset=None):
-        self._dispatch_path = str(Path(path).resolve()) + '.dispatch'
+        self._path = str(Path(path).resolve())
+        self._dispatch_path = self._path + '.dispatch'
         self.db = _connect(path)
         self.final_dataset = final_dataset
         self.runner, self.target, self.verifier = runner, copy.deepcopy(target), verifier
@@ -130,6 +131,11 @@ class Session:
 
     def close(self):
         self.db.close()
+
+    def reopen(self):
+        """Open an independently owned connection on the calling thread."""
+        return type(self).open(self._path, runner=self.runner, target=self.target,
+                               verifier=self.verifier, final_dataset=self.final_dataset)
 
     @contextmanager
     def _transaction(self):
@@ -197,15 +203,37 @@ class Session:
         result = copy.deepcopy(op)
         if result['status'] == 'dispatched':
             result['status'] = 'outcome_unknown'
+        if op['kind'] == 'code':
+            execution = op['result'] or {}
+            submission = execution.get('submission_key')
+            child = self._code_submission(execution)
+            result['execution_status'] = 'completed' if op['result'] is not None else result['status']
+            result['submission'] = submission
+            result['result'] = {field: execution.get(field) for field in ('stdout', 'stdout_truncated')}
+            result['result']['evaluation'] = child['result'] if child else None
+            if child is not None:
+                result['status'] = 'outcome_unknown' if child['status'] == 'dispatched' else child['status']
+                if child['status'] == 'completed' and child['selection'] is None:
+                    result['status'] = 'awaiting_selection'
+                result['selection'] = child['selection']
+                if child.get('error_code'):
+                    result['error_code'] = child['error_code']
         return result
 
+    def _code_submission(self, execution):
+        child = self._op(execution['submission_key']) if execution.get('submission_key') else None
+        if child and child['kind'] == 'submit' and child['request_hash'] == _hash({'action': 'submit', 'proposal': execution['proposal']}):
+            return child
+        return None
+
     def _blocking_keys(self, arm):
-        keys = []
-        for (body,) in self.db.execute('SELECT body FROM operations ORDER BY rowid'):
-            op = json.loads(body)
-            if op.get('arm') == arm and op.get('status') in ('dispatched', 'outcome_unknown'):
-                keys.append(op['key'])
-        return keys
+        operations = (json.loads(row[0]) for row in self.db.execute('SELECT body FROM operations ORDER BY rowid'))
+        return [op['key'] for op in operations if op.get('arm') == arm and self._unresolved(op)]
+
+    def _unresolved(self, op):
+        return (op['status'] in ('dispatched', 'outcome_unknown')
+                or (op['kind'] == 'code' and op['status'] == 'awaiting_submission'
+                    and self._code_submission(op['result']) is None))
 
     def observe(self, arm):
         with self._transaction():
@@ -396,6 +424,134 @@ class Session:
         except Exception:
             return self._unknown(op)
 
+    def infer(self, query, *, key, arm):
+        """Run bounded token inference against an observed selected checkpoint."""
+        from .target_worker import validate_inference_query
+        validate_inference_query(query)
+        request = {'action': 'infer', 'query': query, 'arm': arm}
+        with self._transaction():
+            if self._existing(key, request):
+                return self.status(key, arm=arm)
+            state = self._state()
+            _check(state['phase'] == 'developing' and arm in state['arms'], 'invalid_state', 'Inference unavailable')
+            _check(self.target['kind'] in ('smollm', 'huggingface'), 'unsupported_target', 'Inference requires a language model')
+            record = state['arms'][arm]
+            _check(query['checkpoint'] == record['checkpoint'], 'stale_base', 'Inference checkpoint changed')
+            _check(not self._blocking_keys(arm), 'pending_operation', 'Arm has unresolved work')
+            costs = {'evaluations': 1}
+            limit = query['max_tokens'] + 1 if 'forward_calls' in state['used'] else None
+            if limit is not None:
+                costs['forward_calls'] = limit
+            op = self._reserve(state, key, request, costs, arm)
+        try:
+            result = self._development_execute('infer', patches=record['patches'], query=query,
+                                               **({'forward_limit': limit} if limit is not None else {}))
+            self._validate_inference(result, query, limit)
+            return self._complete(op, result)
+        except WeightlessError as error:
+            if error.code in ('invalid_result', 'invalid_request', 'unsupported_target', 'numerical_failure', 'target_failure', 'stale_base'):
+                return self._failed(op, 'invalid_response' if error.code == 'invalid_result' else 'task_failure', error.code)
+            return self._unknown(op, error.code)
+        except Exception:
+            return self._unknown(op)
+
+    @staticmethod
+    def _validate_inference(result, query, limit):
+        _check(type(result) is dict and result.get('checkpoint') == query['checkpoint'],
+               'invalid_result', 'Inference checkpoint binding mismatch')
+        sequences = result.get('sequences')
+        _check(type(sequences) is list and len(sequences) == int(query['max_tokens'] > 0),
+               'invalid_result', 'Invalid inference sequences')
+        for sequence in sequences:
+            _check(type(sequence) is dict and type(sequence.get('tokens')) is list
+                   and 1 <= len(sequence['tokens']) <= query['max_tokens']
+                   and all(type(token) is int and token >= 0 for token in sequence['tokens'])
+                   and sequence.get('stop_reason') in ('stop', 'length')
+                   and type(sequence.get('sequence_id')) is str, 'invalid_result', 'Invalid generated tokens')
+            scores = sequence.get('logprobs')
+            _check(type(scores) is list and len(scores) == len(sequence['tokens'])
+                   and all(type(value) in (int, float) and math.isfinite(value) and value <= 0 for value in scores),
+                   'invalid_result', 'Invalid generated log probabilities')
+        scores = result.get('prompt_logprobs')
+        _check((not query['prompt_logprobs'] and scores is None)
+               or (query['prompt_logprobs'] and type(scores) is list and len(scores) == len(query['tokens'])
+                   and scores[0] is None and all(type(value) in (int, float) and math.isfinite(value)
+                                               and value <= 0 for value in scores[1:])),
+               'invalid_result', 'Invalid prompt log probabilities')
+        usage = result.get('usage', {})
+        _check(type(usage.get('forward_calls')) is int and 0 < usage['forward_calls'] <= query['max_tokens'] + 1,
+               'invalid_result', 'Invalid inference forward usage')
+        if limit is not None:
+            _check(usage.get('forward_limit') == limit, 'invalid_result', 'Inference forward limit changed')
+
+    def run_code(self, source, inspections, *, key, arm, base, observation):
+        """Execute teacher Python over disclosed weights, then submit its diff."""
+        from .code_teacher import execute_code
+        _check(type(source) is str and 0 < len(source.encode()) <= 65536
+               and type(key) is str and 0 < len(key) <= 160,
+               'invalid_request', 'Expected bounded source and operation key')
+        _check(type(inspections) is list and inspections, 'invalid_request', 'Inspections are required')
+        for query in inspections:
+            _fields(query, 'tensor indices')
+            _check(type(query['tensor']) is str and type(query['indices']) is list and query['indices']
+                   and all(type(index) is int for index in query['indices']), 'invalid_request', 'Invalid inspection')
+        request = {'action': 'code', 'source': source, 'inspections': inspections,
+                   'arm': arm, 'base': base, 'observation': observation}
+        with self._transaction():
+            existing = self._existing(key, request)
+            state = self._state()
+            if existing:
+                if existing['status'] != 'awaiting_submission':
+                    return self.status(key, arm=arm)
+                proposal = existing['result']['proposal']
+            else:
+                _check(state['phase'] == 'developing' and arm in state['arms'], 'invalid_state', 'Code execution unavailable')
+                record = state['arms'][arm]
+                _check((record['checkpoint'], record['version']) == (base, observation), 'stale_base', 'Code observation changed')
+                _check(not self._blocking_keys(arm), 'pending_operation', 'Arm has unresolved work')
+                _check(sum(len(query['indices']) for query in inspections) <= state['declaration']['max_inspect'],
+                       'invalid_request', 'Code inspection exceeds bound')
+                for query in inspections:
+                    self._edits(state | {'declaration': state['declaration'] | {'max_edits': state['declaration']['max_inspect']}},
+                                [{'tensor': query['tensor'], 'index': index, 'value': 0} for index in query['indices']])
+                _check(self.runner.config.get('mode') == 'enforced', 'sandbox_unavailable', 'Teacher code requires enforced isolation')
+                _check('code_executions' in state['used'], 'invalid_declaration', 'Declare a code_executions budget')
+                _check(state['used']['inspections'] + len(inspections) <= state['declaration']['budgets']['inspections'],
+                       'budget_exhausted', 'Code inspections exceed remaining budget')
+                op = self._reserve(state, key, request, {'code_executions': 1}, arm)
+                proposal = {'session': state['session'], 'arm': arm, 'declaration': state['declaration']['id'],
+                            'observation': observation, 'base': base}
+        if not existing:
+            dispatched = False
+            try:
+                values = []
+                for index, query in enumerate(inspections):
+                    inspected = self.inspect({'checkpoint': base, **query}, key=key + ':inspect:' + str(index), arm=arm)
+                    _check(inspected['status'] == 'completed', 'inspection_failed', 'Code inspection did not complete')
+                    values.extend(inspected['result']['values'])
+                with self._dispatch_window('code') as started:
+                    def on_dispatch():
+                        nonlocal dispatched
+                        started()
+                        dispatched = True
+                    feedback = execute_code(self.runner, source, values, timeout=self.remaining_seconds(),
+                                            on_dispatch=on_dispatch)
+                proposal['edits'] = feedback.pop('edits')
+                self._complete(op, {'proposal': proposal, 'submission_key': key + ':submit' if proposal['edits'] else None,
+                                    **feedback})
+            except WeightlessError as error:
+                if not dispatched or error.code in ('invalid_request', 'invalid_code', 'invalid_result', 'inspection_failed', 'invalid_proposal'):
+                    return self._failed(op, 'task_failure', error.code)
+                return self._unknown(op, error.code)
+            except Exception:
+                return self._unknown(op) if dispatched else self._failed(op, 'task_failure', 'code_failure')
+        if proposal['edits']:
+            try:
+                self.submit(proposal, key=self._op(key)['result']['submission_key'])
+            except WeightlessError as error:
+                return self._failed(self._op(key), 'task_failure', error.code)
+        return self.status(key, arm=arm)
+
     @staticmethod
     def _validate_evaluation(result, checkpoint, count, *, forward_limit=None):
         metrics = result.get('metrics', {})
@@ -433,7 +589,8 @@ class Session:
             current = self._op(op['key'])
             if current['status'] in ('completed', 'committed'):
                 return current
-            current.update(status='completed', result=result)
+            status = 'awaiting_submission' if current['kind'] == 'code' and result.get('submission_key') else 'completed'
+            current.update(status=status, result=result)
             current['result_seq'] = self._event({'type': 'result', 'key': op['key'], 'result': result})
             self._put(current)
             return copy.deepcopy(current)
@@ -548,8 +705,8 @@ class Session:
             state = self._state()
             if state['frozen']:
                 return state['frozen']
-            obligations = [json.loads(r[0])['key'] for r in self.db.execute('SELECT body FROM operations')
-                           if json.loads(r[0])['status'] in ('dispatched', 'outcome_unknown')]
+            operations = (json.loads(row[0]) for row in self.db.execute('SELECT body FROM operations'))
+            obligations = [op['key'] for op in operations if self._unresolved(op)]
             complete = not obligations and all(r['loss'] is not None and r['pending'] is None for r in state['arms'].values())
             state['frozen'] = _seal({'format': 'weightless.frozen.v1', 'session': state['session'],
                                      'declaration': state['declaration']['id'], 'cutoff': cutoff,
@@ -744,6 +901,16 @@ def replay_session(bundle):
                 pending[key] = event['status']
             elif event['type'] == 'unknown':
                 pending[key] = 'outcome_unknown'
+    admitted = {op['key']: op for op in bundle['operations'] if op['dispatch_seq'] < frozen['cutoff']}
+    for op in bundle['operations']:
+        if op['kind'] == 'code' and pending.get(op['key']) == 'completed':
+            result = next((event['result'] for event in journal[:frozen['cutoff'] - 1]
+                           if event['type'] == 'result' and event['key'] == op['key']), {})
+            if result.get('submission_key'):
+                child = admitted.get(result['submission_key'])
+                if (child is None or child['kind'] != 'submit'
+                        or child['request_hash'] != _hash({'action': 'submit', 'proposal': result['proposal']})):
+                    pending[op['key']] = 'dispatched'
     obligations = [key for key, status in pending.items() if status in ('dispatched', 'outcome_unknown')]
     complete = not obligations and all(record['loss'] is not None for record in arms.values())
     _check(frozen.get('obligations') == obligations and type(frozen.get('complete')) is bool

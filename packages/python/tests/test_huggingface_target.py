@@ -375,6 +375,35 @@ class GenericCausalLMTests(unittest.TestCase):
         (nested / "extra.jinja").write_text("not the default template", encoding="utf-8")
         return snap
 
+    def test_token_inference_matches_independent_logits_and_bounds_forward_calls(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / 'source'
+            snap = self.save_tiny(root)
+            target = {'kind': 'huggingface', 'source': str(root), 'revision': REV,
+                      'model': 'fixture/tiny', 'dtype': 'float32'}
+            checkpoint = run(request(target))['checkpoint']
+            query = {'checkpoint': checkpoint, 'tokens': [1, 2], 'max_tokens': 1,
+                     'temperature': 0, 'prompt_logprobs': True, 'stop': []}
+            result = run(request(target, 'infer', query=query, forward_limit=2))
+            model = self.AutoModelForCausalLM.from_pretrained(snap, local_files_only=True,
+                        trust_remote_code=False, dtype=self.torch.float32, attn_implementation='eager').eval()
+            with self.torch.inference_mode():
+                logits = model(input_ids=self.torch.tensor([[1, 2]])).logits[0]
+            self.assertEqual(result['sequences'][0]['tokens'], [int(logits[-1].argmax())])
+            expected = float(self.torch.log_softmax(logits[0], -1)[2])
+            self.assertAlmostEqual(result['prompt_logprobs'][1], expected, places=6)
+            self.assertIsNone(result['prompt_logprobs'][0])
+            self.assertEqual(result['usage'], {'forward_calls': 1, 'forward_limit': 2})
+            query['max_tokens'] = 0
+            self.assertEqual(run(request(target, 'infer', query=query))['sequences'], [])
+            query['max_tokens'] = 2
+            with self.assertRaises(WeightlessError) as error:
+                run(request(target, 'infer', query=query, forward_limit=1))
+            self.assertEqual(error.exception.code, 'forward_limit_exceeded')
+            for changed in ({'checkpoint': 'stale'}, {'temperature': 1}, {'tokens': [4]}):
+                with self.subTest(changed=changed), self.assertRaises(WeightlessError):
+                    run(request(target, 'infer', query=query | changed))
+
     def independent_smollm_id(self, snap, target):
         import transformers
         model = self.AutoModelForCausalLM.from_pretrained(snap, local_files_only=True, trust_remote_code=False,
