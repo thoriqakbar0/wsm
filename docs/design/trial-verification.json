@@ -1,0 +1,141 @@
+{
+  "date": "2026-11-10",
+  "scope": "Fixed SmolLM2 Modal target, real Codex CLI-proxy teacher, hidden grading, and reward-weighted Qwen3-4B student update through Spindle. Persistent worse edit, undo, and fresh reset were verified in a separate scripted Modal mechanics trial.",
+  "checks": {
+    "optional_runtime_suite": {
+      "tests": 223,
+      "skipped": 28,
+      "passed": true,
+      "log": "/tmp/wsm-trial-full.log"
+    },
+    "final_dependency_free_suite": {
+      "tests": 248,
+      "skipped": 69,
+      "passed": true,
+      "log": "/tmp/wsm-student-final-core.log"
+    },
+    "focused_real_model_controller": {
+      "tests": 4,
+      "passed": true,
+      "log": "/tmp/wsm-trial-poc-final.log"
+    },
+    "final_real_sdk_and_transport_simulations": {
+      "tests": 7,
+      "passed": true
+    },
+    "wheel_smoke": {
+      "passed": true,
+      "log": "/tmp/wsm-student-final-package.log"
+    },
+    "offline_cli_preflight": {
+      "passed": true,
+      "cloud_calls": 0
+    },
+    "read_only_cli_history_and_tensor_values": {
+      "passed": true
+    },
+    "modal_scripted_mechanics": {
+      "passed": true,
+      "proof": "/tmp/wsm-trial-modal-proof-20261110/proof.json",
+      "worse_edit_persists": true,
+      "explicit_undo": true,
+      "fresh_reset": true,
+      "history_read": true,
+      "retained_checkpoint_values_checked_on_host": true,
+      "sandbox_termination_confirmed": true,
+      "reserved_usd": 1.3802083333333335,
+      "actual_billing_reconciled": false
+    },
+    "independent_smollm_grader": {
+      "passed": true,
+      "receipt": "/tmp/wsm-trial-modal-proof-20261110/verification-grade.json",
+      "scope": "Synthetic verification case supplied only after sandbox termination, not a selected training task."
+    },
+    "hosted_tinker_update": {
+      "verified": false,
+      "blockers": [
+        "Thinking Machines capability request returned HTTP 402; the user selected Modal Spindle instead."
+      ],
+      "training_calls": 0
+    },
+    "final_model_runtime_suite": {
+      "tests": 247,
+      "skipped": 29,
+      "passed": true,
+      "log": "/tmp/wsm-final-model-suite.log",
+      "note": "Two final distillation regressions were added afterward and passed in the eight-test focused suite."
+    },
+    "final_teacher_distillation_suite": {
+      "tests": 8,
+      "passed": true
+    },
+    "live_codex_teacher": {
+      "passed": true,
+      "teacher": "Codex",
+      "turns": 3,
+      "publications": 2,
+      "canonical_changed_tensors": 272,
+      "worker_changed_tensor_entries": 273,
+      "baseline_heldout_loss": 2.7142072319984436,
+      "final_heldout_loss": 1.9074106365442276,
+      "reward": -1.9074106365442276,
+      "checkpoint": "sha256:989fadff1b1fa1fb6eb7d820e073cc0d97d0a4287ac18b44b2caa9c27d1183b7",
+      "proof_directory": "/tmp/wsm-teacher-student-proof-20261110/run",
+      "note": "Canonical safe tensor names omit the tied output embedding alias. Teacher was not rerun after the grader-path repair."
+    },
+    "live_spindle_student": {
+      "passed": true,
+      "provider": "spindle",
+      "sdk": "tinker==0.39.0",
+      "student": "Qwen/Qwen3-4B",
+      "algorithm": "reward_weighted_teacher_sft",
+      "training_tokens": 12469,
+      "response_tokens": 481,
+      "response_weight": 0.14846431739069976,
+      "trajectory_sha256": "9339eb32cf6eb88e2ce62e5a7eccde05ef7ab09aca1d0c331a612e6ff41d708e",
+      "datums_sha256": "fde37c8e368408698dfa6da961cf8a266cef0cad8a42e58bb671a884680fccd1",
+      "backward_metrics": {
+        "tokens:sum": 12469.0,
+        "n_sequences:sum": 3.0,
+        "response_length:mean": 4156.333333333333,
+        "loss:sum": 103.55934488400817,
+        "loss:mean": 0.00830534484593858
+      },
+      "optimizer_update_successful": 1.0,
+      "checkpoint_saved": true,
+      "receipt": "/tmp/wsm-student-final-proof-20261110/run/training/receipt.json",
+      "cleanup": {
+        "confirmed": true,
+        "remaining_apps": [],
+        "remaining_tasks": 0
+      },
+      "cumulative_reserved_usd": 9.927083333333334,
+      "actual_billing_reconciled": false,
+      "student_sampler_created": false
+    }
+  },
+  "historical_source_sha256": {
+    "trial.py": "ffc4ced60fac27b60672adea4e2130adb639b0101828af49db9e8a61204a2a7f",
+    "trial_worker.py": "366edb1dce4637d706946d65dd366e7348591fc739a08d37549fdeff7e389a76",
+    "trial_training.py": "fa4e317316c42f93aaa72c42c680b156fb2bd8798d28bfae6462fcf9ca168f9b",
+    "trial_grading.py": "b2b805c309f54fcac416efa0db3c847a3ef7c78ce149079b50e0b53bc25b4feb",
+    "modal_trial.py": "893d4d981ced4cad73e65da47caae9b3e23225e20e407747a15c5c11ae023fe0",
+    "trial_poc.py": "93a507642222d880fe8276160dc8be31544cd35c462997aebd34b859303bb83b",
+    "trial_editor.py": "a77b08bfe1fa7b7b232eb185e50554b5f986fa4f9e0d9f15c7568c7272dc2fd3",
+    "trial_distillation.py": "f2eb14b4eeb6dcd7a087a1302fa556256322115ae7b4233180b7157ad55cca70",
+    "teacher.py": "2cfd9a8b3188ddbee24d1c69eea9a92e088a6ca12a666f2406f42d4a316c3b91",
+    "cli.py": "6ad02addca5c2128abdeacbec64b5f1b6010af89c769d4a49a6ec4dd82ea5349"
+  },
+  "limits": [
+    "File-boundary checkpoints and observed SDK evaluations, not instruction-level tracing.",
+    "Agent sandbox observations are untrusted. Final grading uses trusted model configuration.",
+    "Cost reservations use explicit allowances and are not provider billing caps.",
+    "Failed files do not publish partial in-memory changes."
+  ],
+  "recovery": [
+    "Preserved the frozen teacher checkpoint after a virtualenv symlink was incorrectly resolved to base Python; fixed path handling and regraded in the intended Torch runtime.",
+    "First student client was created, but missing Jinja2 failed locally before any forward/backward or optimizer dispatch. Full prior allowance remained reserved.",
+    "Added explicit Jinja2 dependency, requested plain token lists across Transformers versions, and checked all three actual teacher datums locally.",
+    "Explicit pretraining recovery checked the prior journal for no training dispatch, confirmed zero prior tasks, revalidated the same grade, and retained prior attempt records. No uncertain optimizer operation was retried."
+  ]
+}

@@ -17,4 +17,3 @@ def _publish(source, destination):
         if code in (errno.EEXIST, errno.ENOTEMPTY):
             raise WeightlessError("export_exists", "Destination already exists")
         raise OSError(code, os.strerror(code), str(destination))
-

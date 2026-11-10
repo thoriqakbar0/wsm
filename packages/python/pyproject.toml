@@ -13,6 +13,9 @@ dependencies = []
 wsm = "wsm.cli:main"
 
 [project.optional-dependencies]
+tinker = ["tinker==0.39.0"]
+trial = ["modal==1.6.3", "tinker==0.39.0", "jinja2>=3.1.6"]
+spindle = ["modal-spindle @ git+https://github.com/modal-projects/spindle.git@16f3cde4d797fe5ca97c128897ae7b6b29eb72f4", "modal==1.6.3", "tinker==0.39.0", "jinja2>=3.1.6"]
 editing = ["torch", "transformers", "safetensors"]
 
 [tool.setuptools.packages.find]

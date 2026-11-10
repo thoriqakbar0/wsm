@@ -43,7 +43,7 @@ The supported API consists of `WeightModel` and `execute_program`. The runner re
 
 The Python runner executes trusted code with the invoking process's privileges. It is not a sandbox or an allowlist of tensor operations. The Modal demonstration also executes a reviewed deterministic program. Do not treat the SDK's tensor mapping as a security boundary.
 
-The operator has not selected a supported-operation policy, execution-permission model, compatibility guarantee, or spending limit. Arbitrary Python can access files, import installed packages, and change process state. A future coding-agent runner must supply the chosen execution boundary separately. The SDK imports no Claude, OpenAI, or DSPy framework. Those frameworks can author a Python file and invoke the same command or call the SDK through their own execution environment.
+Arbitrary Python can access files, import installed packages, and change process state. The standalone runner uses the invoking process's permissions. The experimental [Modal trial runner](trials.md) supplies a separate network-blocked sandbox, host-owned history, retained checkpoints, and private final grading. The SDK imports no agent framework. Coding agents can author a Python file and invoke the same command or call the SDK through their own execution environment.
 
 Evaluation cases are public input to the editing process. Independent private grading belongs in a separate process with data the author cannot read. Neither the new runner nor its recorded comparison claims private-data isolation, authenticated evidence, or scientific efficacy.
 

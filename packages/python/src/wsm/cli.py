@@ -19,12 +19,39 @@ def parser():
     execute.add_argument('--cases', type=Path, required=True)
     execute.add_argument('--device', default='cpu')
     commands.add_parser('tui', help='Open the Python editing terminal')
+    trial = commands.add_parser("trial", help="Run or watch an experimental Modal coding trial")
+    trial_commands = trial.add_subparsers(dest="trial_command", required=True)
+    preflight = trial_commands.add_parser("preflight", help="Validate explicit task, policy, and price configuration offline")
+    preflight.add_argument("--config", type=Path, required=True)
+    trial_run = trial_commands.add_parser("run", help="Run one fixed-model Modal trial and hosted Tinker update")
+    trial_run.add_argument("--config", type=Path, required=True)
+    trial_run.add_argument("--output", type=Path, required=True)
+    trial_view = trial_commands.add_parser("view", help="Read the public trial journal without control access")
+    trial_view.add_argument("directory", type=Path)
+    trial_view.add_argument("--follow", action="store_true")
+    weights = trial_commands.add_parser("weights", help="Read retained tensor shapes or numerical values")
+    weights.add_argument("checkpoint", type=Path, help="Retained safetensors file")
+    weights.add_argument("--tensor")
+    weights.add_argument("--indices", type=int, nargs="+")
     return root
 
 
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
+        if args.command == "trial":
+            from .trial_poc import inspect_weights, load_config, run_poc, watch
+            if args.trial_command == "view":
+                watch(args.directory, follow=args.follow)
+            elif args.trial_command == "weights":
+                print(json.dumps(inspect_weights(args.checkpoint, tensor=args.tensor, indices=args.indices),
+                                 indent=2, allow_nan=False))
+            else:
+                config = load_config(args.config)
+                result = ({"valid": True, "cloud_calls": 0, "budget_usd": config["budget"]["max_usd"]}
+                          if args.trial_command == "preflight" else run_poc(config, args.output))
+                print(json.dumps(result, indent=2, allow_nan=False))
+            return 0
         if args.command in (None, 'tui'):
             if not sys.stdin.isatty() or not sys.stdout.isatty():
                 raise WeightlessError('terminal_required', 'The TUI requires a terminal; use --help for scriptable commands')
