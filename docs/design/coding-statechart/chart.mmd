@@ -1,0 +1,22 @@
+---
+title: "Python edit execution and checkpoint publication"
+---
+stateDiagram-v2
+  s0: Ready
+  s1: Running
+  s2: Failed
+  s3: Interrupted
+  s4: Staging
+  s5: Verified
+  s6: Published
+  [*] --> s0
+  s0 --> s1: Execute Python
+  s1 --> s2: Execution or verification fails
+  s1 --> s3: Interrupt before publication
+  s1 --> s4: Program succeeds
+  s4 --> s2: Execution or verification fails
+  s4 --> s3: Interrupt before publication
+  s4 --> s5: Reload and verify checkpoint
+  s5 --> s2: Execution or verification fails
+  s5 --> s3: Interrupt before publication
+  s5 --> s6: Publish checkpoint atomically

@@ -1,6 +1,6 @@
 # WSM (Weight Space Modifiers)
 
-WSM lets an AI teacher inspect a model's weights, propose edits, and test them. It saves the selected checkpoint and evaluation evidence.
+WSM is a Python SDK for weight-space modification. Write Python that accesses named tensors, changes weights, evaluates the result, and saves a standalone checkpoint. Coding agents use the same API as developers. The Python distribution, import package, and CLI are named `wsm`.
 
 ## Install WSM
 
@@ -14,6 +14,27 @@ wsm --help
 ```
 
 The core package has no third-party runtime dependencies.
+
+## Modify weights with Python
+
+Install the optional model dependencies before loading a local model snapshot:
+
+```sh
+python3 -m pip install -e 'packages/python[editing]'
+```
+
+```python
+from wsm import WeightModel
+
+model = WeightModel.load("/path/to/local/snapshot")
+model.weights["model.norm.weight"][:16].mul_(0.95)
+result = model.evaluate([{"prompt": "Say hello.", "target": "Hello!"}])
+model.save("/path/to/new-checkpoint")
+```
+
+Use `wsm execute edit.py --model /path/to/snapshot --cases examples/coding/cases.json --output runs/edit` for a Python file defining `edit(model)`. Open `wsm` and press **p** for the same workflow in the terminal. Read [Modify weights with Python](docs/coding.md) for execution trust, the Modal proof, and open policy decisions. The SDK is independent of agent frameworks and makes no Tinker compatibility claim.
+
+The prompt harness and durable scalar-session APIs below remain available for their existing experiment contracts.
 
 ## Run the offline example
 
@@ -68,7 +89,8 @@ To open the terminal UI, run `wsm` without arguments.
 
 Use these guides for other tasks:
 
-- [Python SDK](docs/contract.md#intended-caller). Inspect a checkpoint, submit edits, and replay a frozen run.
+- [Coding-first Python SDK](docs/coding.md). Modify tensors with Python, compare results, and save a standalone checkpoint.
+- [Scalar-session SDK](docs/contract.md#intended-caller). Inspect a checkpoint, submit edits, and replay a frozen run.
 - [Configured experiments](docs/driver.md). Run scripted proposals or a teacher from a JSON configuration and export the selected checkpoint.
 - [Sessions and model targets](docs/client.md). Resume experiments and work with binary64 or supported local model snapshots.
 - [Harbor grading](docs/contract.md#native-harbor-boundary). Use the optional Docker-based evaluator.
