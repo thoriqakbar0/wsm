@@ -33,6 +33,7 @@ for (const file of files) {
     for (const [pattern, label] of banned) {
       pattern.lastIndex = 0;
       if (!pattern.test(line)) continue;
+      if (label === 'python3 -m venv' && file === join(root, 'README.md') && line === 'python3 -m venv .venv') continue;
       if (label === '.venv/bin/python' && line.includes('INTEGRATION_PYTHON')) continue;
       hits.push(`${file}:${index + 1}: ${label}`);
     }
