@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Clarify README installation, offline first-run, tensor comparisons, and contribution checks, and record remaining open-source preparation work while the repository stays private.
+
 - Preserve Tinker stopping semantics, give code commands stable recovery results, retain encoded inference responses once, and make Session own connection reopening.
 
 - Add a local Tinker SDK sampling backend and explicit weight-editing extension, with isolated teacher Python, durable candidate selection, and budgeted token inference.

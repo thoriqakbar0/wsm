@@ -2,11 +2,15 @@
 
 WSM is a Python SDK for weight-space modification. Write Python that accesses named tensors, changes weights, evaluates the result, and saves a standalone checkpoint. Coding agents use the same API as developers. The Python distribution, import package, and CLI are named `wsm`.
 
+Start with the offline example to test the experiment loop without downloading a model or configuring credentials. To edit a local model snapshot, use the [Python workflow](#modify-weights-with-python). The tensor SDK is experimental. See [research scope](docs/research.md) for what the current evidence establishes.
+
 ## Install WSM
 
-Use Python 3.12 or later. From the repository root, create a virtual environment and install the package:
+Use Python 3.12 or later. Clone the repository, then create a virtual environment and install the package from source:
 
 ```sh
+git clone https://github.com/thoriqakbar0/wsm.git
+cd wsm
 python3 -m venv .venv
 . .venv/bin/activate
 python3 -m pip install -e packages/python
@@ -14,27 +18,6 @@ wsm --help
 ```
 
 The core package has no third-party runtime dependencies.
-
-## Modify weights with Python
-
-Install the optional model dependencies before loading a local model snapshot:
-
-```sh
-python3 -m pip install -e 'packages/python[editing]'
-```
-
-```python
-from wsm import WeightModel
-
-model = WeightModel.load("/path/to/local/snapshot")
-model.weights["model.norm.weight"][:16].mul_(0.95)
-result = model.evaluate([{"prompt": "Say hello.", "target": "Hello!"}])
-model.save("/path/to/new-checkpoint")
-```
-
-Use `wsm execute edit.py --model /path/to/snapshot --cases examples/coding/cases.json --output runs/edit` for a Python file defining `edit(model)`. Open `wsm` and press **p** for the same workflow in the terminal. Read [Modify weights with Python](docs/coding.md) for execution trust, the Modal proof, and open policy decisions. The coding-first API is independent of agent frameworks. The separate [local Tinker backend](docs/tinker.md#local-sdk-backend) provides bounded compatibility with the Tinker SDK.
-
-The prompt harness and durable scalar-session APIs below remain available for their existing experiment contracts.
 
 ## Run the offline example
 
@@ -53,6 +36,31 @@ The scripted teacher edits a small signed-addition network without model calls, 
 ```
 
 The saved file contains the selected checkpoint and evidence. To test other edits, pass `--proposals` with a file in the format of [the bundled proposals](examples/teacher-proposals.json).
+
+## Modify weights with Python
+
+Install the optional model dependencies before loading a local model snapshot:
+
+```sh
+python3 -m pip install -e 'packages/python[editing]'
+```
+
+```python
+from wsm import WeightModel
+
+model = WeightModel.load("/path/to/local/snapshot")
+cases = [{"prompt": "Say hello.", "target": "Hello!"}]
+before = model.evaluate(cases)
+model.weights["model.norm.weight"][:16].mul_(0.95)
+after = model.evaluate(cases)
+model.save("/path/to/new-checkpoint")
+```
+
+Use a snapshot whose tensors include `model.norm.weight`, and choose a new output directory. Editing files run with your process privileges. Execute only trusted Python.
+
+Use `wsm execute edit.py --model /path/to/snapshot --cases examples/coding/cases.json --output runs/edit` for a Python file defining `edit(model)`. Open `wsm` and press **p** for the same workflow in the terminal. Read [Modify weights with Python](docs/coding.md) for execution trust, the Modal proof, and open policy decisions. The coding-first API is independent of agent frameworks. The separate [local Tinker backend](docs/tinker.md#local-sdk-backend) provides bounded compatibility with the Tinker SDK.
+
+The prompt harness and durable scalar-session APIs below remain available for their existing experiment contracts.
 
 ## Run with an AI teacher
 
@@ -104,3 +112,19 @@ For the research context and limits of the evidence, read [research scope](docs/
 The [Astro documentation site](site/README.md) provides a browsable guide. Run `npm ci` and `npm run dev` from `site/` to start it locally.
 
 The distribution, import package, and command are named `wsm`. If you used the former `weightless-sdk` package, uninstall it and update imports from `weightless` to `wsm`. Serialized `weightless.*` identifiers and hashes, `WeightlessError`, environment variables, and Docker image names keep their existing spelling.
+## Contribute and verify
+
+For fixes, include a regression test when practical. For behavior changes, update the relevant guide under `docs/` and add an entry under `Unreleased` in [the changelog](CHANGELOG.md).
+
+After installation, run the Python tests and checkpoint identity check from the repository root:
+
+```sh
+python3 -m unittest discover -s packages/python/tests -v
+python3 scripts/golden_identity.py
+```
+
+Some tests require optional dependencies or a configured Linux sandbox. Follow [the verification guide](docs/verification.md) for native sandbox, installed-package, and Harbor checks. GitHub Actions is currently disabled, and the [saved workflow](docs/workflows/README.md) does not run automatically.
+
+## License and publication status
+
+This repository has no license file yet. A license must be selected before an open-source release. See [the readiness review](docs/open-source-readiness.md) for remaining preparation work.
