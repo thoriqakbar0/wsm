@@ -13,9 +13,9 @@ export const GET: APIRoute = async () => {
   }));
   entries.unshift(
     {
-      title: 'Introduction to Weight Space Modifiers',
+      title: 'Introduction to Weight Space Mods',
       href: '/',
-      text: 'WSM. Edit named model tensors with WeightModel, evaluate changes, and save standalone checkpoints.',
+      text: "Why WSM? What is weight space programming? How do we do it? Why this design? What's done? Python programs transform named model tensors. WeightModel and execute_program record baseline and candidate evaluations and save standalone checkpoints. Research context includes LoRA, ROME, and task arithmetic. Released on PyPI as wsm 0.1.0. Recorded Modal and Spindle demonstrations have limited integration evidence, not general capability claims.",
     },
     {
       title: 'Quickstart: edit weights with Python',

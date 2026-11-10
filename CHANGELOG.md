@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Add a branded social sharing image, canonical URLs, and Open Graph and Twitter large-image metadata throughout the site.
+
+- Explain WSM's motivation, weight space programming, execution model, design choices, and completed work on the homepage; use the published PyPI package and self-contained CLI examples.
+
+- Deploy the static documentation to `wsm.ta-0.com` with pinned Cloudflare tooling, pull request checks, and verified-artifact production deployments from `main`.
+
+- Brand the documentation as Weight Space Mods with a dark green terminal identity, bracketed tensor logo and favicon, and technical SDK examples that distinguish evaluation evidence from candidate selection.
+
 ## 0.1.0 - 2026-11-10
 
 - Prepare the first Python package release; install the pinned Spindle source separately so package metadata is accepted by PyPI.

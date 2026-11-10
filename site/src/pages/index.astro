@@ -1,22 +1,667 @@
 ---
 import DocsLayout from '../layouts/DocsLayout.astro';
 import { Code } from 'astro:components';
+const codeThemes = { light: 'github-light', dark: 'github-dark' } as const;
+const weights = [
+  '0.240',
+  '−0.180',
+  '0.070',
+  '0.510',
+  '0.304',
+  '1.000',
+  '−0.420',
+  '0.160',
+  '0.630',
+];
 ---
-<DocsLayout title="Introduction" headings={[]} source="site/src/pages/index.astro">
-  <article class="prose">
-    <h1>Edit model weights with Python</h1>
-    <p class="lead">Access named tensors, evaluate your changes, and save a standalone checkpoint.</p>
-    <Code code={`python3 -m pip install -e 'packages/python[editing]'`} lang="bash" />
-    <Code code={`from wsm import WeightModel
 
-model = WeightModel.load("/path/to/snapshot")
+<DocsLayout
+  title="Weight Space Mods"
+  description="Why Weight Space Mods exists, what weight space programming means, how Python edits become evaluated checkpoints, and what we have built and verified."
+  headings={[
+    { depth: 2, slug: 'why-wsm', text: 'Why WSM?' },
+    {
+      depth: 2,
+      slug: 'weight-space-programming',
+      text: 'What is weight space programming?',
+    },
+    { depth: 2, slug: 'how-we-do-it', text: 'How do we do it?' },
+    { depth: 2, slug: 'why-this-design', text: 'Why this design?' },
+    { depth: 2, slug: 'whats-done', text: "What's done?" },
+  ]}
+  source="site/src/pages/index.astro"
+>
+  <article class="prose landing">
+    <section class="landing-hero" aria-labelledby="hero-title">
+      <div class="identity-line">
+        <img src="/brand-mark.svg" width="32" height="32" alt="" />
+        <span>Weight Space Mods</span>
+      </div>
+      <h1 id="hero-title">
+        Program the edit.
+        <br />
+        Measure the model.
+      </h1>
+      <p class="lead">
+        Weight space programming treats changes to model parameters as programs
+        you can inspect, execute, and evaluate. WSM is our Python toolkit for
+        exploring that idea.
+      </p>
+      <div class="landing-actions">
+        <a class="button primary" href="/docs/quickstart/">
+          Start building
+        </a>
+        <a href="#why-wsm">Why we're building WSM</a>
+      </div>
+      <p class="runtime-note">
+        Python ≥ 3.12 <span>/</span> PyTorch tensors <span>/</span>{' '}
+        <a href="https://pypi.org/project/wsm/0.1.0/">wsm 0.1.0 on PyPI</a>
+      </p>
+    </section>
+
+    <section id="why-wsm" aria-labelledby="why-title" class="narrative-section">
+      <h2 id="why-title">Why WSM?</h2>
+      <p>
+        We want to make a change to a model's weights something you can express
+        as a small program, examine before running, and test afterward. The edit
+        should be explicit. The resulting model should be usable outside the
+        experiment that produced it.
+      </p>
+      <p>
+        A model exposes several places to intervene. A prompt changes its input.
+        A retrieval system changes the information supplied with that input. A
+        training procedure changes parameters using an objective and an update
+        rule. Direct weight editing makes a different part of that process
+        accessible: the transformation from one set of parameters to another.
+      </p>
+      <p>
+        That access matters when your question is about the transformation
+        itself. What happens if you scale a particular tensor slice? Can a
+        proposed update be restricted to a named layer? Did the exported
+        checkpoint preserve the intended edit? These are experimental questions.
+        They need a way to inspect weights, execute a precise operation, and
+        compare the resulting model against an unchanged baseline.
+      </p>
+      <p>
+        You can already manipulate model parameters with PyTorch. WSM builds on
+        that ability and gives the experiment a common execution path. A
+        developer or coding agent supplies Python. The runner loads the model,
+        measures the baseline, executes the program, measures the candidate, and
+        writes a checkpoint with a record of what happened.
+      </p>
+      <p>
+        Our ambition is to make weight-changing programs easier to study and
+        reuse. The current library supplies the mechanics of those experiments.
+        Discovering edits that improve useful behavior remains the research
+        problem.
+      </p>
+    </section>
+
+    <section
+      id="weight-space-programming"
+      aria-labelledby="concept-title"
+      class="narrative-section"
+    >
+      <h2 id="concept-title">What is weight space programming?</h2>
+      <p>
+        Let <code>θ</code> denote a model's parameters and <code>fθ(x)</code>{' '}
+        its computation on an input. A weight-editing program produces a
+        candidate parameter set, <code>θ′ = P(θ)</code>. The model you evaluate
+        afterward is <code>fθ′</code>. The program specifies a parameter
+        transformation; evaluation determines what that transformation did to
+        behavior.
+      </p>
+      <p>
+        We use <em>weight space programming</em> as a working description of
+        this perspective. It is not the name of a single established algorithm
+        or a feature unique to WSM. A program might scale values, add a
+        structured update, combine compatible checkpoints, or implement a more
+        involved editing method. The important distinction is that the
+        transformation is expressed in executable code.
+      </p>
+      <p>
+        Weight coordinates are not human-readable instructions. A tensor name
+        identifies where a value lives in an implementation; it does not tell
+        you which concept that value represents. A small numerical change can
+        affect many outputs. A short program can be reproducible without being
+        useful, interpretable, or safe to apply to a different model.
+      </p>
+      <h3>How this relates to existing work</h3>
+      <p>
+        Fine-tuning also changes weights, usually through repeated optimization
+        steps. An explicit editing program and a training procedure are
+        therefore related ways to produce new parameters. WSM's current model
+        interface exposes detached tensor views and evaluation, rather than a
+        differentiable training interface. It does not replace a training
+        framework.
+      </p>
+      <p>
+        <a href="https://arxiv.org/abs/2106.09685">LoRA</a> learns low-rank
+        updates while freezing the pretrained weights.{' '}
+        <a href="https://arxiv.org/abs/2202.05262">ROME</a> investigates
+        targeted changes to factual associations through rank-one parameter
+        updates. <a href="https://arxiv.org/abs/2212.04089">Task arithmetic</a>{' '}
+        constructs weight differences between a pretrained model and its
+        fine-tuned descendants, then studies operations on those differences.
+      </p>
+      <p>
+        These approaches motivate concrete questions about how parameter changes
+        affect behavior. They have different assumptions, objectives, and
+        evidence. WSM does not currently ship implementations of those methods,
+        and access to tensors does not reproduce their results.
+      </p>
+      <p>
+        Prompting and retrieval remain useful when you need to supply
+        instructions or current information. A persistent weight edit changes
+        the model artifact itself. Choosing that route means accepting the
+        responsibility to measure regressions and preserve the original model
+        for comparison.
+      </p>
+    </section>
+
+    <section
+      id="how-we-do-it"
+      aria-labelledby="how-title"
+      class="narrative-section"
+    >
+      <h2 id="how-title">How do we do it?</h2>
+      <p>
+        Start with a local model snapshot and a hypothesis about a parameter
+        transformation. In the example below, the hypothesis is deliberately
+        mechanical: scale the first 16 elements of a normalization tensor by
+        0.95. It demonstrates how an edit travels through the system. It is not
+        a recipe for improving a model.
+      </p>
+      <p>
+        Install the published package with its model dependencies in a Python
+        3.12 or later environment.
+      </p>
+      <Code
+        themes={codeThemes}
+        code={`python3 -m pip install 'wsm[editing]==0.1.0'`}
+        lang="bash"
+      />
+      <h3>Load, evaluate, modify, evaluate</h3>
+      <p>
+        <code>WeightModel.load</code> loads a local snapshot without downloading
+        model files or executing custom model repository Python.{' '}
+        <code>model.weights</code> exposes named tensors. Slicing and in-place
+        arithmetic operate on live model storage, so the next evaluation sees
+        the modified values.
+      </p>
+      <div class="terminal">
+        <div class="terminal-bar">
+          <span>experiment.py</span>
+          <span>Python SDK</span>
+        </div>
+        <Code
+          themes={codeThemes}
+          code={`from wsm import WeightModel
+
+model = WeightModel.load("/path/to/snapshot", device="cpu")
+cases = [{"prompt": "Say hello.", "target": "Hello!"}]
+
+before = model.evaluate(cases)
 model.weights["model.norm.weight"][:16].mul_(0.95)
-result = model.evaluate([{"prompt": "Say hello.", "target": "Hello!"}])
-model.save("/path/to/checkpoint")`} lang="python" />
-    <p>To run a file, define <code>edit(model)</code> and execute it with the CLI.</p>
-    <Code code={`mkdir -p runs
-wsm execute edit.py --model /path/to/snapshot --cases examples/coding/cases.json --output runs/edit`} lang="bash" />
-    <p>The runner records baseline and candidate evaluations. You decide whether to keep the change. Python executes with your process privileges.</p>
-    <p><a href="/docs/coding/">Read the Python editing guide</a> or <a href="/docs/quickstart/">Start building</a>.</p>
+after = model.evaluate(cases)
+
+print({"baseline": before, "candidate": after})
+model.save("/path/to/new-checkpoint")`}
+          lang="python"
+        />
+      </div>
+      <p>
+        The tensor name is specific to compatible model architectures. Inspect
+        your model's names and shapes before applying an edit. Tied parameter
+        names can share storage, so changing one view can change another name's
+        values too.
+      </p>
+      <figure class="tensor-art">
+        <div class="tensor-heading">
+          <code>W′ = 0.95 × W</code>
+          <span>Illustrative tensor slice</span>
+        </div>
+        <div class="tensor-scene">
+          <div class="tensor-copy">
+            <span class="tensor-wordmark">[wsm_]</span>
+            <p>
+              Named tensors.
+              <br />
+              Explicit operations.
+            </p>
+            <code>0.320 × 0.95 = 0.304</code>
+          </div>
+          <div class="tensor-grid" aria-hidden="true">
+            {weights.map((weight, index) => (
+              <span
+                class:list={['tensor-cell', { 'tensor-selected': index === 4 }]}
+              >
+                {weight}
+              </span>
+            ))}
+          </div>
+        </div>
+        <figcaption>
+          The highlighted value illustrates the arithmetic on one element. The
+          code scales up to 16 elements of <code>model.norm.weight</code>. These
+          values are not an experimental result.
+        </figcaption>
+      </figure>
+      <h3>Run the edit as a recorded experiment</h3>
+      <p>
+        For the CLI, put the mutation in a Python file defining{' '}
+        <code>edit(model)</code>. The runner owns the baseline and candidate
+        evaluations around that function.
+      </p>
+      <div class="terminal">
+        <div class="terminal-bar">
+          <span>edit.py</span>
+          <span>CLI entry point</span>
+        </div>
+        <Code
+          themes={codeThemes}
+          code={`def edit(model):
+    model.weights["model.norm.weight"][:16].mul_(0.95)`}
+          lang="python"
+        />
+      </div>
+      <p>
+        Create a cases file containing a JSON array of prompt and target
+        objects. This one-case example checks the workflow; use cases
+        appropriate to your actual hypothesis.
+      </p>
+      <Code
+        themes={codeThemes}
+        code={`[{"prompt": "Say hello.", "target": "Hello!"}]`}
+        lang="json"
+      />
+      <p>
+        Save it as <code>cases.json</code>, replace the snapshot path, and
+        choose an output directory that does not already exist.
+      </p>
+      <Code
+        themes={codeThemes}
+        code={`mkdir -p runs
+wsm execute edit.py --model /path/to/snapshot \\
+  --cases cases.json --output runs/edit --device cpu`}
+        lang="bash"
+      />
+      <dl class="artifacts">
+        <div>
+          <dt>
+            <code>runs/edit/run.json</code>
+          </dt>
+          <dd>
+            Program source hash, execution state, baseline and candidate
+            evaluations, and checkpoint location.
+          </dd>
+        </div>
+        <div>
+          <dt>
+            <code>runs/edit/checkpoint/</code>
+          </dt>
+          <dd>
+            A standalone model checkpoint with weights and tokenizer files.
+          </dd>
+        </div>
+      </dl>
+      <h3>Interpret the result before keeping it</h3>
+      <p>
+        Evaluation measures target-token negative log likelihood. WSM calculates
+        a mean for each case, then an unweighted mean across cases. It does not
+        generate a response or apply a chat template. A loss difference answers
+        a question about these target tokens under this evaluation procedure.
+      </p>
+      <p>
+        The runner records that difference without automatically accepting or
+        rejecting the candidate. Keep development cases separate from held-out
+        checks. Test behavior beyond the examples used to design the edit,
+        including unrelated tasks you want to preserve. The SDK's public cases
+        are visible to the editing program; independent private grading requires
+        a separate process.
+      </p>
+      <p>
+        For exact API behavior and execution details, read the{' '}
+        <a href="/docs/coding/">Python editing guide</a>.
+      </p>
+    </section>
+
+    <section
+      id="why-this-design"
+      aria-labelledby="design-title"
+      class="narrative-section"
+    >
+      <h2 id="design-title">Why this design?</h2>
+      <h3>Python expresses the transformation directly</h3>
+      <p>
+        An edit can use familiar control flow, tensor indexing, and arithmetic.
+        We do not require a separate editing language. A coding agent can write
+        the same <code>edit(model)</code> file a developer would write, without
+        the SDK importing an agent framework. This keeps the program inspectable
+        and the execution interface independent of who authored it.
+      </p>
+      <p>
+        That flexibility is also an execution boundary. Python files run with
+        the invoking process's privileges. The standalone runner does not
+        sandbox filesystem access, imports, or other Python behavior. The
+        experimental trial system has a separate isolation mechanism; it is not
+        a property of ordinary SDK execution.
+      </p>
+      <h3>Execution and acceptance answer different questions</h3>
+      <p>
+        The runner can determine whether a program executed and whether its
+        checkpoint was published. It cannot infer whether your chosen evaluation
+        covers the behavior you care about. Automatically treating a lower
+        development loss as success would conflate those questions.
+      </p>
+      <p>
+        For the same reason, a receipt is a record of an execution, not
+        authenticated proof that the program was harmless or the evaluation
+        scientifically sufficient. More capable search can overfit an exposed
+        metric. Independent grading, regression tasks, and an explicit
+        acceptance policy belong in the surrounding experiment.
+      </p>
+      <h3>The output must survive outside the experiment</h3>
+      <p>
+        An edit is useful to other tools only if they can load the result.
+        Saving writes model weights and tokenizer files, checks finite tensors,
+        reloads the staged checkpoint, and compares its tensors before
+        publication. The destination is published atomically without overwriting
+        an existing checkpoint, on filesystems that support exclusive atomic
+        rename.
+      </p>
+      <p>
+        Those checks protect the artifact's integrity. They do not certify its
+        model quality. A correctly saved checkpoint can still be a worse model.
+        We keep that distinction visible in the{' '}
+        <a href="/docs/architecture/">architecture</a> and{' '}
+        <a href="/docs/verification/">verification documentation</a>.
+      </p>
+    </section>
+
+    <section
+      id="whats-done"
+      aria-labelledby="done-title"
+      class="narrative-section"
+    >
+      <h2 id="done-title">What's done?</h2>
+      <p>
+        WSM is a released Python package with an implemented editing workflow.
+        Here is what exists, and what the retained evidence supports.
+      </p>
+      <h3>A published SDK and a shared execution path</h3>
+      <p>
+        <a href="https://pypi.org/project/wsm/0.1.0/">
+          Version 0.1.0 is available on PyPI
+        </a>
+        , with a{' '}
+        <a href="https://github.com/thoriqakbar0/wsm/releases/tag/v0.1.0">
+          matching GitHub release
+        </a>
+        . The supported public API is <code>WeightModel</code> and{' '}
+        <code>execute_program</code>. The CLI and terminal editing action use
+        the same program runner. You can load, edit, evaluate, and save without
+        adopting an agent framework.
+      </p>
+      <h3>Tests for edits and checkpoint publication</h3>
+      <p>
+        The repository's model tests build tiny local models and exercise live
+        tensor changes, evaluation, and checkpoint reloads. Failure cases cover
+        non-finite weights, existing destinations, interruptions, and execution
+        errors. The <a href="/docs/verification/">verification record</a>{' '}
+        distinguishes completed runs from tests that require optional
+        dependencies. These checks establish implementation behavior, not
+        general model improvement.
+      </p>
+      <h3>A GPU edit and an independent reload path</h3>
+      <p>
+        The documented{' '}
+        <a href="/docs/coding/#reproduce-the-modal-proof">
+          Modal demonstration
+        </a>{' '}
+        checks a deterministic edit on a pinned SmolLM2 snapshot, then checks
+        the exported model in a separate CPU environment without the original
+        snapshot or model cache. It examines intended tensor changes, unchanged
+        tensors, and evaluation parity after reload. This tests the
+        edit-and-export mechanism.
+      </p>
+      <h3>An experimental teacher and student integration</h3>
+      <p>
+        The retained{' '}
+        <a href="/docs/verification/#modal-teacher-and-spindle-student-proof">
+          trial verification record
+        </a>{' '}
+        documents a coding-agent rollout, independent held-out grading on a
+        small task, and a response-weighted student training update through
+        Modal Spindle. The grade improved on that toy task. A student optimizer
+        update was confirmed, but improved student editing ability was not
+        demonstrated.
+      </p>
+      <p>
+        These are historical integration results tied to their recorded code and
+        runtime. Updating this website does not rerun them. The scope is
+        narrower than reliable autonomous model improvement: useful edit
+        discovery, broad generalization, and repeatable gains across models
+        remain open work.
+      </p>
+      <p>
+        Start with the <a href="/docs/quickstart/">quickstart</a> to run an
+        edit, or read the <a href="/docs/research/">research limitations</a>{' '}
+        before designing an experiment around the results.
+      </p>
+    </section>
   </article>
 </DocsLayout>
+
+<style>
+  .landing-hero {
+    padding: 6px 0 26px;
+  }
+  .identity-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--accent);
+    font: 600 0.82rem var(--terminal-font);
+    margin-bottom: 27px;
+  }
+  .landing-hero h1 {
+    font-size: clamp(2.2rem, 4.5vw, 3.65rem);
+    line-height: 1.12;
+    letter-spacing: -0.06em;
+    margin-bottom: 24px;
+    font-weight: 550;
+  }
+  .landing-hero .lead {
+    font-size: 0.98rem;
+    line-height: 1.85;
+    max-width: 39rem;
+  }
+  .landing-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 26px;
+    font: 500 0.8rem var(--terminal-font);
+  }
+  .landing-actions > a:not(.button) {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+  .landing-actions .button {
+    padding-inline: 22px;
+    font: inherit;
+  }
+  .landing .runtime-note {
+    font: 0.7rem/1.8 var(--terminal-font);
+    margin: 23px 0 0;
+    color: var(--muted);
+  }
+  .runtime-note span {
+    padding-inline: 7px;
+    color: var(--field-border);
+  }
+  .terminal {
+    border: 1px solid var(--field-border);
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 0 0 24px;
+  }
+  .terminal-bar,
+  .terminal-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 17px;
+    background: var(--sidebar);
+    font: 0.7rem/1.6 var(--terminal-font);
+    color: var(--muted);
+  }
+  .terminal-bar {
+    border-bottom: 1px solid var(--line);
+  }
+  .terminal-bar > span:first-child {
+    color: var(--accent);
+  }
+  .terminal-bottom {
+    border-top: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .terminal :global(pre),
+  .terminal :global(.code-block) {
+    border: 0;
+    border-radius: 0;
+    margin: 0;
+  }
+  .tensor-art {
+    margin: 0 0 38px;
+    background: var(--diagram);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .tensor-heading {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 17px 22px 0;
+    font: 0.7rem/1.6 var(--terminal-font);
+    color: var(--muted);
+  }
+  .tensor-heading code {
+    color: var(--accent);
+    background: none;
+    padding: 0;
+    border: 0;
+  }
+  .tensor-scene {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    align-items: center;
+    padding: 27px 24px;
+  }
+  .tensor-wordmark {
+    font: 500 clamp(1.6rem, 3.2vw, 2.8rem)/1 var(--terminal-font);
+    letter-spacing: -0.08em;
+    color: var(--accent);
+  }
+  .tensor-copy p {
+    font-size: 0.78rem;
+    line-height: 1.7;
+    margin: 15px 0 10px;
+  }
+  .tensor-copy > code {
+    font-size: 0.65rem;
+    border: 0;
+    padding: 0;
+    background: none;
+  }
+  .tensor-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+    border-inline: 2px solid var(--accent);
+    padding: 8px;
+  }
+  .tensor-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-block: 15px;
+    color: var(--muted);
+    font: 0.76rem var(--terminal-font);
+  }
+  .tensor-selected {
+    background: var(--accent);
+    color: var(--surface);
+  }
+  .tensor-art figcaption {
+    border-top: 1px solid var(--line);
+    padding: 13px 22px;
+    color: var(--muted);
+    font-size: 0.7rem;
+    line-height: 1.8;
+  }
+  .artifacts {
+    margin: 24px 0 38px;
+  }
+  .artifacts > div {
+    padding-block: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .artifacts dt {
+    margin-bottom: 5px;
+    font-size: 0.8rem;
+  }
+  .artifacts dd {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  .narrative-section {
+    margin-top: 48px;
+    padding-top: 26px;
+    border-top: 1px solid var(--line);
+    scroll-margin-top: 100px;
+  }
+  .narrative-section > h2 {
+    margin-top: 0;
+    font-size: 1.45rem;
+  }
+  .narrative-section > p {
+    max-width: 72ch;
+  }
+  @media (max-width: 639px) {
+    .landing-hero h1 {
+      font-size: 2.3rem;
+    }
+    .identity-line {
+      font-size: 0.75rem;
+    }
+    .tensor-scene {
+      gap: 14px;
+      padding: 22px 14px;
+    }
+    .tensor-wordmark {
+      font-size: 1.8rem;
+    }
+    .tensor-copy p {
+      font-size: 0.7rem;
+    }
+    .tensor-copy > code {
+      font-size: 0.55rem;
+    }
+    .tensor-cell {
+      font-size: 0.58rem;
+      padding-block: 12px;
+    }
+    .tensor-art figcaption,
+    .tensor-heading {
+      padding-inline: 14px;
+    }
+  }
+</style>
