@@ -2,21 +2,56 @@
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import { Code } from 'astro:components';
 ---
-<DocsLayout title="Quickstart" headings={[]} source="site/src/pages/docs/quickstart.astro">
+
+<DocsLayout
+  title="Quickstart"
+  headings={[]}
+  source="site/src/pages/docs/quickstart.astro"
+>
   <article class="prose">
     <h1>Edit model weights with Python</h1>
-    <p class="lead">Access named tensors, evaluate your changes, and save a standalone checkpoint.</p>
-    <Code code={`python3 -m pip install -e 'packages/python[editing]'`} lang="bash" />
-    <Code code={`from wsm import WeightModel
+    <p class="lead">
+      Access named tensors, evaluate your changes, and save a standalone
+      checkpoint.
+    </p>
+    <Code code={`python3 -m pip install 'wsm[editing]==0.1.0'`} lang="bash" />
+    <Code
+      code={`from wsm import WeightModel
 
 model = WeightModel.load("/path/to/snapshot")
 model.weights["model.norm.weight"][:16].mul_(0.95)
 result = model.evaluate([{"prompt": "Say hello.", "target": "Hello!"}])
-model.save("/path/to/checkpoint")`} lang="python" />
-    <p>To run a file, define <code>edit(model)</code> and execute it with the CLI.</p>
-    <Code code={`mkdir -p runs
-wsm execute edit.py --model /path/to/snapshot --cases examples/coding/cases.json --output runs/edit`} lang="bash" />
-    <p>The runner records baseline and candidate evaluations. You decide whether to keep the change. Python executes with your process privileges.</p>
-    <p><a href="/docs/coding/">Read the Python editing guide</a> or <a href="/docs/quickstart/">Start building</a>.</p>
+model.save("/path/to/checkpoint")`}
+      lang="python"
+    />
+    <p>
+      To run a file, define <code>edit(model)</code> and execute it with the
+      CLI.
+    </p>
+    <p>
+      Save the following as <code>edit.py</code>.
+    </p>
+    <Code
+      code={`def edit(model):
+    model.weights["model.norm.weight"][:16].mul_(0.95)`}
+      lang="python"
+    />
+    <p>
+      Save a JSON array of prompt and target objects as <code>cases.json</code>.
+    </p>
+    <Code code={`[{"prompt": "Say hello.", "target": "Hello!"}]`} lang="json" />
+    <Code
+      code={`mkdir -p runs
+wsm execute edit.py --model /path/to/snapshot --cases cases.json --output runs/edit`}
+      lang="bash"
+    />
+    <p>
+      The runner records baseline and candidate evaluations. You decide whether
+      to keep the change. Python executes with your process privileges.
+    </p>
+    <p>
+      <a href="/docs/coding/">Read the Python editing guide</a> or{' '}
+      <a href="/docs/quickstart/">Start building</a>.
+    </p>
   </article>
 </DocsLayout>

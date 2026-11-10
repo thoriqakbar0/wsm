@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Explain WSM's motivation, weight space programming, execution model, design choices, and completed work on the homepage; use the published PyPI package and self-contained CLI examples.
+
 - Deploy the static documentation to `wsm.ta-0.com` with pinned Cloudflare tooling, pull request checks, and verified-artifact production deployments from `main`.
 
 - Brand the documentation as Weight Space Mods with a dark green terminal identity, bracketed tensor logo and favicon, and technical SDK examples that distinguish evaluation evidence from candidate selection.

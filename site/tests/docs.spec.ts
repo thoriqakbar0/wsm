@@ -52,7 +52,7 @@ test('read a guide, copy a command, and retain the theme across pages', async ({
     .click();
   await expect(page.getByRole('status').first()).toContainText('Code copied');
   const copied = await page.evaluate(() => navigator.clipboard.readText());
-  expect(copied).toContain('packages/python[editing]');
+  expect(copied).toContain('wsm[editing]==0.1.0');
   expect(copied).toContain('pip install');
   expect(copied).not.toContain('.venv/bin/python');
   await page.getByRole('button', { name: 'Switch to dark mode' }).click();
