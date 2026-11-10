@@ -3,6 +3,6 @@ import { glob } from 'astro/loaders';
 
 export const collections = {
   docs: defineCollection({
-    loader: glob({ pattern: '**/*.md', base: '../docs' }),
+    loader: glob({ pattern: ['**/*.md', '!verification.md'], base: '../docs' }),
   }),
 };

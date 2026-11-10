@@ -19,7 +19,12 @@ import { Code } from 'astro:components';
       Hugging Face causal-language-model snapshot with its tokenizer files. WSM
       does not download model files or execute model repository Python.
     </p>
-    <Code code={`python3 -m pip install 'wsm[editing]==0.1.0'`} lang="bash" />
+    <Code
+      code={`uv venv --python 3.12 .venv
+. .venv/bin/activate
+uv pip install 'wsm[editing]==0.1.0'`}
+      lang="bash"
+    />
     <p>
       Replace the paths below with your snapshot and an unused checkpoint
       destination whose parent directory exists. The example requires a tensor
@@ -43,31 +48,9 @@ model.save("/path/to/checkpoint")`}
       responses. This edit demonstrates the API without claiming to improve the
       model.
     </p>
+    <h2>CLI coming soon</h2>
     <p>
-      To run the edit with the CLI, save the following as <code>edit.py</code>.
-    </p>
-    <Code
-      code={`def edit(model):
-    model.weights["model.norm.weight"][:16].mul_(0.95)`}
-      lang="python"
-    />
-    <p>
-      Save a JSON array of prompt and target objects as <code>cases.json</code>.
-    </p>
-    <Code code={`[{"prompt": "Say hello.", "target": "Hello!"}]`} lang="json" />
-    <p>
-      Replace the snapshot path and choose an output directory that does not
-      exist. Create its parent directory before running the command.
-    </p>
-    <Code
-      code={`mkdir -p runs
-wsm execute edit.py --model /path/to/snapshot --cases cases.json --output runs/edit`}
-      lang="bash"
-    />
-    <p>
-      The runner records both evaluations in <code>runs/edit/run.json</code>
-      and saves the checkpoint in <code>runs/edit/checkpoint/</code>. You decide
-      whether to keep the change. Python editing files run with your process
+      Use the Python SDK for now. Python editing files run with your process
       permissions and are not sandboxed.
     </p>
     <p>

@@ -1,6 +1,8 @@
 # WSM (Weight Space Mods)
 
-WSM is a Python SDK for editing model weights. Use Python to access named tensors, change weights, evaluate the result, and save a standalone checkpoint. Developers and coding agents use the same API. The Python distribution, import package, and CLI are named `wsm`.
+WSM is an AI harness for modding model weights. An AI agent writes Python edits, runs them against a model, and uses evaluation results to choose its next experiment. WSM provides access to the weights and records the edits, evaluations, and saved checkpoints.
+
+For example, an agent can change a group of weights, test the changed model, and inspect earlier attempts before deciding what to try next. The Python SDK provides the editing operations used in that loop. Finding changes that reliably improve a model remains a research goal.
 
 ## Install WSM
 
@@ -10,10 +12,10 @@ Use Python 3.12 or later. From the repository root, create a virtual environment
 uv venv --python 3.12 .venv
 . .venv/bin/activate
 uv pip install -e packages/python
-wsm --help
+python -c 'from wsm import WeightModel, execute_program'
 ```
 
-The core package has no third-party runtime dependencies.
+The core package has no third-party runtime dependencies. Model editing and experimental agent trials require optional dependencies.
 
 ## Modify weights with Python
 
@@ -39,26 +41,24 @@ model.save("/path/to/new-checkpoint")
 
 The example requires a tensor named `model.norm.weight`. Inspect `model.weights` for your model's names and shapes before choosing an edit. Scaling this slice demonstrates the API, not an improvement in model quality. Evaluation reports target-token negative log likelihood, not generated responses.
 
-To run the same edit with the CLI, save this as `edit.py`:
+Python editing files run with your process permissions and are not sandboxed. Read [Modify weights with Python](docs/coding.md) for API details, execution permissions, and the Modal demonstration.
 
-```python
-def edit(model):
-    model.weights["model.norm.weight"][:16].mul_(0.95)
-```
+## CLI coming soon
 
-From the repository root, create the output parent directory and run the file. Replace the snapshot path and choose an output directory that does not exist:
+Use the Python SDK for now.
 
-```sh
-mkdir -p runs
-wsm execute edit.py --model /path/to/snapshot --cases examples/coding/cases.json --output runs/edit
-```
+## Experimental agent trials and Tinker
 
-The runner evaluates the unchanged model and the edited model on the same cases. It saves the checkpoint in `runs/edit/checkpoint/` and records both evaluations in `runs/edit/run.json`. You decide whether to keep the edit. Python editing files run with your process permissions and are not sandboxed.
+The experimental [Modal trial workflow](docs/trials.md) connects an editing agent to a model sandbox. The agent can submit Python edits, request public evaluations, and inspect earlier attempts. Each successful edit becomes the current checkpoint, even when its public score is worse. A separate process grades the final model on held-out cases.
 
-To run an edit from the terminal UI, open `wsm` and press **p**. Read [Modify weights with Python](docs/coding.md) for API details, execution permissions, and the Modal demonstration. WSM does not require an agent framework.
+WSM's experimental training integration uses the Tinker API to train the agent that writes weight edits. The target model is separate. WSM changes its weights by running the agent's Python code.
+
+The recorded demonstration used a Codex teacher to write edits, then trained a separate open-weight student on the teacher's recorded actions through Modal Spindle using the Tinker SDK. It confirmed one training update, but did not demonstrate better student editing ability. Hosted Tinker support exists in code, but a hosted training update has not been verified. Tinker is optional for the Python SDK.
+
+The [Jupyter and marimo examples](examples/notebooks/README.md) include uv setup instructions and inspect the recorded experiment offline by default.
+
+## Python API
 
 The supported Python API consists of `WeightModel` and `execute_program`. WSM no longer includes search, sessions, prompt harnesses, or the local Tinker bridge. It does not support existing experiment bundles.
 
-See [CLI commands](docs/cli.md), [architecture](docs/architecture.md), and [verification](docs/verification.md).
-
-The experimental [Modal trial workflow](docs/trials.md) runs persistent agent edits with independent grading, a Codex teacher, and a Spindle student. The [Jupyter and marimo examples](examples/notebooks/README.md) include uv setup instructions.
+See the [architecture](docs/architecture.md) and [research limitations](docs/research.md).

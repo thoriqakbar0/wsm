@@ -16,7 +16,9 @@ function repositoryLinks() {
         );
         const anchor = fragment ? `#${fragment}` : '';
         node.url =
-          source.startsWith('docs/') && source.endsWith('.md')
+          source.startsWith('docs/') &&
+          source.endsWith('.md') &&
+          source !== 'docs/verification.md'
             ? `/docs/${source.slice(5, -3).toLowerCase()}/${anchor}`
             : `https://github.com/thoriqakbar0/wsm/blob/main/${source}${anchor}`;
       }
