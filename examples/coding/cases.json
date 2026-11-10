@@ -1,0 +1,4 @@
+[
+  {"prompt": "Say hello.", "target": "Hello!"},
+  {"prompt": "The capital of France is", "target": " Paris."}
+]

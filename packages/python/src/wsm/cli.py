@@ -101,6 +101,12 @@ def parser():
     start.add_argument("--python", default="/usr/bin/python3", help="Python runtime for bubblewrap")
     start.add_argument("--image", help="Existing image for the Docker runner")
     command("tui", "Open the interactive terminal")
+    execute = commands.add_parser("execute", help="Execute a trusted Python weight-editing program")
+    execute.add_argument("program", type=Path, help="Python file defining edit(model)")
+    execute.add_argument("--model", type=Path, required=True, help="Local Hugging Face snapshot directory")
+    execute.add_argument("--output", type=Path, required=True, help="New run directory")
+    execute.add_argument("--cases", type=Path, required=True, help="Public evaluation cases JSON")
+    execute.add_argument("--device", default="cpu", help="Explicit Torch device, such as cpu or cuda")
     return root
 
 
@@ -498,8 +504,21 @@ def _text_error(error):
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     harness = False
+    coding = False
     try:
         args = parser().parse_args(argv)
+        if args.command == "execute":
+            coding = True
+            from .program import execute_program
+            try:
+                result = execute_program(args.program, model_path=args.model, output=args.output,
+                                         device=args.device, cases=read_json(args.cases))
+            except Exception as error:
+                print(json.dumps({"error": {"type": type(error).__name__, "message": str(error)},
+                                  "run": str(args.output / "run.json")}), file=sys.stderr)
+                return 1
+            print(json.dumps(result, allow_nan=False, indent=2))
+            return 0 if result.get("state") == "published" else 1
         if args.command in (None, "tui"):
             if not sys.stdin.isatty() or not sys.stdout.isatty():
                 raise WeightlessError("terminal_required", "The TUI requires a terminal; use --help for scriptable commands")
@@ -514,7 +533,9 @@ def main(argv=None):
         print(json.dumps(result, indent=None if args.json else 2, allow_nan=False))
         return result_exit_code(result)
     except KeyboardInterrupt:
-        print(json.dumps({"error": {"code": "interrupted", "message": "Interrupted. Reopen the workspace and inspect the saved operation before retrying."}}), file=sys.stderr)
+        message = (f"Interrupted. Inspect {args.output / 'run.json'} and its checkpoint before retrying."
+                   if coding else "Interrupted. Reopen the workspace and inspect the saved operation before retrying.")
+        print(json.dumps({"error": {"code": "interrupted", "message": message}}), file=sys.stderr)
         return 130
     except WeightlessError as error:
         if harness:
