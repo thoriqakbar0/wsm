@@ -14,7 +14,10 @@ Use Python 3.12 for Spindle's serialized runtime images. Install the pinned serv
 uv venv --python 3.12 .venv
 . .venv/bin/activate
 uv pip install -e 'packages/python[editing,spindle]'
+uv pip install 'modal-spindle @ git+https://github.com/modal-projects/spindle.git@16f3cde4d797fe5ca97c128897ae7b6b29eb72f4'
 ```
+
+The `spindle` extra installs the controller dependencies. Install Spindle separately from the pinned source because PyPI does not accept Git dependencies in distribution metadata.
 
 The [single-client recipe](../examples/spindle/qwen3_4b.py) uses Qwen3-4B LoRA as the student. Codex makes the edits through the CLI proxy. The target remains SmolLM2. The recipe limits the server to one H100 trainer and permits at most one sampler with zero minimum replicas. Teacher distillation never creates a student sampler. This overrides the upstream preset's multiple trainer GPUs.
 
