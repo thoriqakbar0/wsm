@@ -12,7 +12,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-live = ["wsm[editing,spindle]"]
+live = ["wsm[editing,spindle]", "modal-spindle"]
 
 [tool.uv.sources]
 wsm = { path = "../../packages/python", editable = true }
+modal-spindle = { git = "https://github.com/modal-projects/spindle.git", rev = "16f3cde4d797fe5ca97c128897ae7b6b29eb72f4" }

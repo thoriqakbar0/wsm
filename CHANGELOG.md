@@ -10,6 +10,10 @@
 
 - Brand the documentation as Weight Space Mods with a dark green terminal identity, bracketed tensor logo and favicon, and technical SDK examples that distinguish evaluation evidence from candidate selection.
 
+## 0.1.0 - 2026-11-10
+
+- Prepare the first Python package release; install the pinned Spindle source separately so package metadata is accepted by PyPI.
+
 - Integrate Modal trials and notebooks with the Python-editing-only API; retain trial transport and pinned source staging without restoring removed experiment workflows.
 
 - Add runnable Jupyter and marimo examples for the Modal teacher and Spindle student PoC, with uv setup, offline receipt inspection, and explicit live-run controls.

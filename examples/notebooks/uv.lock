@@ -2698,7 +2698,6 @@ editing = [
 spindle = [
     { name = "jinja2" },
     { name = "modal" },
-    { name = "modal-spindle" },
     { name = "tinker" },
 ]
 
@@ -2708,7 +2707,6 @@ requires-dist = [
     { name = "jinja2", marker = "extra == 'trial'", specifier = ">=3.1.6" },
     { name = "modal", marker = "extra == 'spindle'", specifier = "==1.6.3" },
     { name = "modal", marker = "extra == 'trial'", specifier = "==1.6.3" },
-    { name = "modal-spindle", marker = "extra == 'spindle'", git = "https://github.com/modal-projects/spindle.git?rev=16f3cde4d797fe5ca97c128897ae7b6b29eb72f4" },
     { name = "safetensors", marker = "extra == 'editing'" },
     { name = "tinker", marker = "extra == 'spindle'", specifier = "==0.39.0" },
     { name = "tinker", marker = "extra == 'tinker'", specifier = "==0.39.0" },
@@ -2733,6 +2731,7 @@ dependencies = [
 
 [package.optional-dependencies]
 live = [
+    { name = "modal-spindle" },
     { name = "wsm", extra = ["editing", "spindle"] },
 ]
 
@@ -2741,6 +2740,7 @@ requires-dist = [
     { name = "ipykernel", specifier = ">=7,<8" },
     { name = "jupyterlab", specifier = ">=4,<5" },
     { name = "marimo", specifier = "==0.25.2" },
+    { name = "modal-spindle", marker = "extra == 'live'", git = "https://github.com/modal-projects/spindle.git?rev=16f3cde4d797fe5ca97c128897ae7b6b29eb72f4" },
     { name = "nbclient", specifier = ">=0.10,<0.11" },
     { name = "nbformat", specifier = ">=5.10,<6" },
     { name = "wsm", editable = "../../packages/python" },

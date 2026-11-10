@@ -1,4 +1,4 @@
-# WSM (Weight Space Modifiers)
+# WSM (Weight Space Mods)
 
 WSM is a Python SDK for weight-space modification. Write Python that accesses named tensors, changes weights, evaluates the result, and saves a standalone checkpoint. Coding agents use the same API as developers. The Python distribution, import package, and CLI are named `wsm`.
 
