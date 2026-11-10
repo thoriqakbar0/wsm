@@ -2,12 +2,18 @@
 
 This experimental PoC connects a Codex teacher through a CLI proxy to one Modal editing sandbox, then distills the teacher's actions into an open-weight student through Spindle and the real Tinker SDK. The target is `HuggingFaceTB/SmolLM2-135M-Instruct` at revision `12fd25f77366fa6b3b4b768ec3050bf629380bac`.
 
+## Open a notebook
+
+Use [the Jupyter and marimo examples](../examples/notebooks/README.md) to configure the same bounded owner, inspect the recorded proof, and read public trial history. Setup and launch commands use uv. Both notebooks run offline by default. Live execution uses the existing owner and its watchdog, with an explicit cumulative cost reservation.
+
 ## Use the bounded Spindle proof
 
 Use Python 3.12 for Spindle's serialized runtime images. Install the pinned server tooling:
 
 ```sh
-python -m pip install -e 'packages/python[spindle]'
+uv venv --python 3.12 .venv
+. .venv/bin/activate
+uv pip install -e 'packages/python[editing,spindle]'
 ```
 
 The [single-client recipe](../examples/spindle/qwen3_4b.py) uses Qwen3-4B LoRA as the student. Codex makes the edits through the CLI proxy. The target remains SmolLM2. The recipe limits the server to one H100 trainer and permits at most one sampler with zero minimum replicas. Teacher distillation never creates a student sampler. This overrides the upstream preset's multiple trainer GPUs.
@@ -21,7 +27,7 @@ For the teacher, supply a separate private JSON file containing `model` and `api
 Run the bounded owner:
 
 ```sh
-python scripts/spindle_poc.py --model-source /path/to/staged/source \
+uv run --active --no-project python scripts/spindle_poc.py --model-source /path/to/staged/source \
   --grader-python /path/to/model-runtime/bin/python \
   --api-key-file /private/spindle-api.json --editor-config-file /private/editor.json \
   --prior-reserved-usd 0 --output runs/spindle-proof
@@ -42,7 +48,9 @@ The watchdog cannot survive loss of the whole host. The trainer's native timeout
 Install the controller and local grading dependencies in your Python environment:
 
 ```sh
-python -m pip install -e 'packages/python[editing,trial]'
+uv venv --python 3.12 .venv
+. .venv/bin/activate
+uv pip install -e 'packages/python[editing,trial]'
 ```
 
 Authenticate Modal using its CLI. Set the Responses-proxy `policy` and Spindle `student` endpoints explicitly. Configure `WSM_EDITOR_MODEL`, `WSM_EDITOR_API_KEY`, and `WSM_SPINDLE_API_KEY` on the controller. Spindle never falls back to the hosted service's key. None of these credentials enters the editing sandbox.
@@ -136,7 +144,7 @@ Run the focused tests in a runtime with Torch, Transformers, safetensors, and Ti
 
 ```sh
 PYTHONPATH=packages/python/src:packages/python/tests \
-python -m unittest test_trial test_trial_poc test_trial_training -q
+uv run --active --no-project python -m unittest test_trial test_trial_poc test_trial_training -q
 ```
 
 The tests use a tiny local model to check persistent worse edits, explicit undo, fresh reset, complete source and output recording, a separate grader, hostile configuration exclusion, BF16 source to float32 publication, and token-loss alignment with real SDK types. Simulated transport failures do not establish hosted Tinker integration. The completed Codex/Spindle live proof is recorded in [verification](verification.md#modal-teacher-and-spindle-student-proof). Reruns still require valid credentials and checked prices.
@@ -144,7 +152,7 @@ The tests use a tiny local model to check persistent worse edits, explicit undo,
 To verify sandbox mechanics using the existing deterministic example without choosing a training task, run:
 
 ```sh
-python scripts/verify_trial_modal.py --model-source /path/to/staged/source \
+uv run --active --no-project python scripts/verify_trial_modal.py --model-source /path/to/staged/source \
   --output /tmp/wsm-trial-modal-proof
 ```
 

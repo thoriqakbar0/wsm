@@ -188,3 +188,10 @@ The retained teacher trajectory trained Qwen3-4B LoRA through Modal Spindle usin
 Recovery preserved the original teacher artifact. An incorrectly resolved virtualenv executable first blocked grading; a missing Jinja2 renderer then stopped the first student attempt before training dispatch. Both were fixed and tested. Explicit recovery verified the prior dispatch journal and zero remaining tasks, then reproduced the same trusted grade before training a fresh student. It did not retry an uncertain optimizer update.
 
 Persistent worse edits, explicit undo, history access, fresh target reset, retained tensor inspection, and sandbox termination passed in a separate scripted Modal mechanics run. They were not all exercised by the three-turn Codex rollout. The final model-runtime suite passed 247 tests with 29 skips; the dependency-free suite passed 248 with 69 skips. The final eight-test distillation suite and wheel smoke passed. All task-owned cloud apps were stopped with zero remaining tasks. Cumulative conservative reservations were US$9.927083 of the authorized US$10, including failed attempts; provider billing has not been reconciled. No hosted Thinking Machines update or student efficacy improvement is claimed.
+
+
+## Notebook examples
+
+The [Jupyter and marimo examples](../examples/notebooks/README.md) use one uv project and lockfile. Both inspect the retained public proof offline and invoke the existing bounded owner only for an explicitly requested live run. The live extra supplies the editing and Spindle runtime, including the grader's Torch dependencies.
+
+The Jupyter notebook passed nbformat validation and execution of all eight cells in a real kernel. A second kernel execution with live mode enabled and the prior US$9.927083 reservation failed at the insufficient-budget check before process launch. The marimo notebook passed standalone execution and HTML export with live mode enabled while its run button remained unpressed. These notebook checks made no cloud requests or new training updates. The existing Modal and Spindle integration evidence above remains the live proof.

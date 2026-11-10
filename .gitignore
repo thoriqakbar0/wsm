@@ -10,3 +10,6 @@ jobs/
 examples/harbor/signed-addition/environment/generated/
 examples/harbor/signed-addition/tests/expected.json
 examples/harbor/signed-addition/tests/manifest.json
+
+.ipynb_checkpoints/
+__marimo__/

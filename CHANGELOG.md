@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add runnable Jupyter and marimo examples for the Modal teacher and Spindle student PoC, with uv setup, offline receipt inspection, and explicit live-run controls.
+
 - Verify a live Codex teacher rollout, independent hidden grading, and a reward-weighted Qwen3-4B Spindle update; preserve frozen trials for guarded pretraining recovery and retain virtualenv grading runtimes.
 
 - Add a Codex CLI-proxy teacher and separate Spindle student distillation, with student retokenization, final-score response weights, sanitized route records, and no student sampler allocation.

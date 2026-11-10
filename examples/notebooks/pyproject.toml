@@ -1,0 +1,18 @@
+[project]
+name = "wsm-notebook-examples"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "ipykernel>=7,<8",
+  "jupyterlab>=4,<5",
+  "marimo==0.25.2",
+  "nbclient>=0.10,<0.11",
+  "nbformat>=5.10,<6",
+  "wsm",
+]
+
+[project.optional-dependencies]
+live = ["wsm[editing,spindle]"]
+
+[tool.uv.sources]
+wsm = { path = "../../packages/python", editable = true }

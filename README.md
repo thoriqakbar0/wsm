@@ -7,9 +7,9 @@ WSM is a Python SDK for weight-space modification. Write Python that accesses na
 Use Python 3.12 or later. From the repository root, create a virtual environment and install the package:
 
 ```sh
-python3 -m venv .venv
+uv venv --python 3.12 .venv
 . .venv/bin/activate
-python3 -m pip install -e packages/python
+uv pip install -e packages/python
 wsm --help
 ```
 
@@ -20,7 +20,7 @@ The core package has no third-party runtime dependencies.
 Install the optional model dependencies before loading a local model snapshot:
 
 ```sh
-python3 -m pip install -e 'packages/python[editing]'
+uv pip install -e 'packages/python[editing]'
 ```
 
 ```python
@@ -33,6 +33,8 @@ model.save("/path/to/new-checkpoint")
 ```
 
 Use `wsm execute edit.py --model /path/to/snapshot --cases examples/coding/cases.json --output runs/edit` for a Python file defining `edit(model)`. Open `wsm` and press **p** for the same workflow in the terminal. Read [Modify weights with Python](docs/coding.md) for execution trust, the Modal proof, and open policy decisions. The coding-first API is independent of agent frameworks. The separate [local Tinker backend](docs/tinker.md#local-sdk-backend) provides bounded compatibility with the Tinker SDK.
+
+For runnable Jupyter and marimo versions of the Modal teacher and Spindle student workflow, open [the notebook examples](examples/notebooks/README.md). Both use uv and start in offline inspection mode.
 
 The prompt harness and durable scalar-session APIs below remain available for their existing experiment contracts.
 
