@@ -1,22 +1,394 @@
 ---
 import DocsLayout from '../layouts/DocsLayout.astro';
 import { Code } from 'astro:components';
+const codeThemes = { light: 'github-light', dark: 'github-dark' } as const;
+const weights = [
+  '0.240',
+  '−0.180',
+  '0.070',
+  '0.510',
+  '0.304',
+  '1.000',
+  '−0.420',
+  '0.160',
+  '0.630',
+];
 ---
-<DocsLayout title="Introduction" headings={[]} source="site/src/pages/index.astro">
-  <article class="prose">
-    <h1>Edit model weights with Python</h1>
-    <p class="lead">Access named tensors, evaluate your changes, and save a standalone checkpoint.</p>
-    <Code code={`python3 -m pip install -e 'packages/python[editing]'`} lang="bash" />
-    <Code code={`from wsm import WeightModel
 
-model = WeightModel.load("/path/to/snapshot")
+<DocsLayout
+  title="Weight Space Mods"
+  description="Modify named model tensors with Python, compare baseline and candidate evaluations, and export standalone checkpoints. Weight Space Mods documentation."
+  headings={[
+    { depth: 2, slug: 'python-api', text: 'Python API' },
+    { depth: 2, slug: 'execution', text: 'Execute an edit' },
+    { depth: 2, slug: 'evaluation', text: 'Evaluation contract' },
+  ]}
+  source="site/src/pages/index.astro"
+>
+  <article class="prose landing">
+    <section class="landing-hero" aria-labelledby="hero-title">
+      <div class="identity-line">
+        <img src="/brand-mark.svg" width="32" height="32" alt="" />
+        <span>Weight Space Mods</span>
+      </div>
+      <h1 id="hero-title">
+        Model weights.
+        <br />
+        Python access.
+      </h1>
+      <p class="lead">
+        Modify named tensors in a local model checkpoint. Evaluate the unchanged
+        and edited model on the same cases. Export the result as a standalone
+        checkpoint.
+      </p>
+      <div class="landing-actions">
+        <a class="button primary" href="/docs/quickstart/">
+          Start building
+        </a>
+        <a href="/docs/coding/">Read the SDK guide</a>
+      </div>
+      <p class="runtime-note">
+        Python ≥ 3.12 <span>/</span> PyTorch tensors <span>/</span> Local
+        snapshots
+      </p>
+    </section>
+
+    <section id="python-api" aria-labelledby="api-title" class="terminal">
+      <div class="terminal-bar">
+        <span>edit.py</span>
+        <span>Python SDK</span>
+      </div>
+      <h2 id="api-title" class="sr-only">
+        Python API
+      </h2>
+      <Code
+        themes={codeThemes}
+        code={`from wsm import WeightModel
+
+model = WeightModel.load("/path/to/snapshot", device="cpu")
+cases = [{"prompt": "Say hello.", "target": "Hello!"}]
+
+before = model.evaluate(cases)
 model.weights["model.norm.weight"][:16].mul_(0.95)
-result = model.evaluate([{"prompt": "Say hello.", "target": "Hello!"}])
-model.save("/path/to/checkpoint")`} lang="python" />
-    <p>To run a file, define <code>edit(model)</code> and execute it with the CLI.</p>
-    <Code code={`mkdir -p runs
-wsm execute edit.py --model /path/to/snapshot --cases examples/coding/cases.json --output runs/edit`} lang="bash" />
-    <p>The runner records baseline and candidate evaluations. You decide whether to keep the change. Python executes with your process privileges.</p>
-    <p><a href="/docs/coding/">Read the Python editing guide</a> or <a href="/docs/quickstart/">Start building</a>.</p>
+after = model.evaluate(cases)
+
+model.save("/path/to/new-checkpoint")`}
+        lang="python"
+      />
+      <div class="terminal-bottom">
+        <span>Named tensor access</span>
+        <span>Explicit checkpoint export</span>
+      </div>
+    </section>
+
+    <figure class="tensor-art">
+      <div class="tensor-heading">
+        <code>W′ = 0.95 × W</code>
+        <span>Illustrative tensor slice</span>
+      </div>
+      <div class="tensor-scene">
+        <div class="tensor-copy">
+          <span class="tensor-wordmark">[wsm_]</span>
+          <p>
+            Same tensor names.
+            <br />
+            Ordinary PyTorch operations.
+          </p>
+          <code>0.320 × 0.95 = 0.304</code>
+        </div>
+        <div class="tensor-grid" aria-hidden="true">
+          {weights.map((weight, index) => (
+            <span
+              class:list={['tensor-cell', { 'tensor-selected': index === 4 }]}
+            >
+              {weight}
+            </span>
+          ))}
+        </div>
+      </div>
+      <figcaption>
+        The highlighted value illustrates scaling one weight. The example above
+        scales the first 16 elements of <code>model.norm.weight</code>.
+      </figcaption>
+    </figure>
+
+    <section id="execution" aria-labelledby="execution-title">
+      <h2 id="execution-title">Execute an edit. Record the comparison.</h2>
+      <p>
+        From the repository root, install the editing dependencies. Requires a
+        local Hugging Face snapshot.
+      </p>
+      <Code
+        themes={codeThemes}
+        code={`python3 -m pip install -e 'packages/python[editing]'`}
+        lang="bash"
+      />
+      <p>
+        Save the tensor operation in a file defining <code>edit(model)</code>.
+      </p>
+      <div class="terminal">
+        <div class="terminal-bar">
+          <span>edit.py</span>
+          <span>CLI entry point</span>
+        </div>
+        <Code
+        themes={codeThemes}
+          code={`def edit(model):
+    model.weights["model.norm.weight"][:16].mul_(0.95)`}
+          lang="python"
+        />
+      </div>
+      <Code
+        themes={codeThemes}
+        code={`mkdir -p runs
+wsm execute edit.py --model /path/to/snapshot \\
+  --cases examples/coding/cases.json --output runs/edit --device cpu`}
+        lang="bash"
+      />
+      <dl class="artifacts">
+        <div>
+          <dt>
+            <code>runs/edit/run.json</code>
+          </dt>
+          <dd>Execution state and baseline / candidate comparison evidence.</dd>
+        </div>
+        <div>
+          <dt>
+            <code>runs/edit/checkpoint/</code>
+          </dt>
+          <dd>Standalone model weights and tokenizer files.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section
+      id="evaluation"
+      aria-labelledby="evaluation-title"
+      class="evaluation-contract"
+    >
+      <h2 id="evaluation-title">A weight edit is not a capability claim.</h2>
+      <p>
+        Evaluation reports mean target-token negative log likelihood per case,
+        then the unweighted mean across cases. It does not generate text or
+        apply a chat template.
+      </p>
+      <p>
+        The runner records the comparison. It does not automatically select a
+        candidate. A lower loss on public cases does not establish a capability
+        improvement. You decide whether to keep the edit.
+      </p>
+      <p>
+        Python editing files run with your process privileges. The SDK is not a
+        sandbox.
+      </p>
+      <a href="/docs/verification/">Read the verification contract</a>
+    </section>
   </article>
 </DocsLayout>
+
+<style>
+  .landing-hero {
+    padding: 6px 0 26px;
+  }
+  .identity-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--accent);
+    font: 600 0.82rem var(--terminal-font);
+    margin-bottom: 27px;
+  }
+  .landing-hero h1 {
+    font-size: clamp(2.2rem, 4.5vw, 3.65rem);
+    line-height: 1.12;
+    letter-spacing: -0.06em;
+    margin-bottom: 24px;
+    font-weight: 550;
+  }
+  .landing-hero .lead {
+    font-size: 0.98rem;
+    line-height: 1.85;
+    max-width: 39rem;
+  }
+  .landing-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 26px;
+    font: 500 0.8rem var(--terminal-font);
+  }
+  .landing-actions > a:not(.button) {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+  .landing-actions .button {
+    padding-inline: 22px;
+    font: inherit;
+  }
+  .landing .runtime-note {
+    font: 0.7rem/1.8 var(--terminal-font);
+    margin: 23px 0 0;
+    color: var(--muted);
+  }
+  .runtime-note span {
+    padding-inline: 7px;
+    color: var(--field-border);
+  }
+  .terminal {
+    border: 1px solid var(--field-border);
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 0 0 24px;
+  }
+  .terminal-bar,
+  .terminal-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 17px;
+    background: var(--sidebar);
+    font: 0.7rem/1.6 var(--terminal-font);
+    color: var(--muted);
+  }
+  .terminal-bar {
+    border-bottom: 1px solid var(--line);
+  }
+  .terminal-bar > span:first-child {
+    color: var(--accent);
+  }
+  .terminal-bottom {
+    border-top: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .terminal :global(pre),
+  .terminal :global(.code-block) {
+    border: 0;
+    border-radius: 0;
+    margin: 0;
+  }
+  .tensor-art {
+    margin: 0 0 38px;
+    background: var(--diagram);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .tensor-heading {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 17px 22px 0;
+    font: 0.7rem/1.6 var(--terminal-font);
+    color: var(--muted);
+  }
+  .tensor-heading code {
+    color: var(--accent);
+    background: none;
+    padding: 0;
+    border: 0;
+  }
+  .tensor-scene {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    align-items: center;
+    padding: 27px 24px;
+  }
+  .tensor-wordmark {
+    font: 500 clamp(1.6rem, 3.2vw, 2.8rem)/1 var(--terminal-font);
+    letter-spacing: -0.08em;
+    color: var(--accent);
+  }
+  .tensor-copy p {
+    font-size: 0.78rem;
+    line-height: 1.7;
+    margin: 15px 0 10px;
+  }
+  .tensor-copy > code {
+    font-size: 0.65rem;
+    border: 0;
+    padding: 0;
+    background: none;
+  }
+  .tensor-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+    border-inline: 2px solid var(--accent);
+    padding: 8px;
+  }
+  .tensor-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-block: 15px;
+    color: var(--muted);
+    font: 0.76rem var(--terminal-font);
+  }
+  .tensor-selected {
+    background: var(--accent);
+    color: var(--surface);
+  }
+  .tensor-art figcaption {
+    border-top: 1px solid var(--line);
+    padding: 13px 22px;
+    color: var(--muted);
+    font-size: 0.7rem;
+    line-height: 1.8;
+  }
+  .artifacts {
+    margin: 24px 0 38px;
+  }
+  .artifacts > div {
+    padding-block: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .artifacts dt {
+    margin-bottom: 5px;
+    font-size: 0.8rem;
+  }
+  .artifacts dd {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  .evaluation-contract {
+    border-left: 2px solid var(--accent);
+    padding-left: 22px;
+  }
+  .evaluation-contract h2 {
+    font-size: 1.15rem;
+  }
+  @media (max-width: 639px) {
+    .landing-hero h1 {
+      font-size: 2.3rem;
+    }
+    .identity-line {
+      font-size: 0.75rem;
+    }
+    .tensor-scene {
+      gap: 14px;
+      padding: 22px 14px;
+    }
+    .tensor-wordmark {
+      font-size: 1.8rem;
+    }
+    .tensor-copy p {
+      font-size: 0.7rem;
+    }
+    .tensor-copy > code {
+      font-size: 0.55rem;
+    }
+    .tensor-cell {
+      font-size: 0.58rem;
+      padding-block: 12px;
+    }
+    .tensor-art figcaption,
+    .tensor-heading {
+      padding-inline: 14px;
+    }
+  }
+</style>

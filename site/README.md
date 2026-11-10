@@ -31,3 +31,21 @@ npm test
 ```
 
 Tests build the static site, start the local preview, and exercise search, navigation, copy, themes, article links, and responsive layouts. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to use an existing Chromium installation. Screenshots remain in the ignored `test-results/` directory.
+
+## Visual identity
+
+Weight Space Mods uses WSM as shorthand. The bracketed matrix mark represents direct access to named tensors, with one cell selected for modification. Use `public/brand-mark.svg` for the logo and `public/favicon.svg` for the browser icon. Keep clear space of at least one cell around the mark. The SVG uses large, aligned shapes so the brackets and selected cell remain legible at 16px.
+
+The default palette is graphite `#101512`, panel `#141b17`, phosphor `#91e6aa`, foreground `#e5eee8`, supporting text `#a3b5a9`, and border `#688573`. Green identifies edits, links, focus, and primary actions. A saved light-theme preference remains available, with a darker green accent for contrast. Monospace headings and controls pair with Manrope body text; code and tensor values use monospace. Avoid scanlines, simulated logs, and decorative motion. Tensor values on the landing page are illustrative, not experimental results.
+
+The landing page follows the SDK contract: evaluate the unchanged model, edit named tensors, evaluate on the same cases, and explicitly export a checkpoint. The runner records comparisons without automatically choosing a winner. The public brand changes neither the `wsm` import nor the CLI command.
+
+## Production deployment
+
+The static site is served by the `wsm-site` Cloudflare Worker at <https://wsm.ta-0.com>. `cloudflare.config.ts` owns the custom domain and static HTML/404 behavior. Cloudflare provisions DNS and TLS for the domain. No server code or Astro adapter is deployed.
+
+From `site/`, run `npm run deploy` with Cloudflare CLI authentication to build and publish. To validate without publishing, run `npm run build:deploy` followed by `npm run deploy:check`. The packaging script copies only `dist/` into Cloudflare Build Output and validates it before deployment. The Cloudflare CLI and its Build Output helpers are pinned together because these APIs are in beta.
+
+The `Site` GitHub Actions workflow checks pull requests and changes to `main`. It runs Astro checks, browser tests, and a deployment dry run. Only `main` deploys, using the exact verified artifact rather than rebuilding it. Manual dispatch on `main` also deploys. Production deployments are serialized and check the public homepage and quickstart afterward.
+
+Configure repository secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`. Use an API token scoped to the deployment account with Workers Scripts Edit and Account Settings Read, plus Workers Routes Edit and Zone Read for `ta-0.com`. Keep credentials outside Git. The workflow never exposes deployment secrets to pull request jobs.

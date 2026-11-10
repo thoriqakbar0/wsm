@@ -13,7 +13,7 @@ interface Props {
 }
 const {
   title,
-  description = 'Inspect model weights, propose explicit edits, and keep the evidence. Documentation for Weight Space Modifiers.',
+  description = 'Modify named model tensors with Python, compare evaluations, and export standalone checkpoints. Weight Space Mods documentation.',
   headings = [],
   source,
 } = Astro.props;
@@ -22,7 +22,7 @@ const next = pages[position + 1];
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -30,17 +30,14 @@ const next = pages[position + 1];
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#101512" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <title>{title} · WSM Docs</title>
+    <title>{title} · WSM</title>
     <script is:inline>
       try {
         const theme = localStorage.getItem('wsm-theme');
-        if (
-          theme === 'dark' ||
-          (!theme && matchMedia('(prefers-color-scheme: dark)').matches)
-        )
-          document.documentElement.dataset.theme = 'dark';
+        if (theme === 'light' || theme === 'dark')
+          document.documentElement.dataset.theme = theme;
       } catch {}
     </script>
   </head>
@@ -50,9 +47,7 @@ const next = pages[position + 1];
     </a>
     <header class="header">
       <a href="/" class="brand" aria-label="WSM documentation home">
-        <span class="brand-mark" aria-hidden="true">
-          w<span>∷</span>
-        </span>
+        <img src="/brand-mark.svg" width="34" height="34" alt="" />
         <span>wsm</span>
         <span class="brand-divider"></span>
         <span class="brand-caption">docs</span>
@@ -98,7 +93,7 @@ const next = pages[position + 1];
     <div class="shell">
       <aside class="sidebar">
         <div class="project-label">
-          <span class="project-dot"></span> Weight Space Modifiers
+          <span class="project-dot"></span> Weight Space Mods
         </div>
         <Navigation />
         <a class="sidebar-source" href={repository}>
@@ -143,8 +138,8 @@ const next = pages[position + 1];
           <span class="note-symbol" aria-hidden="true">
             ↗
           </span>
-          <strong>Connect a model</strong>
-          <p>Set the endpoint, then read the edit.</p>
+          <strong>Make your first edit</strong>
+          <p>Load a local snapshot and modify its weights with Python.</p>
           <a href="/docs/quickstart/">
             Open quickstart <Icon name="arrow" size={14} />
           </a>
@@ -176,7 +171,7 @@ const next = pages[position + 1];
         );
         document
           .querySelector('meta[name="theme-color"]')
-          ?.setAttribute('content', dark ? '#141922' : '#ffffff');
+          ?.setAttribute('content', dark ? '#101512' : '#ffffff');
       }
       syncTheme();
       themeButton.addEventListener('click', () => {

@@ -13,7 +13,7 @@ export const GET: APIRoute = async () => {
   }));
   entries.unshift(
     {
-      title: 'Introduction to Weight Space Modifiers',
+      title: 'Introduction to Weight Space Mods',
       href: '/',
       text: 'WSM. Edit named model tensors with WeightModel, evaluate changes, and save standalone checkpoints.',
     },

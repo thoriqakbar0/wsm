@@ -5,12 +5,13 @@
   --text: #222936;
   --muted: #606b7e;
   --line: #e3e7ef;
-  --accent: #3059d5;
-  --accent-soft: #edf2ff;
+  --accent: #21683f;
+  --accent-soft: #e4f3e9;
   --diagram: #f7f9fe;
   --success: #297652;
   --field-border: #818b9d;
-  --radius: 8px;
+  --radius: 4px;
+  --terminal-font: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
   color-scheme: light;
   font-family: 'Manrope Variable', sans-serif;
   font-size: 16px;
@@ -21,17 +22,17 @@
   scroll-padding-top: 100px;
 }
 :root[data-theme='dark'] {
-  --surface: #141922;
-  --sidebar: #171d28;
-  --subtle: #202836;
-  --text: #edf1f8;
-  --muted: #abb7cc;
-  --line: #313c4e;
-  --accent: #99b5ff;
-  --accent-soft: #253557;
-  --diagram: #1b2332;
-  --success: #8adbb4;
-  --field-border: #7a8ba5;
+  --surface: #101512;
+  --sidebar: #141b17;
+  --subtle: #1b251f;
+  --text: #e5eee8;
+  --muted: #a3b5a9;
+  --line: #2d3e33;
+  --accent: #91e6aa;
+  --accent-soft: #203c2a;
+  --diagram: #141e18;
+  --success: #91e6aa;
+  --field-border: #688573;
   color-scheme: dark;
 }
 * {
@@ -79,6 +80,7 @@ h1,
 h2,
 h3 {
   text-wrap: balance;
+  font-family: var(--terminal-font);
 }
 p {
   text-wrap: pretty;
@@ -142,6 +144,7 @@ button {
   font-size: 1.55rem;
   font-weight: 800;
   letter-spacing: -1px;
+  font-family: var(--terminal-font);
 }
 .brand-mark {
   font-weight: 800;
@@ -371,7 +374,7 @@ main {
   padding: 12px 18px;
   font-size: 0.78rem;
   font-weight: 650;
-  border-radius: 7px;
+  border-radius: 3px;
   min-height: 44px;
 }
 .primary {

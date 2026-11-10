@@ -1,5 +1,36 @@
 import { test, expect } from '@playwright/test';
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    if (!localStorage.getItem('wsm-theme'))
+      localStorage.setItem('wsm-theme', 'light');
+  });
+});
+
+test('new visitors get the dark theme and can navigate by keyboard', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ colorScheme: 'light' });
+  const page = await context.newPage();
+  await page.goto('http://127.0.0.1:4322/');
+  await expect(
+    page.getByRole('button', { name: 'Switch to light mode' }),
+  ).toBeVisible();
+  await page.keyboard.press('Tab');
+  await expect(
+    page.getByRole('link', { name: 'Skip to content' }),
+  ).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('main')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(
+    page.getByRole('link', { name: 'Start building', exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL('http://127.0.0.1:4322/docs/quickstart/');
+  await context.close();
+});
+
 test('read a guide, copy a command, and retain the theme across pages', async ({
   page,
   context,

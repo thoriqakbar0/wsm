@@ -13,3 +13,5 @@ examples/harbor/signed-addition/tests/manifest.json
 
 .ipynb_checkpoints/
 __marimo__/
+
+site/.cloudflare/
