@@ -1,5 +1,13 @@
 # Verify the experiment and grading boundaries
 
+## Modal coding-trial PoC
+
+The [trial verification receipt](design/trial-verification.json) records the current local checks and a real scripted Modal run on pinned SmolLM2. The Modal check preserved a deliberately worse edit, observed it in a subsequent process, restored the original weights through another Python file, read public history from the sandbox, retained both weight artifacts on the host, and verified a fresh second sandbox. Both sandboxes terminated. A separate trusted local process graded the exported final SmolLM2 weights on a synthetic case supplied after termination. This is a mechanics check, not a chosen training task or evidence of editing-agent learning.
+
+The optional-runtime suite passed 223 tests with 28 skips. After transport failure coverage was added, the dependency-free suite passed 225 tests with 59 optional skips. Focused real-model controller tests, real Tinker SDK datum tests, local transport failure simulations, installed-wheel smoke, offline preflight, and read-only history and tensor inspection passed. The live Modal run preceded the final failure-observation hardening, which is covered by local transport simulations.
+
+The scripted Modal run reserved US$1.38 from a US$2 verification allowance. This is not a reconciled provider bill. A live Tinker capability request returned a billing block. No hosted agent rollout or training update completed. Editing-agent model, task/scoring, and training algorithm also remain explicit operator choices. Follow [Run a coding-agent trial on Modal](trials.md) for setup and the remaining live proof.
+
 ## Python package migration
 
 The Python distribution and source package are now `wsm`. No `weightless` import shim is included. Checkpoint and evidence format names, hash-domain inputs, and `WeightlessError` remain unchanged.
@@ -169,3 +177,14 @@ A separate tiny-model integration changed only `transformer.ln_f.weight`, reload
 The final reviewed implementation passed 181 host tests with 36 optional skips and all 19 model-runtime tests. The wheel smoke and real TUI Python execution passed. On Modal, a Tesla T4 changed exactly 16 elements in `model.norm.weight`; every other tensor fingerprint matched. The unchanged control and original snapshot remained unchanged. A separate CPU image without the source or an HF cache reloaded every tensor exactly and preserved tied embeddings. Its loss agreed with the CUDA result within the declared 1e-4 tolerance. The two-case norm-scaling experiment is an engineering check, not a capability-improvement result. The [machine-readable receipt](design/coding-verification.json) binds the proof to the SDK and program hashes.
 
 Troubleshooting found two launcher errors before compute, then a mounted-volume `renameat2` rejection after GPU verification. Publishing locally before volume transport resolved that storage constraint. A later local artifact-download path error occurred after both remote model checks passed; the final rerun fixes path normalization. These were explicit troubleshooting launches, not automatic retries. Product spending policy remains open.
+
+
+## Modal teacher and Spindle student proof
+
+On 2026-11-10, a real Codex teacher through the CLI proxy completed three turns against a fresh pinned SmolLM2-135M-Instruct target on Modal. Two Python files published checkpoints. Independent final grading found 272 changed canonical tensors, excluding the tied output embedding alias counted by the worker. Held-out mean target-token loss changed from 2.714207 to 1.907411. The two held-out cases were unavailable to the teacher sandbox. This toy task is an integration check, not evidence of general editing ability.
+
+The retained teacher trajectory trained Qwen3-4B LoRA through Modal Spindle using Tinker SDK 0.39.0. One response-only, reward-weighted cross-entropy forward/backward processed 12,469 tokens, including 481 response tokens, followed by one confirmed optimizer update and a saved training checkpoint. Local verification matched the trajectory and datum hashes and checked prompt masks. No student sampling client was created. The [receipt](design/trial-verification.json) links the local proof artifacts.
+
+Recovery preserved the original teacher artifact. An incorrectly resolved virtualenv executable first blocked grading; a missing Jinja2 renderer then stopped the first student attempt before training dispatch. Both were fixed and tested. Explicit recovery verified the prior dispatch journal and zero remaining tasks, then reproduced the same trusted grade before training a fresh student. It did not retry an uncertain optimizer update.
+
+Persistent worse edits, explicit undo, history access, fresh target reset, retained tensor inspection, and sandbox termination passed in a separate scripted Modal mechanics run. They were not all exercised by the three-turn Codex rollout. The final model-runtime suite passed 247 tests with 29 skips; the dependency-free suite passed 248 with 69 skips. The final eight-test distillation suite and wheel smoke passed. All task-owned cloud apps were stopped with zero remaining tasks. Cumulative conservative reservations were US$9.927083 of the authorized US$10, including failed attempts; provider billing has not been reconciled. No hosted Thinking Machines update or student efficacy improvement is claimed.

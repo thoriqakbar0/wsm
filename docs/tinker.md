@@ -1,5 +1,9 @@
 # Tinker capability boundary
 
+## Train the editing agent
+
+The experimental [Modal trial workflow](trials.md) uses Codex through a CLI proxy as the editing teacher and the real Tinker SDK against Modal Spindle to train a separate Qwen3-4B student. Exact teacher text is retokenized for the student. Response-only cross entropy is weighted by the final held-out reward. No student sampler is created, and Codex is not trained. Provider-specific credentials prevent fallback to the hosted service. Spindle uses a prepaid GPU-time envelope. The optional direct-policy `TinkerPolicy` path instead records sampled tokens and log probabilities for policy-gradient updates. Both paths are separate from exposing target tensors through Tinker. Completed live updates require a separate proof receipt.
+
 ## Decision for the Python editing program
 
 Rechecked the official TrainingClient, ServiceClient, RestClient, and supported-model references on 2026-11-10. The concrete program is `model.weights["model.norm.weight"][:16].mul_(0.95)`, followed by evaluation and standalone checkpoint reload.

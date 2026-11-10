@@ -108,7 +108,46 @@ class ResponsesTeacher:
                 _write(folder / "failure.json", {"status": "outcome_unknown", "automatic_retry": False})
                 raise WeightlessError("teacher_outcome_unknown", "Teacher completion is uncertain; request retained") from None
 
-    def _send(self, request, timeout, folder, on_dispatch=None):
+    def complete(self, prompt, *, key, display_model="Codex", reasoning_effort="low"):
+        """Complete one controller-owned turn without coupling it to a Session."""
+        if (type(prompt) is not str or not prompt or len(prompt.encode()) > 262144
+                or type(key) is not str or not key or type(display_model) is not str or not display_model
+                or reasoning_effort not in ("minimal", "low", "medium", "high", "xhigh")):
+            raise WeightlessError("invalid_teacher", "Invalid completion prompt or identity")
+        request = {"model": self._model, "input": [{"role": "user", "content": prompt}],
+                   "tools": [], "tool_choice": "none", "stream": True,
+                   "reasoning": {"effort": reasoning_effort}, "max_output_tokens": self._max_tokens}
+        folder = self._directory / hashlib.sha256(_canonical({"key": key})).hexdigest()
+        folder.mkdir(mode=0o700, exist_ok=True)
+        import fcntl
+        with (folder / "lock").open("a") as lock:
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                raise WeightlessError("teacher_busy", "This completion is already active") from None
+            record = {"request": {**request, "model": display_model},
+                      "wire_request_sha256": hashlib.sha256(_canonical(request)).hexdigest()}
+            saved = folder / "request.json"
+            if saved.exists() and _load(saved.read_bytes()) != record:
+                raise WeightlessError("idempotency_conflict", "Completion key has different request bytes")
+            if not saved.exists():
+                _write(saved, record)
+            response_path = folder / "response.json"
+            if response_path.exists():
+                return _load(response_path.read_bytes())
+            intent = folder / "send-intent.json"
+            if intent.exists():
+                raise WeightlessError("teacher_outcome_unknown", "A possible prior send cannot be repeated")
+            _write(intent, {"request_sha256": record["wire_request_sha256"]})
+            try:
+                response = self._send(request, self._timeout, folder, display_model=display_model)
+                _write(response_path, response)
+                return response
+            except BaseException:
+                _write(folder / "failure.json", {"status": "outcome_unknown", "automatic_retry": False})
+                raise WeightlessError("teacher_outcome_unknown", "Completion uncertain; inspect retained records") from None
+
+    def _send(self, request, timeout, folder, on_dispatch=None, display_model=None):
         deadline = time.monotonic() + timeout
         cls = http.client.HTTPSConnection if self._url.scheme == "https" else http.client.HTTPConnection
         connection = cls(self._url.hostname, self._url.port, timeout=timeout)
@@ -158,7 +197,7 @@ class ResponsesTeacher:
                 if event.get("type") == "response.completed":
                     completed = event.get("response")
                     break
-            _write(folder / "events.json", events)
+            _write(folder / "events.json", self._event_record(events, display_model))
             if (type(completed) is not dict or completed.get("status") != "completed"
                     or completed.get("model") != self._model or completed.get("tools") != []
                     or completed.get("tool_choice") != "none"):
@@ -173,8 +212,11 @@ class ResponsesTeacher:
             usage = completed.get("usage", {})
             safe_usage = {name: usage[name] for name in ("input_tokens", "output_tokens", "total_tokens")
                           if type(usage.get(name)) is int and usage[name] >= 0}
-            return {"text": text, "model": completed["model"], "tools": [], "tool_choice": "none",
+            response = {"text": text, "model": display_model or completed["model"], "tools": [], "tool_choice": "none",
                     "tool_events": [], "usage": safe_usage, "assurance": "observed CLIProxy/API boundary only"}
+            if display_model is not None:
+                response["response_id"] = completed.get("id")
+            return response
         finally:
             if timer:
                 timer.cancel()
@@ -182,4 +224,14 @@ class ResponsesTeacher:
             if guard:
                 guard.close()
             if events and not (folder / "events.json").exists():
-                _write(folder / "events.json", events)
+                _write(folder / "events.json", self._event_record(events, display_model))
+
+    def _event_record(self, value, display_model):
+        if display_model is None:
+            return value
+        if isinstance(value, dict):
+            return {key: display_model if key == "model" else self._event_record(item, display_model)
+                    for key, item in value.items()}
+        if isinstance(value, list):
+            return [self._event_record(item, display_model) for item in value]
+        return display_model if value == self._model else value

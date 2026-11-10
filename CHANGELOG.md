@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Verify a live Codex teacher rollout, independent hidden grading, and a reward-weighted Qwen3-4B Spindle update; preserve frozen trials for guarded pretraining recovery and retain virtualenv grading runtimes.
+
+- Add a Codex CLI-proxy teacher and separate Spindle student distillation, with student retokenization, final-score response weights, sanitized route records, and no student sampler allocation.
+- Add explicit Modal Spindle training endpoints and separate credentials, a bounded single-trainer/sampler Qwen3-4B recipe, cumulative GPU cost reservations, and independent deployment cleanup.
+- Add an experimental fixed-model Modal coding trial with persistent Python edits, retained checkpoint history, a read-only terminal viewer, separate held-out grading, cost reservations, and a configured hosted Tinker policy update.
 - Preserve Tinker stopping semantics, give code commands stable recovery results, retain encoded inference responses once, and make Session own connection reopening.
 
 - Add a local Tinker SDK sampling backend and explicit weight-editing extension, with isolated teacher Python, durable candidate selection, and budgeted token inference.

@@ -91,6 +91,7 @@ To open the terminal UI, run `wsm` without arguments.
 
 Use these guides for other tasks:
 
+- [Modal coding-agent trials](docs/trials.md). Run a fresh fixed-model trial, retain every Python checkpoint, watch public history, grade separately on held-out cases, and distill a Codex teacher into an open-weight student through Spindle.
 - [Coding-first Python SDK](docs/coding.md). Modify tensors with Python, compare results, and save a standalone checkpoint.
 - [Scalar-session SDK](docs/contract.md#intended-caller). Inspect a checkpoint, submit edits, and replay a frozen run.
 - [Configured experiments](docs/driver.md). Run scripted proposals or a teacher from a JSON configuration and export the selected checkpoint.

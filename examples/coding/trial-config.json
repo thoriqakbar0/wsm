@@ -1,0 +1,40 @@
+{
+  "model_source": "/choose/local/models--HuggingFaceTB--SmolLM2-135M-Instruct",
+  "public_cases": "cases.json",
+  "heldout_cases": "/choose/private/heldout.json",
+  "instruction": "Improve short English completions on the public cases by editing target weights. Run at least one Python edit before finishing.",
+  "scoring": "negative_loss",
+  "policy": {
+    "provider": "responses_proxy",
+    "base_url": "http://127.0.0.1:8317/v1",
+    "model_env": "WSM_EDITOR_MODEL",
+    "api_key_env": "WSM_EDITOR_API_KEY",
+    "max_tokens": 4096,
+    "max_turns": 3,
+    "request_seconds": 180,
+    "reasoning_effort": "medium"
+  },
+  "student": {
+    "provider": "spindle",
+    "base_url": "https://YOUR-SPINDLE-SERVER.modal.run",
+    "model": "Qwen/Qwen3-4B",
+    "rank": 8,
+    "loss_fn": "cross_entropy",
+    "learning_rate": 0.00001,
+    "request_seconds": 600,
+    "max_context_tokens": 16384
+  },
+  "budget": {
+    "max_usd": 10,
+    "prior_reserved_usd": 3.3802083333333335,
+    "modal_hourly_usd": 5,
+    "modal_build_usd": 0.5,
+    "modal_egress_per_gib": 0.04,
+    "spindle_hourly_usd": 8,
+    "spindle_seconds": 1200
+  },
+  "sandbox_seconds": 600,
+  "command_seconds": 120,
+  "grader_python": "/choose/runtime/bin/python",
+  "grader_seconds": 120
+}
