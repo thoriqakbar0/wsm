@@ -1,5 +1,7 @@
 # Ownership of an experiment
 
+The coding-first API is `wsm.editing.WeightModel`. It exposes live PyTorch weights and owns local model loading, public evaluation, and verified checkpoint saving. `wsm.program.execute_program` owns execution of a trusted Python editing file and its lifecycle receipt. Neither imports an agent framework or translates the edit into scalar commands. [The coding guide](coding.md) describes this experimental API and its separate execution boundary. The durable scalar-session architecture below remains available for existing recorded experiments.
+
 WSM separates experiment state from numerical model access and external grading. The ordinary caller still uses `inspect`, `submit`, and `finish`. The [contract](contract.md) specifies every record and boundary.
 
 `wsm.core` owns one run, candidate attempts, copied evidence, the proposal budget, pure metric comparison, and replay. `submit` composes public `propose`, `evaluate`, and `select`. The constructor copies the initial checkpoint, declarative policy, and evaluator configuration without evaluating anything. The core never parses train or development examples. It reads only configured metric paths from a validated result.

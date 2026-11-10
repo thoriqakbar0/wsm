@@ -1,5 +1,7 @@
 # Commands
 
+`wsm execute edit.py --model /local/snapshot --cases public-cases.json --output runs/edit --device cpu` executes a trusted Python file defining `edit(model)`. It compares unchanged and edited weights on the same public cases and publishes a reload-verified checkpoint. The output directory must be new. `--device cuda` explicitly selects a GPU runtime. See [the coding guide](coding.md) for the API and execution boundary. In the TUI startup screen, **p** opens this workflow.
+
 The installed command is `wsm`. It is also `python -m wsm` and `python -m wsm.cli`. There is no second console script.
 
 Session remains the owner of budgets, stale operations, uncertain sends, selection, and replay. The command names for those steps match the session methods.

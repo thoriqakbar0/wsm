@@ -1,0 +1,46 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { Code } from 'astro:components';
+const headings = [
+  { depth: 2, slug: 'connect', text: 'Connect the model' },
+  { depth: 2, slug: 'edit', text: 'Read the edit' },
+];
+---
+
+<DocsLayout
+  title="Quickstart"
+  headings={headings}
+  source="site/src/pages/docs/quickstart.astro"
+>
+  <div class="breadcrumb">
+    Get started <span>/</span> <span>Quickstart</span>
+  </div>
+  <article class="prose">
+    <h1>Connect a model and edit a weight</h1>
+    <p class="lead">
+      Point a model at the weights. WSM keeps a change when the loss goes down.
+    </p>
+    <h2 id="connect">Connect the model</h2>
+    <Code
+      code={`git clone https://github.com/thoriqakbar0/wsm.git
+cd wsm
+python3 -m pip install -e packages/python
+export WSM_TEACHER_URL="https://example.invalid"
+export WSM_TEACHER_MODEL="your-model-id"
+export WSM_TEACHER_API_KEY="your-key"
+wsm run "Improve signed addition. Inspect the weights and test your changes." \\
+  --task addition --output runs/addition`}
+      lang="bash"
+      themes={{ light: 'github-light', dark: 'github-dark' }}
+    />
+    <h2 id="edit">Read the edit</h2>
+    <p>The model sends one command at a time.</p>
+    <Code
+      code={`{"action":"inspect","tensor":"output.weight","indices":[0,1]}
+{"action":"edit","edits":[{"tensor":"output.weight","index":0,"value":1}]}`}
+      lang="json"
+      themes={{ light: 'github-light', dark: 'github-dark' }}
+    />
+    <p>WSM keeps the edit when the loss goes down.</p>
+  </article>
+</DocsLayout>

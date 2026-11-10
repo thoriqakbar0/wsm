@@ -1,5 +1,18 @@
 # Tinker capability boundary
 
+## Decision for the Python editing program
+
+Rechecked the official TrainingClient, ServiceClient, RestClient, and supported-model references on 2026-11-10. The concrete program is `model.weights["model.norm.weight"][:16].mul_(0.95)`, followed by evaluation and standalone checkpoint reload.
+
+The documented TrainingClient methods include `forward`, `forward_backward`, `optim_step`, state loading, and external weight saving. None exposes named model tensors for this Python mutation. ServiceClient creates LoRA clients and clients from saved state. SmolLM was not listed on the inspected supported-model page. These observations establish a documented-contract gap, not proof of undocumented service behavior. No authenticated hosted Tinker experiment was run.
+
+A possible compatibility subset would name `ServiceClient.create_training_client_from_state`, `TrainingClient.forward`, and `TrainingClient.save_state`. Implementing it would require real SDK tests of `Datum`, loss outputs, futures, checkpoint identifiers, errors, and reload semantics. It would still lack tensor editing. WSM's evaluation dictionary and Hugging Face directory are different contracts; similar names would not make them compatible.
+
+The implemented experimental coding-first SDK therefore owns `WeightModel.load`, `weights`, `evaluate`, and `save`, with `execute_program` as a separate execution boundary. The local SDK backend below provides a separate sampling and scoring contract with an explicit WSM coefficient-editing extension. It does not expose this `WeightModel` program through hosted Tinker. The earlier SDK-wheel inspection below identifies an experimental adapter import route; it does not establish arbitrary dense edits or hosted support for this program.
+
+- [Supported models](https://tinker-docs.thinkingmachines.ai/tinker/models/models_and_pricing/).
+- [Coding workflow](coding.md).
+
 WSM requires a target backend that can inspect permitted weights, materialize explicit replacements in separate candidates, evaluate those candidates, and export the selected checkpoint. The editing AI is a separate caller. Its provider's inference API does not grant access to the target's weights.
 
 ## Local SDK backend
@@ -112,7 +125,7 @@ On 2026-11-10, this proof ran with the official SDK 0.39.0 against the pinned Sm
 
 ## Inspected contract
 
-On 2026-11-09, inspection covered the public client interfaces, RestClient, weight resources, and upload types in the published `tinker==0.39.0` Python wheel. It also covered the official API references below. The wheel's SHA-256 is `47c87de4e13ca6eeaecfff55b316bd436344d98685091c3024c44462e946250d`. The TrainingClient documentation identified its generated source as SDK 0.38.0. SDK inspection establishes the client contract, not a live service integration.
+On 2026-11-09, inspection covered the public client interfaces, RestClient, weight resources, and upload types in the published `tinker==0.39.0` Python wheel. It also covered the official API references below. The TrainingClient documentation identified its generated source as SDK 0.38.0. SDK inspection establishes the client contract, not a live service integration.
 
 | Required capability | Public Tinker contract | Consequence for WSM |
 | --- | --- | --- |

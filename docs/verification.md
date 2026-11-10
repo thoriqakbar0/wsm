@@ -110,9 +110,9 @@ The actual trusted final verifier script graded the oracle with reward one and t
 After installing `packages/python[integration]`, prepare and build the image:
 
 ```sh
-.venv/bin/python scripts/prepare_harbor.py
+python3 scripts/prepare_harbor.py
 docker build -t weightless-signed-addition:local examples/harbor/signed-addition/environment
-.venv/bin/python scripts/harbor_native.py --failures --output /tmp/weightless-native-proof
+python3 scripts/harbor_native.py --failures --output /tmp/weightless-native-proof
 ```
 
 The adapter ran the installed Verifiers `HarborTask`, `DockerConfig`, `Deployment`, and isolated `grade_task(on_score=...)` in real Docker. No agent or model rollout occurred. The baseline returned completed native reward zero. The three candidate evaluations returned completed native rewards zero, one, zero, with the original reject, accept, reject decisions and native train/development metrics. Independent final grading of the frozen Harbor-produced run returned reward one with all six heldout examples exact.
@@ -159,3 +159,13 @@ A fresh live teacher run initially exhausted its budget while alternating inspec
 The combined worker also passed a real Modal T4 smoke with finite CUDA outputs, selection, replay, and reconstruction. Sandbox termination was confirmed. The current worker, session, sandbox, and verifier hashes match that receipt. No live hosted Tinker integration is claimed.
 
 The model export tests force acceptance to isolate changed-state export and fresh-process reload. Their loss fixture is not efficacy evidence. Real measured selection is exercised separately in the CUDA smoke and live synthetic experiment.
+
+## Coding-first SDK checks
+
+On 2026-11-10, the dependency-free suite passed 179 tests with 34 optional-environment skips. In the local Torch 2.15.0+cpu and Transformers 5.22.2 environment, all 17 editing and program tests passed. They cover actual tensor edits, tied storage, independent target-token NLL, checkpoint reload, no-overwrite, nonfinite rejection, interruption, and publication-callback failure. The installed wheel smoke passed without optional model dependencies.
+
+A separate tiny-model integration changed only `transformer.ln_f.weight`, reloaded the checkpoint, and verified failure/interruption without publication and rejection of an existing checkpoint destination. The statechart check explored 9 states and 15 transitions with all publication invariants and the deadlock check holding. These checks establish SDK mechanics, not model-improvement efficacy.
+
+The final reviewed implementation passed 181 host tests with 36 optional skips and all 19 model-runtime tests. The wheel smoke and real TUI Python execution passed. On Modal, a Tesla T4 changed exactly 16 elements in `model.norm.weight`; every other tensor fingerprint matched. The unchanged control and original snapshot remained unchanged. A separate CPU image without the source or an HF cache reloaded every tensor exactly and preserved tied embeddings. Its loss agreed with the CUDA result within the declared 1e-4 tolerance. The two-case norm-scaling experiment is an engineering check, not a capability-improvement result. The [machine-readable receipt](design/coding-verification.json) binds the proof to the SDK and program hashes.
+
+Troubleshooting found two launcher errors before compute, then a mounted-volume `renameat2` rejection after GPU verification. Publishing locally before volume transport resolved that storage constraint. A later local artifact-download path error occurred after both remote model checks passed; the final rerun fixes path normalization. These were explicit troubleshooting launches, not automatic retries. Product spending policy remains open.

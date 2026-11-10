@@ -1,0 +1,87 @@
+{
+  "date": "2026-11-10",
+  "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
+  "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+  "gpu": "Tesla T4",
+  "torch": "2.10.0+cu128",
+  "changed_tensors": [
+    "model.norm.weight"
+  ],
+  "changed_elements": 16,
+  "baseline": {
+    "loss": 3.753681927919388,
+    "cases": [
+      {
+        "target_nll": 6.81997013092041
+      },
+      {
+        "target_nll": 0.6873937249183655
+      }
+    ]
+  },
+  "candidate": {
+    "loss": 3.7297757267951965,
+    "cases": [
+      {
+        "target_nll": 6.771714210510254
+      },
+      {
+        "target_nll": 0.6878372430801392
+      }
+    ]
+  },
+  "unchanged_control_verified": true,
+  "source_unchanged_verified": true,
+  "independent_reload": {
+    "source_absent": true,
+    "cache_absent": true,
+    "all_tensors_exact": true,
+    "tied_embeddings": true,
+    "evaluation": {
+      "loss": 3.729770302772522,
+      "cases": [
+        {
+          "target_nll": 6.771709442138672
+        },
+        {
+          "target_nll": 0.6878311634063721
+        }
+      ]
+    },
+    "device": "cpu"
+  },
+  "sdk_files": {
+    "__init__.py": "04d6f49af94a75715ef63c70cc99e0134e332131fb43cc534a4e7d0bd70564d6",
+    "__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+    "binary64.py": "e261193d8948344f678e3eee9362fa9248e688a88d7fa5511536e8a3c615db68",
+    "broker.py": "348e45d89a0c611d0c9d432bd4779eaecae40b2077d0766669312c9b18fca467",
+    "checkpoint_export.py": "309f8a633efbec79540fdde2dc5170e4290bd8fa40618413baeb786e99f59a13",
+    "cli.py": "f0c61014c37e9328d4fda0acc680e2044d2c639af12d85ae30a72f4d7b3ad868",
+    "client.py": "ef71725b2a91b6e08911e18515c7913d289ea0fd2e583e991f005a8ff990a5d1",
+    "coding_tui.py": "49f3ba2f2fb951561c82ea7a36ba062429bb30f4a1f7638d82cd447bdd209428",
+    "core.py": "4ccb1e6b93eb880e5d916d069a385461f4eb8ac8fea53622cb324b7c9d9c2026",
+    "editing.py": "3701b323ecddba568e2f3dc963afc3a88a84d93e5004142f474729bf7b6c82d3",
+    "harbor.py": "fb7ed7d57b93014171057a057e5ca7763f3f60df0c77a723769dbc36530095ce",
+    "harness.py": "4f159263376777a89273d53d202637fd9733fb11c9b5e5f0fd9e724e2bd9e56f",
+    "local_sandbox.py": "795c89b95bf9d2aa99b0411185d5b867fc77278768c446f221265c394315f7d8",
+    "program.py": "003ff1a528efe499bf5a0e5092bbd6803f89c1d3a4e46a4074f8d3b334d65a6b",
+    "sandbox.py": "75b83ca537dfd524e10a2b768be0fc44104ea0c90d844bf2ff2bc3ae1d0d5df2",
+    "session.py": "cb34eb386829a218c9f6c4fdd00c3f960772c790e830a14a8b1aab857ff12fe1",
+    "target_worker.py": "fba6460f49c82fe5b1c83522a858bd920b10388a6b58411623555d0d0c85a0fe",
+    "teacher.py": "e22cc0080b3eeaf36908d93eee3b6526af2dbfdc801b17c1d78be60fcaf91bc6",
+    "tui.py": "19432e2be4afa39db27730d1733cc1ee4e046ebcb7ad0f3c3f2d14fe6facf7af",
+    "verifier.py": "854ca02e1be04f5a5cb66e27a66ea0198798e79b5581daa5896130f2c39af927"
+  },
+  "program_sha256": "b1aa3cda7c7f6cd7da624ef1b4fa43a86f32e7ae19712a5985205694442094ba",
+  "proof_script_sha256": "3e038d93e46bc21b4b872dfcc6b2f51be7b428dd54a3296335a2041215ac3807",
+  "host_suite": {
+    "tests": 181,
+    "skipped": 36,
+    "passed": true
+  },
+  "model_tests": 19,
+  "wheel": "passed",
+  "real_tui": "published",
+  "scope": "Deterministic SDK mechanics check. No capability improvement claim.",
+  "local_evidence": "/tmp/wsm-coding-modal-final-proof"
+}

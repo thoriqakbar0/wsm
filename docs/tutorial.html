@@ -13,7 +13,7 @@
 print(teacher_send)  # Your transport sends these exact bytes to your teacher.
 # The offline teacher returns the proposal below.
 decision = run.submit(json.loads(teacher_reply))</pre><details><summary>Inspect a complete first observation from the Python API</summary><p>This is a recorded synthetic run observation. A fresh run has a different run ID. The checkpoint ID stays the same.</p><details><summary>Open the complete recorded observation JSON</summary><pre>{
-  &quot;run&quot;: &quot;sha256:68d512d2916597ba6f12cc9603ff85d427a43e8438ed7fb8d563fe80d276039b&quot;,
+  &quot;run&quot;: &quot;&quot;,
   &quot;checkpoint&quot;: {
     &quot;format&quot;: &quot;weightless.checkpoint.v1&quot;,
     &quot;graph&quot;: {
@@ -82,10 +82,10 @@ decision = run.submit(json.loads(teacher_reply))</pre><details><summary>Inspect 
         ]
       }
     },
-    &quot;id&quot;: &quot;sha256:1554696f55aac47c67222c16d87bd6fc22512428409cac4f4a17a5ab0246e271&quot;
+    &quot;id&quot;: &quot;&quot;
   },
   &quot;incumbent&quot;: {
-    &quot;run&quot;: &quot;sha256:68d512d2916597ba6f12cc9603ff85d427a43e8438ed7fb8d563fe80d276039b&quot;,
+    &quot;run&quot;: &quot;&quot;,
     &quot;attempt&quot;: 0,
     &quot;base&quot;: null,
     &quot;checkpoint&quot;: {
@@ -156,7 +156,7 @@ decision = run.submit(json.loads(teacher_reply))</pre><details><summary>Inspect 
           ]
         }
       },
-      &quot;id&quot;: &quot;sha256:1554696f55aac47c67222c16d87bd6fc22512428409cac4f4a17a5ab0246e271&quot;
+      &quot;id&quot;: &quot;&quot;
     }
   },
   &quot;config&quot;: {
@@ -238,7 +238,7 @@ decision = run.submit(json.loads(teacher_reply))</pre><details><summary>Inspect 
         &quot;budget&quot;: 8
       }
     },
-    &quot;id&quot;: &quot;sha256:2879563a391e119b576b71477851052ae12336a6850a11744a2f95a0b395868b&quot;
+    &quot;id&quot;: &quot;&quot;
   },
   &quot;policy&quot;: {
     &quot;format&quot;: &quot;weightless.policy.v1&quot;,
@@ -260,7 +260,7 @@ decision = run.submit(json.loads(teacher_reply))</pre><details><summary>Inspect 
   &quot;events&quot;: [],
   &quot;closed&quot;: false
 }</pre></details></details><p>The first scripted reply supplies a replacement for one flattened tensor address. This complete JSON is accepted as a proposal:</p><pre>{
-  &quot;base&quot;: &quot;sha256:1554696f55aac47c67222c16d87bd6fc22512428409cac4f4a17a5ab0246e271&quot;,
+  &quot;base&quot;: &quot;&quot;,
   &quot;author&quot;: &quot;scripted-teacher&quot;,
   &quot;edits&quot;: [
     {
@@ -275,9 +275,9 @@ decision = run.submit(json.loads(teacher_reply))</pre><details><summary>Inspect 
   &quot;reason&quot;: &quot;not_improved&quot;,
   &quot;before&quot;: 0,
   &quot;after&quot;: 0,
-  &quot;evaluation&quot;: &quot;sha256:fa742368e3330313f17fee0cd95a94ee701738d34a6a47e9a599d3f5cb12be8a&quot;,
-  &quot;incumbentEvaluation&quot;: &quot;sha256:fe2ba820c4d517747aae44600ab12473802c1e4111d21ef70648b8b1a6dc715c&quot;,
-  &quot;policy&quot;: &quot;sha256:42bf4b5bb38b562219c2ca09668c3ff8b9d277f74ac389837b90329a0ddfcbe1&quot;
+  &quot;evaluation&quot;: &quot;&quot;,
+  &quot;incumbentEvaluation&quot;: &quot;&quot;,
+  &quot;policy&quot;: &quot;&quot;
 }</pre><p>Send a fresh <code>run.inspect()</code> for the next turn. Its latest <code>events[-1].evaluation.native</code> contains the measured metrics, native reward, and failure details behind the decision. The rejected candidate never becomes the next proposal's base. There is no language-model response hidden in this example.</p></section>
 <section id="python"><h2>Run the same loop in Python</h2><p>From the repository root, use Python 3.12 or later. The core SDK has no runtime dependencies.</p><pre>python3 -m venv .venv
 .venv/bin/python -m pip install -e packages/python
