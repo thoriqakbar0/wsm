@@ -8,7 +8,7 @@ export const navigation = [
   { title: 'Reference', pages: [
     { title: 'Architecture', href: '/docs/architecture/' },
     { title: 'CLI coming soon', href: '/docs/cli/' },
-    { title: 'Research limitations', href: '/docs/research/' },
+    { title: 'Research', href: '/docs/research/' },
   ] },
 ];
 export const pages = navigation.flatMap((group) => group.pages);

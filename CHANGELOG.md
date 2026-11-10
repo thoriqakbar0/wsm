@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add the weight-space programming research reference to the site, explain Tinker SDK compatibility, and remove the Modal proof's runtime requirements paragraph.
+
 - Use solo-neutral website copy, clarify navigation labels and source-checkout instructions, and add the homepage example's model and output-path prerequisites.
 
 - Add the interactive Textures Twist pattern to the homepage hero, using the site's theme colors.

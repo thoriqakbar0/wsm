@@ -59,8 +59,6 @@ python scripts/coding_modal.py \
   --output /tmp/wsm-coding-modal-proof
 ```
 
-Use a Python runtime with Modal installed and configured. The source must contain pinned revision `12fd25f77366fa6b3b4b768ec3050bf629380bac`. The script performs one T4 edit invocation and one CPU reload invocation, each with a 600-second timeout and no application retries. These are demonstration bounds, not an account spending cap or a product policy.
-
 The edit invocation checks the exact modified tensor and element count, fingerprints every unchanged tensor, compares actual loss against an unchanged model, and verifies that the original snapshot is unchanged. A second image contains only the SDK, example cases, and saved checkpoint through an ephemeral volume. It has neither the original source nor a Hugging Face cache. It checks every tensor fingerprint, tied embeddings, and evaluation parity. The script downloads the published checkpoint to the local output directory before the ephemeral volume closes.
 
 The lifecycle and its limits are described in [the execution statechart](design/coding-statechart.md).
