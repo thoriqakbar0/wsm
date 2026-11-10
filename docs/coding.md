@@ -12,6 +12,7 @@ Run the program against a local Hugging Face snapshot. Install the optional mode
 
 ```sh
 python -m pip install -e 'packages/python[editing]'
+mkdir -p runs
 wsm execute edit.py --model /path/to/snapshot \
   --cases examples/coding/cases.json --output runs/python-edit --device cpu
 ```
@@ -36,7 +37,7 @@ reloaded = WeightModel.load("/path/to/new-checkpoint")
 
 Tensor names, shapes, slicing, and arithmetic are ordinary PyTorch. Tied tensors share storage. Model loading is offline and does not execute model repository Python. Saving writes Hugging Face safetensors and tokenizer files, checks finite tensors, reloads and compares the tensors, and publishes the directory atomically without overwriting an existing destination.
 
-This is an experimental WSM API. The legacy `Session` and `SearchRun` interfaces retain their existing serialized experiment contracts. The Python runner does not translate tensor modifications into scalar proposals or reuse their automatic selection policy.
+The supported API consists of `WeightModel` and `execute_program`. The runner records comparisons without automatic candidate selection.
 
 ## Execution boundary and open decisions
 
@@ -58,7 +59,7 @@ Use a Python runtime with Modal installed and configured. The source must contai
 
 The edit invocation checks the exact modified tensor and element count, fingerprints every unchanged tensor, compares actual loss against an unchanged model, and verifies that the original snapshot is unchanged. A second image contains only the SDK, example cases, and saved checkpoint through an ephemeral volume. It has neither the original source nor a Hugging Face cache. It checks every tensor fingerprint, tied embeddings, and evaluation parity. The script downloads the published checkpoint to the local output directory before the ephemeral volume closes.
 
-The lifecycle and its limits are described in [the execution statechart](design/coding-statechart.md). Hosted Tinker and a Tinker-compatible subset are assessed in [the capability record](tinker.md).
+The lifecycle and its limits are described in [the execution statechart](design/coding-statechart.md).
 
 Evaluation encodes prompt and target separately with special tokens disabled and concatenates their token IDs. It reports mean target-token negative log likelihood for each case, then the unweighted mean across cases. It does not apply a chat template or generate text. Empty cases return a null aggregate loss. Receipt states use lowercase names; the chart's **Failed** label corresponds to `failure` in `run.json`.
 
@@ -66,4 +67,4 @@ The Modal launcher uses serialized functions. Run it with Python 3.12 to match t
 
 The proof publishes the SDK checkpoint on the worker's local filesystem before copying it to the ephemeral volume for transport. Modal's mounted volume rejected `renameat2(RENAME_NOREPLACE)` during the first GPU attempt. A destination filesystem must support exclusive atomic rename for `save`; a volume copy is not that publication boundary.
 
-Inside an existing legacy session, press **P** for the Python workflow. Lowercase **p** retains the saved-proposal action for those sessions.
+Open `wsm` and press **p** to execute a Python editing file.
