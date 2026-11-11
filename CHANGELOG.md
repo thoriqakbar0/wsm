@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Keep site CI limited to verification and deploy production only through the `npm run deploy` command.
+
 - Use plain language in the homepage headline, subtitle, and sharing description to explain coding-agent weight edits.
 
 - Add the weight-space programming research reference to the site, explain Tinker SDK compatibility, and remove the Modal proof's runtime requirements paragraph.
