@@ -2,6 +2,8 @@
 
 The experimental `wsm benchmark` commands compare unchanged weights, a frozen scripted edit, and an editing policy. They retain independent task and regression grades without training a student. Read the [protocol reference](benchmark-protocol.md) for scoring, configuration, and evidence limits.
 
+Download and open the self-contained [HTML walkthrough](../examples/benchmark/walkthrough.html) for an interactive explanation using the recorded synthetic results. It makes no cloud calls.
+
 ## Check the workflow without external services
 
 Create a Python 3.12 environment from the repository root:

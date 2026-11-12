@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a standalone interactive HTML walkthrough of the benchmark and checkpoint transfer guards.
+
 - Verify checkpoint export byte counts and SHA-256 completion receipts before publication so a stream timeout cannot publish truncated weights after a successful process exit.
 
 - Bound Modal checkpoint transfers, stream into staged files, reject oversized exports without publishing partial data, and reserve diagnostic and overflow-detection allowances.
