@@ -10,6 +10,8 @@
 
 - Add an experimental repeatable evaluation benchmark with frozen protocols, matched baselines, independent task and regression grading, durable trial accounting and reservations, offline reports, and a synthetic local verification workflow.
 
+- Keep site CI limited to verification and deploy production only through the `npm run deploy` command.
+
 - Use plain language in the homepage headline, subtitle, and sharing description to explain coding-agent weight edits.
 
 - Add the weight-space programming research reference to the site, explain Tinker SDK compatibility, and remove the Modal proof's runtime requirements paragraph.

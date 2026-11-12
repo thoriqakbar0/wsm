@@ -46,9 +46,9 @@ The static site is served by the `wsm-site` Cloudflare Worker at <https://wsm.ta
 
 From `site/`, run `npm run deploy` with Cloudflare CLI authentication to build and publish. To validate without publishing, run `npm run build:deploy` followed by `npm run deploy:check`. The packaging script copies only `dist/` into Cloudflare Build Output and validates it before deployment. The Cloudflare CLI and its Build Output helpers are pinned together because these APIs are in beta.
 
-The `Site` GitHub Actions workflow checks pull requests and changes to `main`. It runs Astro checks, browser tests, and a deployment dry run. Only `main` deploys, using the exact verified artifact rather than rebuilding it. Manual dispatch on `main` also deploys. Production deployments are serialized and check the public homepage and quickstart afterward.
+The `Site` GitHub Actions workflow checks pull requests and changes to `main`. It runs Astro checks, browser tests, and a deployment dry run. Manual dispatch runs the same checks. Deployments run only through the `npm run deploy` command from `site/`.
 
-Configure repository secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`. Use an API token scoped to the deployment account with Workers Scripts Edit and Account Settings Read, plus Workers Routes Edit and Zone Read for `ta-0.com`. Keep credentials outside Git. The workflow never exposes deployment secrets to pull request jobs.
+For token-based command-line authentication, set `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in your shell environment. Use an API token scoped to the deployment account with Workers Scripts Edit and Account Settings Read, plus Workers Routes Edit and Zone Read for `ta-0.com`. Keep credentials outside Git. The workflow does not require deployment secrets.
 
 ## Social previews
 
