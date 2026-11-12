@@ -4,6 +4,14 @@ WSM is an AI harness for modding model weights. An AI agent writes Python edits,
 
 For example, an agent can change a group of weights, test the changed model, and inspect earlier attempts before deciding what to try next. The Python SDK provides the editing operations used in that loop. Finding changes that reliably improve a model remains a research goal.
 
+## Current direction
+
+WSM's goal is to make weight-space editing easier for others to use. The first priority is a reproducible edit-and-evaluate workflow, so others can rerun an experiment and inspect how an edit affected the model.
+
+The SDK already supports evaluation before and after an edit and checkpoint export. The experimental [benchmark workflow](docs/benchmark.md) adds frozen inputs, retained grades, and offline reports. These are the foundation for the current work, not evidence of reliable model improvement.
+
+Easier checkpoint comparison and recovery are planned next. Existing baseline comparisons and saved checkpoints provide building blocks. A workflow for comparing saved checkpoints and recovering from an unwanted edit remains planned work.
+
 ## Install WSM
 
 Use Python 3.12 or later. From the repository root, create a virtual environment and install the package:

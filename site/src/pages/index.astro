@@ -94,6 +94,25 @@ const weights = [
         WSM runs and records these experiments. Finding edits that improve model
         behavior remains a research problem.
       </p>
+      <h3>Current direction</h3>
+      <p>
+        WSM's goal is to make weight-space editing easier for others to use.
+        The first priority is a reproducible edit-and-evaluate workflow, so
+        others can rerun an experiment and inspect how an edit affected the model.
+      </p>
+      <p>
+        The SDK already supports evaluation before and after an edit and
+        checkpoint export. The experimental{' '}
+        <a href="/docs/benchmark/">benchmark workflow</a> adds frozen inputs,
+        retained grades, and offline reports. These are the foundation for the
+        current work, not evidence of reliable model improvement.
+      </p>
+      <p>
+        Easier checkpoint comparison and recovery are planned next. Existing
+        baseline comparisons and saved checkpoints provide building blocks.
+        A workflow for comparing saved checkpoints and recovering from an
+        unwanted edit remains planned work.
+      </p>
     </section>
 
     <section
