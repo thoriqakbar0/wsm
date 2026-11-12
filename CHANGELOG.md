@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Clarify the README and website direction: prioritize a reproducible edit-and-evaluate workflow, with easier checkpoint comparison and recovery planned next.
+
 - Add a standalone interactive HTML walkthrough of the benchmark and checkpoint transfer guards.
 
 - Verify checkpoint export byte counts and SHA-256 completion receipts before publication so a stream timeout cannot publish truncated weights after a successful process exit.
