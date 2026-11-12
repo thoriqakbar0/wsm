@@ -43,9 +43,13 @@ The example requires a tensor named `model.norm.weight`. Inspect `model.weights`
 
 Python editing files run with your process permissions and are not sandboxed. Read [Modify weights with Python](docs/coding.md) for API details, execution permissions, and the Modal demonstration.
 
-## CLI coming soon
+## Command-line workflows
 
-Use the Python SDK for now.
+Use the [Python editing guide](docs/coding.md) for trusted editing files and the [benchmark guide](docs/benchmark.md) for experimental evaluation campaigns.
+
+## Repeatable evaluation benchmark
+
+The experimental [benchmark workflow](docs/benchmark.md) compares unchanged weights, a frozen scripted edit, and an editing policy without student training. It retains independent task and regression grades, accounts for incomplete trials, and rebuilds reports offline. Start with the synthetic local fixture to check mechanics without cloud calls. Synthetic results do not establish editing efficacy.
 
 ## Experimental agent trials and Tinker
 

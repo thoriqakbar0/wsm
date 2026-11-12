@@ -177,9 +177,9 @@ class Budget:
             os.fsync(stream.fileno())
 
 
-def run_agent(trial, policy, instruction):
+def run_agent(trial, policy, instruction, *, system_instruction=INSTRUCTIONS):
     """Only generated agent tokens enter the later training trajectory."""
-    messages = [{"role": "system", "content": INSTRUCTIONS},
+    messages = [{"role": "system", "content": system_instruction},
                 {"role": "user", "content": instruction + "\nPublic cases:\n" + json.dumps(trial.config["cases"])}]
     for message in messages:
         trial.record_message(**message)
@@ -208,6 +208,8 @@ def run_agent(trial, policy, instruction):
                 break
             else:
                 raise ValueError("Unknown action or fields")
+        except WeightlessError:
+            raise
         except (ValueError, KeyError, TypeError) as error:
             result = {"error": str(error), "instructions": "Return one valid action JSON object"}
         content = json.dumps(result, allow_nan=False)

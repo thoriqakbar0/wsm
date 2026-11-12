@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How the WSM benchmark works</title>
+<style>
+:root.standalone{color-scheme:light;--foreground:#182b3a;--muted-foreground:#526572;--primary:#245edb;--success:#087f6f;--destructive:#b42335;--border:#dce4e9;--card:#f7f9fb;--secondary:#e9f0fa;--code-background:#edf2f6;--ring:#245edb;--chart-1:#245edb;--chart-2:#087f6f;--chart-3:#d28b12;--radius:8px;--font-sans:system-ui,sans-serif;--font-mono:ui-monospace,monospace}
+:root{--flow:var(--primary);--quiet:var(--muted-foreground);--good:var(--success);--bad:var(--destructive)}
+*{box-sizing:border-box}body{margin:0;font-family:var(--font-sans);color:var(--foreground)}button{font:inherit;color:inherit;cursor:pointer}button:focus-visible{outline:2px solid var(--ring);outline-offset:3px}h1,h2,p{margin:0}h1{font-size:27px;line-height:1.2;letter-spacing:-.7px;font-weight:650}h2{font-size:18px;letter-spacing:-.3px;font-weight:650}.intro{margin:9px 0 21px;line-height:1.5;color:var(--quiet);font-size:14px;max-width:65ch}.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-bottom:12px}.step{border:1px solid var(--border);border-radius:var(--radius);padding:10px 5px;background:transparent;display:flex;flex-direction:column;gap:5px;align-items:center;font-size:12px}.step span{font:13px var(--font-mono);color:var(--quiet)}.step[aria-current="step"]{background:var(--secondary);border-color:var(--flow)}.step[aria-current="step"] span{color:var(--flow)}.stage{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;min-height:245px}.stage-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.counter{font-size:12px;color:var(--quiet)}.story{margin-top:11px;font-size:14px;line-height:1.65;max-width:67ch;min-height:69px}.snippet{margin:13px 0 0;padding:12px;background:var(--code-background);border-radius:var(--radius);font:12px/1.65 var(--font-mono);white-space:pre-wrap;overflow-wrap:anywhere}.boundary{margin-top:12px;font-size:12px;color:var(--quiet);line-height:1.5}.controls{display:flex;justify-content:space-between;align-items:center;margin-top:12px}.nav{border:1px solid var(--border);border-radius:var(--radius);padding:7px 13px;background:transparent;font-size:12px}.nav:disabled{opacity:.35;cursor:default}.progress{display:flex;gap:5px}.dot{height:4px;width:20px;border-radius:4px;background:var(--border)}.dot.active{background:var(--flow)}section{margin-top:24px}.section-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:7px}.caption{font-size:12px;color:var(--quiet);line-height:1.5}.chart{width:100%;height:185px;display:block;margin-top:6px;overflow:visible}.chart text{fill:var(--quiet);font-family:var(--font-sans);font-size:12px}.chart .name{fill:var(--foreground);font-size:13px}.chart .value{fill:var(--foreground);font-family:var(--font-mono);font-size:12px}.chart .grid{stroke:var(--border);stroke-width:1}.result{font-size:13px;line-height:1.5;padding-left:12px;border-left:2px solid var(--chart-2);margin-top:2px}.guard{padding:16px;border:1px solid var(--border);border-radius:var(--radius);margin-top:12px}.choices{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:15px}.choice{padding:6px 11px;font-size:12px;background:transparent;border:1px solid var(--border);border-radius:var(--radius)}.choice[aria-pressed="true"]{background:var(--secondary);border-color:var(--flow)}.checks{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.check-label{font-size:11px;color:var(--quiet);margin-bottom:5px}.check-value{font-size:13px;font-weight:600}.verdict{margin-top:15px;font-size:14px;font-weight:650}.verdict.good{color:var(--good)}.verdict.bad{color:var(--bad)}.explanation{font-size:12px;line-height:1.6;color:var(--quiet);margin-top:5px;min-height:38px}.footer{margin-top:18px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;line-height:1.65;color:var(--quiet)}@media(max-width:460px){h1{font-size:23px}.step{font-size:11px;padding:9px 2px}.stage{min-height:290px}.story{min-height:110px}.checks{gap:8px}.section-head{display:block}.section-head .caption{margin-top:5px}.chart .name{font-size:12px}.chart text{font-size:11px}.explanation{min-height:58px}}
+</style>
+</head>
+<body>
+<main>
+<h1>Follow an edit from experiment to evidence.</h1>
+<p class="intro">WSM compares an editing policy with two baselines. Explore the workflow below. This walkthrough uses a recorded synthetic run and makes no cloud calls.</p>
+<nav class="steps" aria-label="Benchmark stages">
+<button class="step" data-step="0" aria-current="step"><span>1</span>Freeze</button>
+<button class="step" data-step="1"><span>2</span>Branch</button>
+<button class="step" data-step="2"><span>3</span>Edit</button>
+<button class="step" data-step="3"><span>4</span>Grade</button>
+<button class="step" data-step="4"><span>5</span>Report</button>
+</nav>
+<div class="stage">
+<div class="stage-head"><h2 id="stageTitle">Freeze the rules before the run.</h2><span class="counter" id="counter">1 / 5</span></div>
+<p class="story" id="story"></p>
+<pre class="snippet" id="snippet"></pre>
+<p class="boundary" id="boundary"></p>
+</div>
+<div class="controls"><button class="nav" id="previous" disabled>Previous</button><div class="progress" aria-hidden="true"><i class="dot active"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i></div><button class="nav" id="next">Next stage</button></div>
+<section aria-labelledby="runTitle">
+<div class="section-head"><h2 id="runTitle">What the recorded run shows</h2><p class="caption">Target-token loss · lower is better</p></div>
+<p class="caption">One tiny-model task. The “policy” here is a scripted action tape, not a learned agent.</p>
+<svg class="chart" id="chart" viewBox="0 0 700 185" role="img" aria-label="Logarithmic comparison of recorded target-token loss: unchanged 1.624, destructive script 1600, synthetic policy after undo 1.624."></svg>
+<p class="result">The tape restores baseline performance. This proves the edit-and-undo mechanics; it does not establish better editing ability.</p>
+</section>
+<section aria-labelledby="guardTitle">
+<div class="section-head"><h2 id="guardTitle">Try the checkpoint transfer guard</h2><p class="caption">Illustration of the current checks</p></div>
+<div class="guard">
+<div class="choices" aria-label="Transfer scenario"><button class="choice" data-case="complete" aria-pressed="true">Complete</button><button class="choice" data-case="truncated" aria-pressed="false">Truncated</button><button class="choice" data-case="oversized" aria-pressed="false">Oversized</button></div>
+<div class="checks"><div><p class="check-label">Producer exit</p><p class="check-value" id="exit"></p></div><div><p class="check-label">Bytes received</p><p class="check-value" id="received"></p></div><div><p class="check-label">Completion receipt</p><p class="check-value" id="receipt"></p></div></div>
+<p class="verdict" id="verdict" role="status"></p><p class="explanation" id="explanation"></p>
+</div>
+</section>
+<p class="footer">Recorded synthetic evidence: 3 completed arms, 2 private task cases, 1 regression case, and no live campaign. Transfer scenarios are illustrative; local regression tests cover the actual pinned SDK timeout behavior. Live Modal execution and provider billing remain unverified.</p>
+</main>
+<script>
+if(!getComputedStyle(document.documentElement).getPropertyValue("--foreground").trim())document.documentElement.classList.add("standalone");
+const stages=[
+{title:'Freeze the rules before the run.',story:'Pin the model, datasets, edit script, policy settings, repetition count, limits, and scoring. Hash the inputs and save the entire trial schedule before dispatching work.',code:'wsm benchmark preflight --config config.json\n\nFrozen manifest + input hashes + trial schedule',boundary:'The thresholds stay explicit. Missing efficacy thresholds keep the result exploratory.'},
+{title:'Start every comparison from the same weights.',story:'Create three arms: unchanged weights, a frozen scripted baseline, and the editing policy. Each edit trial begins from the pristine snapshot. A stochastic script repeats on the same schedule as the policy.',code:'Pristine snapshot\n  ├─ Unchanged model\n  ├─ Scripted baseline\n  └─ Editing policy × repetitions',boundary:'A successful publication becomes current even when its public score gets worse.'},
+{title:'Let the policy use public feedback.',story:'The policy can submit Python, evaluate public cases, inspect its history, and finish. Edits produce checkpoints. Live edits run in isolated Modal sandboxes; the local demo uses a trusted synthetic action tape.',code:'python(edit) → checkpoint → public evaluation\n\nNext action: edit / evaluate / history / finish',boundary:'Private task cases and regression grades stay outside the editor’s inputs.'},
+{title:'Freeze, close the editor, then grade.',story:'Export the final tensors with size and completeness checks. Confirm sandbox termination before a separate grader loads the original trusted configuration and tokenizer. Grade both private task cases and unrelated regression cases.',code:'Final tensors → byte count + SHA-256 receipt\nEditor closed → independent private grading',boundary:'The export receipt checks transfer completeness. The grader separately checks tensor names, layouts, finiteness, and loss.'},
+{title:'Rebuild the evidence without another rollout.',story:'Bind the grading receipts to their checkpoints. Keep every scheduled trial, including failures, timeouts, blocked budgets, and unknown outcomes. Report loss comparisons and uncertainty from completed pairs while keeping all scheduled policy trials in the success denominator.',code:'wsm benchmark report /path/to/campaign\n\nSame retained evidence → identical numeric report',boundary:'Report generation needs no model provider or model-runtime dependency. Positive, negative, and inconclusive results are all valid research outcomes.'}
+];
+let current=0;
+function showStage(index){current=index;const s=stages[index];document.getElementById('stageTitle').textContent=s.title;document.getElementById('story').textContent=s.story;document.getElementById('snippet').textContent=s.code;document.getElementById('boundary').textContent=s.boundary;document.getElementById('counter').textContent=`${index+1} / 5`;document.getElementById('previous').disabled=index===0;document.getElementById('next').disabled=index===4;document.querySelectorAll('[data-step]').forEach((b,i)=>{if(i===index)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current')});document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===index))}
+document.querySelectorAll('[data-step]').forEach(b=>b.addEventListener('click',()=>showStage(Number(b.dataset.step))));document.getElementById('previous').onclick=()=>showStage(current-1);document.getElementById('next').onclick=()=>showStage(current+1);showStage(0);
+const observed=[{name:'Unchanged',nll:1.623952567577362,color:'var(--chart-1)'},{name:'Destructive script',nll:1600,color:'var(--chart-3)'},{name:'Tape after undo',nll:1.623952567577362,color:'var(--chart-2)'}];
+function drawChart(){
+const svg=document.getElementById('chart'),mobile=window.innerWidth<460,w=mobile?Math.max(300,svg.clientWidth):700,h=mobile?220:185;
+svg.replaceChildren();svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.style.height=h+'px';
+const x0=mobile?0:200,x1=mobile?w-85:615,scale=v=>x0+Math.log10(v)/Math.log10(2000)*(x1-x0);
+const el=(tag,attrs,content)=>{const n=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));if(content!==undefined)n.textContent=content;svg.appendChild(n);return n};
+[1,10,100,1000].forEach(t=>{let x=scale(t);el('line',{x1:x,x2:x,y1:mobile?34:22,y2:mobile?181:151,class:'grid'});el('text',{x:x===0?2:x,y:mobile?199:171,'text-anchor':x===0?'start':'middle'},String(t))});
+observed.forEach((row,i)=>{let y=mobile?43+i*54:40+i*44;el('text',{x:0,y:mobile?y-12:y+5,class:'name'},row.name);el('rect',{x:x0,y:mobile?y-2:y-10,width:Math.max(2,scale(row.nll)-x0),height:mobile?15:20,rx:3,fill:row.color});el('text',{x:scale(row.nll)+10,y:mobile?y+10:y+4,class:'value'},row.nll===1600?'1600.000':row.nll.toFixed(3))});el('text',{x:w,y:h,'text-anchor':'end'},'Log axis starts at 1');
+}
+drawChart();window.addEventListener('resize',drawChart);
+
+const scenarios={complete:{exit:'Success (0)',received:'1024 / 1024 B',receipt:'Count + hash match',verdict:'Publish the verified artifact',good:true,text:'The byte count and digest computed by the controller match the complete exporter receipt. The staged file can be published without overwriting an existing file.'},truncated:{exit:'Success (0)',received:'7 / 1024 B',receipt:'Does not match',verdict:'Reject and remove the partial file',good:false,text:'A successful process can still have a truncated output stream. The receipt mismatch prevents publication, including when the SDK turns a stream timeout into EOF.'},oversized:{exit:'Rejected (73)',received:'0 payload bytes',receipt:'No success receipt',verdict:'Reject the oversized checkpoint',good:false,text:'The exporter rejects an initially oversized file before transmitting its contents. The controller also counts streamed bytes and stops producers that exceed the limit.'}};
+function scenario(key){const s=scenarios[key];document.getElementById('exit').textContent=s.exit;document.getElementById('received').textContent=s.received;document.getElementById('receipt').textContent=s.receipt;const v=document.getElementById('verdict');v.textContent=s.verdict;v.className='verdict '+(s.good?'good':'bad');document.getElementById('explanation').textContent=s.text;document.querySelectorAll('[data-case]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.case===key)))}
+document.querySelectorAll('[data-case]').forEach(b=>b.onclick=()=>scenario(b.dataset.case));scenario('complete');
+</script>
+</body></html>

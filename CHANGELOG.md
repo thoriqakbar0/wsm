@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Add a standalone interactive HTML walkthrough of the benchmark and checkpoint transfer guards.
+
+- Verify checkpoint export byte counts and SHA-256 completion receipts before publication so a stream timeout cannot publish truncated weights after a successful process exit.
+
+- Bound Modal checkpoint transfers, stream into staged files, reject oversized exports without publishing partial data, and reserve diagnostic and overflow-detection allowances.
+
+- Add an experimental repeatable evaluation benchmark with frozen protocols, matched baselines, independent task and regression grading, durable trial accounting and reservations, offline reports, and a synthetic local verification workflow.
+
 - Keep site CI limited to verification and deploy production only through the `npm run deploy` command.
 
 - Use plain language in the homepage headline, subtitle, and sharing description to explain coding-agent weight edits.
