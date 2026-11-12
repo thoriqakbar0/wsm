@@ -33,12 +33,45 @@ def parser():
     weights.add_argument("checkpoint", type=Path, help="Retained safetensors file")
     weights.add_argument("--tensor")
     weights.add_argument("--indices", type=int, nargs="+")
+    benchmark = commands.add_parser("benchmark", help="Run frozen evaluation campaigns without student training")
+    benchmarks = benchmark.add_subparsers(dest="benchmark_command", required=True)
+    for name in ("preflight", "run"):
+        command = benchmarks.add_parser(name)
+        command.add_argument("--config", type=Path, required=True)
+        if name == "run":
+            command.add_argument("--output", type=Path, required=True)
+            command.add_argument("--local-trusted", action="store_true",
+                                 help="Execute reviewed synthetic fixtures with your host permissions")
+    for name in ("report", "regrade"):
+        command = benchmarks.add_parser(name)
+        command.add_argument("directory", type=Path)
+        if name == "report":
+            command.add_argument("--markdown", action="store_true")
+        else:
+            command.add_argument("--trial-id", required=True)
     return root
 
 
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
+        if args.command == "benchmark":
+            from .benchmark import preflight, regrade, run
+            from .benchmark_report import markdown, report
+            if args.benchmark_command == "preflight":
+                result = preflight(args.config)
+            elif args.benchmark_command == "run":
+                run(args.config, args.output, local_trusted=args.local_trusted)
+                result = report(args.output)
+            elif args.benchmark_command == "regrade":
+                result = regrade(args.directory, args.trial_id)
+            else:
+                result = report(args.directory)
+                if args.markdown:
+                    print(markdown(result))
+                    return 0
+            print(json.dumps(result, indent=2, allow_nan=False))
+            return 1 if args.benchmark_command == "run" and not result["complete"] else 0
         if args.command == "trial":
             from .trial_poc import inspect_weights, load_config, run_poc, watch
             if args.trial_command == "view":

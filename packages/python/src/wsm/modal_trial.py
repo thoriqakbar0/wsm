@@ -3,8 +3,10 @@
 from concurrent.futures import ThreadPoolExecutor
 import json
 import hashlib
+import os
 from pathlib import Path
 import shutil
+import tempfile
 import uuid
 
 from .errors import WeightlessError
@@ -12,6 +14,33 @@ from .errors import WeightlessError
 MODEL = "HuggingFaceTB/SmolLM2-135M-Instruct"
 REVISION = "12fd25f77366fa6b3b4b768ec3050bf629380bac"
 INITIAL_CHECKPOINT = f"/target/snapshots/{REVISION}"
+MAX_CHECKPOINT_BYTES = 600 * 1024**2
+MAX_COMMAND_OUTPUT_BYTES = 8 * 1024**2
+
+_EXPORT_WEIGHTS = """import hashlib, json, os, stat, sys
+limit = int(sys.argv[2])
+digest = hashlib.sha256()
+size = 0
+with open(sys.argv[1], 'rb', buffering=0) as source:
+    info = os.fstat(source.fileno())
+    if not stat.S_ISREG(info.st_mode):
+        sys.exit(74)
+    if info.st_size > limit:
+        sys.exit(73)
+    remaining = limit + 1
+    while remaining:
+        chunk = source.read(min(65536, remaining))
+        if not chunk:
+            break
+        sys.stdout.buffer.write(chunk)
+        sys.stdout.buffer.flush()
+        digest.update(chunk)
+        size += len(chunk)
+        remaining -= len(chunk)
+if size != info.st_size:
+    sys.exit(75)
+print(json.dumps({'bytes': size, 'sha256': digest.hexdigest()}), file=sys.stderr, flush=True)
+"""
 
 
 def stage_smollm(source, destination):
@@ -33,7 +62,7 @@ class ModalTrialRunner:
     """Transport for agent-controlled execution, never an authoritative grader."""
 
     def __init__(self, sandbox, *, command_seconds, artifacts, reserve,
-                 max_output_bytes=8 * 1024**2):
+                 max_output_bytes=MAX_COMMAND_OUTPUT_BYTES):
         self.sandbox = sandbox
         self.command_seconds = command_seconds
         self.max_output_bytes = max_output_bytes
@@ -46,11 +75,11 @@ class ModalTrialRunner:
     def _read_stream(self, stream):
         chunks, size = [], 0
         for chunk in stream:
-            size += len(chunk.encode("utf-8"))
+            size += len(chunk) if isinstance(chunk, bytes) else len(chunk.encode("utf-8"))
             if size > self.max_output_bytes:
                 self.close()
                 raise WeightlessError("output_limit", "Sandbox output exceeded the trial limit")
-            chunks.append(chunk)
+            chunks.append(chunk.decode("utf-8", errors="replace") if isinstance(chunk, bytes) else chunk)
         return "".join(chunks)
 
     def _request(self, request):
@@ -114,25 +143,76 @@ class ModalTrialRunner:
     def set_history(self, events):
         self.sandbox.filesystem.write_text(json.dumps(events, allow_nan=False), "/trial/history.json")
 
-    def export_weights(self, checkpoint, destination, *, max_bytes=600 * 1024**2):
+    def export_weights(self, checkpoint, destination, *, max_bytes=MAX_CHECKPOINT_BYTES):
         if checkpoint in self.checkpoints:
-            with self.checkpoints[checkpoint].open("rb") as source, Path(destination).open("xb") as target:
-                shutil.copyfileobj(source, target)
+            with self.checkpoints[checkpoint].open("rb") as source:
+                if os.fstat(source.fileno()).st_size > max_bytes:
+                    raise WeightlessError("checkpoint_limit", "Final weights exceed the artifact limit")
+                with Path(destination).open("xb") as target:
+                    shutil.copyfileobj(source, target)
             return
         self._download_weights(checkpoint, destination, max_bytes=max_bytes)
 
-    def _download_weights(self, checkpoint, destination, *, max_bytes=600 * 1024**2):
+    def _download_weights(self, checkpoint, destination, *, max_bytes=MAX_CHECKPOINT_BYTES):
         """Export inert weights only. The trusted grader supplies config and tokenizer."""
         path = Path(checkpoint)
         if (not path.is_absolute() or ".." in path.parts
                 or not (str(path).startswith("/trial/edit-") or str(path) == INITIAL_CHECKPOINT)):
             raise WeightlessError("invalid_checkpoint", "Final checkpoint must belong to this trial")
-        self.reserve("modal_egress", {"bytes": max_bytes})
-        data = self.sandbox.filesystem.read_bytes(str(path / "model.safetensors"))
-        if len(data) > max_bytes:
-            raise WeightlessError("checkpoint_limit", "Final weights exceed the artifact limit")
-        with Path(destination).open("xb") as handle:
-            handle.write(data)
+        if type(max_bytes) is not int or max_bytes < 1:
+            raise ValueError("Artifact limit must be a positive integer")
+        destination = Path(destination)
+        if destination.exists() or destination.is_symlink():
+            raise FileExistsError("Checkpoint destination already exists")
+        self.reserve("modal_egress", {"bytes": max_bytes + 1 + self.max_output_bytes})
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile(dir=destination.parent, prefix=".wsm-download-", delete=False) as target:
+                temporary = Path(target.name)
+                process = self.sandbox.exec("python", "-I", "-S", "-c", _EXPORT_WEIGHTS,
+                                            str(path / "model.safetensors"), str(max_bytes),
+                                            text=False, timeout=self.command_seconds)
+
+                def copy_output():
+                    size = 0
+                    digest = hashlib.sha256()
+                    try:
+                        for chunk in process.stdout:
+                            size += len(chunk)
+                            if size > max_bytes:
+                                raise WeightlessError("checkpoint_limit", "Final weights exceed the artifact limit")
+                            target.write(chunk)
+                            digest.update(chunk)
+                    except BaseException:
+                        self.close()
+                        raise
+                    return {"bytes": size, "sha256": digest.hexdigest()}
+
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    copied = pool.submit(copy_output)
+                    diagnostics = pool.submit(self._read_stream, process.stderr)
+                    process.wait()
+                    received = copied.result()
+                    receipt_text = diagnostics.result()
+                if process.returncode == 73:
+                    self.close()
+                    raise WeightlessError("checkpoint_limit", "Final weights exceed the artifact limit")
+                if process.returncode:
+                    raise WeightlessError("checkpoint_export_failed", "Weight export command failed")
+                try:
+                    receipt = json.loads(receipt_text)
+                except ValueError:
+                    receipt = None
+                if (type(receipt) is not dict or type(receipt.get("bytes")) is not int
+                        or receipt != received):
+                    self.close()
+                    raise WeightlessError("checkpoint_incomplete", "Weight transfer does not match its completion receipt")
+                target.flush()
+                os.fsync(target.fileno())
+            os.link(temporary, destination)
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
 
     def close(self):
         if not self.closed:

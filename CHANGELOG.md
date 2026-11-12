@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Verify checkpoint export byte counts and SHA-256 completion receipts before publication so a stream timeout cannot publish truncated weights after a successful process exit.
+
+- Bound Modal checkpoint transfers, stream into staged files, reject oversized exports without publishing partial data, and reserve diagnostic and overflow-detection allowances.
+
+- Add an experimental repeatable evaluation benchmark with frozen protocols, matched baselines, independent task and regression grading, durable trial accounting and reservations, offline reports, and a synthetic local verification workflow.
+
 - Use plain language in the homepage headline, subtitle, and sharing description to explain coding-agent weight edits.
 
 - Add the weight-space programming research reference to the site, explain Tinker SDK compatibility, and remove the Modal proof's runtime requirements paragraph.
