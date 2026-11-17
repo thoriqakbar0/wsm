@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Accept indexed CPU devices in `WeightModel.load` and reject `meta` before loading weights.
+
 - Reject invalid `wsm execute --cases` files before running the edit. The file must contain a JSON array.
 
 - Name missing model editing dependencies and show how to install the `editing` extra.

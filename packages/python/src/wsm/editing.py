@@ -284,6 +284,13 @@ class WeightModel:
             requested = torch.device(device)
         except (TypeError, RuntimeError, ValueError) as error:
             raise WeightlessError("unsupported_target", "Unsupported execution device") from error
+        if requested.type == "meta":
+            raise WeightlessError(
+                "unsupported_target",
+                "'meta' cannot store weights. Please use 'cpu' or an available accelerator.",
+            )
+        if requested.type == "cpu":
+            requested = torch.device("cpu")
         if requested.type == "cuda" and not torch.cuda.is_available():
             raise WeightlessError("unsupported_target", "CUDA execution is unavailable")
         path = Path(local_path)
@@ -310,7 +317,9 @@ class WeightModel:
             raise WeightlessError("invalid_model", "Local model snapshot could not be loaded") from error
         loaded = cls(model, tokenizer)
         actual = loaded.device
-        if actual.type != requested.type or (requested.index is not None and actual.index != requested.index):
+        if actual.type != requested.type or (
+            requested.index is not None and actual.index != requested.index
+        ):
             raise WeightlessError("unsupported_target", "Model parameters are not on the requested device")
         if any(parameter.dtype != torch.float32 for parameter in loaded.model.parameters()):
             raise WeightlessError("unsupported_target", "Model parameters are not float32")

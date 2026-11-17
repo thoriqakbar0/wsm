@@ -168,13 +168,13 @@ class EditingTests(unittest.TestCase):
         if self.tmp is not None:
             self.tmp.cleanup()
 
-    def test_load_normalizes_indexed_cpu_device(self):
+    def test_load_indexed_cpu(self):
         import torch
 
         model = WeightModel.load(self.source, device="cpu:0")
         self.assertEqual(model.device, torch.device("cpu"))
 
-    def test_load_rejects_meta_before_loading_snapshot(self):
+    def test_reject_meta_device(self):
         for path in (self.source, self.root / "missing"):
             with self.subTest(path=path):
                 with self.assertRaisesRegex(WeightlessError, "meta.*use 'cpu'") as raised:
