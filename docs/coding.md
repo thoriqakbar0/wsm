@@ -8,6 +8,25 @@ def edit(model):
     model.weights["model.norm.weight"][:16].mul_(0.95)
 ```
 
+## Checkpoint requirements
+
+Before running `WeightModel.save()` or an edit with `wsm execute`, choose an
+unused output path whose parent directory exists. Use Linux with a C library
+that exposes `renameat2`, and choose an output filesystem that supports
+`renameat2(RENAME_NOREPLACE)` for directories. The flag publishes the verified
+checkpoint atomically and refuses to replace an existing destination.
+
+WSM stages the checkpoint beside its destination and syncs staged files and
+directories before publication. For `wsm execute`, the checkpoint is inside
+the new run directory. Use a compatible local filesystem if your mounted
+volume rejects exclusive rename, then copy the published checkpoint to the volume.
+
+WSM attempts the rename after staging and verification. A missing
+`renameat2` symbol raises `unsupported_platform`. A destination that appears
+before publication raises `export_exists`. Other rename errors, including
+unsupported filesystem operations, surface as OS errors. Loading and
+evaluating a model do not use this publication step.
+
 ## Run an editing file from the repository
 
 These commands use a source checkout. For the published SDK workflow, use the [Python quickstart](/docs/quickstart/).
@@ -26,6 +45,12 @@ wsm execute edit.py --model /path/to/snapshot \
 The receipt records `case_count` and `cases_sha256` without storing prompt or target text in the case evidence. To reproduce the digest, hash the UTF-8 bytes of the normalized case list serialized with Python's `json.dumps(cases, sort_keys=True, ensure_ascii=True, separators=(",", ":"))` and prefix the hex digest with `sha256:`. Keep the original case order and use `[]` when cases are omitted.
 
 For CUDA, pass `--device cuda` in a runtime with CUDA-enabled Torch and a GPU. The TUI opens with `wsm`; press **p** to review and execute a Python editing file using the same command. Choose an unused output directory for each run. The TUI supports Ctrl-C interruption, displays a receipt after a successful command, and shows command output on failure.
+
+## Try a synthetic model offline
+
+From a repository checkout, follow the [download-free SDK quickstart](../README.md#modify-weights-with-python).
+It creates a tiny GPT-2 model and tokenizer locally, evaluates a tensor edit,
+and verifies that the edited tensor survives a save and reload.
 
 ## Use the SDK directly
 

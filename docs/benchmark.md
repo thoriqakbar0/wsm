@@ -57,7 +57,7 @@ OMP_NUM_THREADS=1 wsm benchmark regrade /tmp/wsm-benchmark-run \
   --trial-id completion.agent.0000
 ```
 
-Regrading verifies the frozen input and runtime fingerprints before loading the artifact. It compares per-case results with the original receipt using the frozen numeric tolerance, or exact equality when no tolerance was supplied. It never repeats an edit or provider request and never erases a prior failure. A frozen artifact whose grading was interrupted can receive its missing grade receipt, while its earlier outcome remains visible.
+Regrading verifies the frozen input and runtime fingerprints before loading the artifact. Per-case target token counts must match the original receipt exactly. Per-case target NLL must match within the frozen numeric tolerance, or exactly when no tolerance was supplied. It never repeats an edit or provider request and never erases a prior failure. A frozen artifact whose grading was interrupted can receive its missing grade receipt, while its earlier outcome remains visible.
 
 ## Prepare an isolated campaign
 

@@ -290,6 +290,15 @@ print(json.dumps(report(sys.argv[1]), sort_keys=True))
         self.assertTrue(regrade(self.output, "task.agent.0000")["matches"])
         self.assertEqual(digest(self.output / "trials/task.agent.0000/trial/events.jsonl"), before)
 
+    def test_regrade_rejects_token_count_mismatch(self):
+        trial_id = "task.agent.0000"
+        grades = read(self.output / "restricted" / trial_id / "grade.json")["grades"]
+        grades["task"]["final"]["cases"][0]["target_tokens"] += 1
+
+        with patch("wsm.benchmark._grade", return_value=grades):
+            with self.assertRaisesRegex(ValueError, "target token count"):
+                regrade(self.output, trial_id)
+
     def test_budget_exhaustion_blocks_isolated_editing_before_provider_import(self):
         from wsm.modal_trial import MODEL, REVISION
         inputs = self.root / "blocked-inputs"

@@ -29,12 +29,7 @@ The Markdown processor converts links between repository docs to local routes. L
 
 ## Browser checks
 
-```sh
-npx playwright install chromium
-npm test
-```
-
-Tests build the static site, start the local preview, and exercise search, navigation, copy, themes, article links, and responsive layouts. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to use an existing Chromium installation. Screenshots remain in the ignored `test-results/` directory.
+Follow the [site checks in the contributor guide](../CONTRIBUTING.md#documentation-site). The tests exercise search, navigation, copy, themes, article links, and responsive layouts. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to use an existing Chromium installation. Screenshots remain in the ignored `test-results/` directory.
 
 ## Visual identity
 
