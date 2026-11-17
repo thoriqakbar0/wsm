@@ -1,4 +1,7 @@
-"""Atomic checkpoint publication without replacing an existing destination."""
+"""Publish checkpoints with a Linux C library that exposes renameat2.
+
+The destination filesystem must support RENAME_NOREPLACE for directories.
+"""
 import ctypes
 import errno
 import os

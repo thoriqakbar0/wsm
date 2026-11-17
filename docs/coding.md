@@ -8,6 +8,25 @@ def edit(model):
     model.weights["model.norm.weight"][:16].mul_(0.95)
 ```
 
+## Checkpoint requirements
+
+Before running `WeightModel.save()` or an edit with `wsm execute`, choose an
+unused output path whose parent directory exists. Use Linux with a C library
+that exposes `renameat2`, and choose an output filesystem that supports
+`renameat2(RENAME_NOREPLACE)` for directories. The flag publishes the verified
+checkpoint atomically and refuses to replace an existing destination.
+
+WSM stages the checkpoint beside its destination and syncs staged files and
+directories before publication. For `wsm execute`, the checkpoint is inside
+the new run directory. Use a compatible local filesystem if your mounted
+volume rejects exclusive rename, then copy the published checkpoint to the volume.
+
+WSM attempts the rename after staging and verification. A missing
+`renameat2` symbol raises `unsupported_platform`. A destination that appears
+before publication raises `export_exists`. Other rename errors, including
+unsupported filesystem operations, surface as OS errors. Loading and
+evaluating a model do not use this publication step.
+
 ## Run an editing file from the repository
 
 These commands use a source checkout. For the published SDK workflow, use the [Python quickstart](/docs/quickstart/).
