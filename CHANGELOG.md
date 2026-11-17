@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reject existing output directories in the TUI before a previous run's receipt can appear as the result of a new run.
+
 - Reject duplicate normalized benchmark cases, including copied tasks, before they can inflate trial schedules or coverage.
 
 - Reject local model snapshots with missing required weights while accepting tied aliases that can be recovered from saved tensors.

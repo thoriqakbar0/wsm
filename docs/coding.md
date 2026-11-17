@@ -25,7 +25,7 @@ wsm execute edit.py --model /path/to/snapshot \
 
 The receipt records `case_count` and `cases_sha256` without storing prompt or target text in the case evidence. To reproduce the digest, hash the UTF-8 bytes of the normalized case list serialized with Python's `json.dumps(cases, sort_keys=True, ensure_ascii=True, separators=(",", ":"))` and prefix the hex digest with `sha256:`. Keep the original case order and use `[]` when cases are omitted.
 
-For CUDA, pass `--device cuda` in a runtime with CUDA-enabled Torch and a GPU. The TUI opens with `wsm`; press **p** to review and execute a Python editing file using the same command. It displays execution state and supports Ctrl-C interruption.
+For CUDA, pass `--device cuda` in a runtime with CUDA-enabled Torch and a GPU. The TUI opens with `wsm`; press **p** to review and execute a Python editing file using the same command. It displays execution state and supports Ctrl-C interruption. Choose an unused output directory for each run. The TUI rejects an existing destination before launching the command.
 
 ## Use the SDK directly
 

@@ -34,6 +34,9 @@ def execute(screen):
     model = Path(prompt(screen, "Local model snapshot directory")).expanduser().resolve()
     cases = Path(prompt(screen, "Public evaluation cases JSON")).expanduser().resolve()
     output = Path(prompt(screen, "New output directory")).expanduser().resolve()
+    if output.exists():
+        raise FileExistsError("Output directory must be unused")
+
     device = prompt(screen, "Torch device", default="cpu")
     command = [sys.executable, "-m", "wsm", "execute", str(program), "--model", str(model),
                "--cases", str(cases), "--output", str(output), "--device", device]
