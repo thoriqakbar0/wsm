@@ -22,9 +22,10 @@ the new run directory. Use a compatible local filesystem if your mounted
 volume rejects exclusive rename, then copy the published checkpoint to the volume.
 
 WSM attempts the rename after staging and verification. A missing
-`renameat2` symbol raises `unsupported_platform`. If the kernel or filesystem
-rejects the operation, WSM surfaces the OS error. Loading and evaluating a
-model do not use this publication step.
+`renameat2` symbol raises `unsupported_platform`. A destination that appears
+before publication raises `export_exists`. Other rename errors, including
+unsupported filesystem operations, surface as OS errors. Loading and
+evaluating a model do not use this publication step.
 
 ## Run an editing file from the repository
 
