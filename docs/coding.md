@@ -70,6 +70,8 @@ Tensor names, shapes, slicing, and arithmetic are ordinary PyTorch. Tied tensors
 
 A snapshot must contain every required weight. Transformers can recover a missing tied alias from its saved counterpart. If required weights are still missing, `WeightModel.load` raises `WeightlessError` with code `invalid_model` and names the missing weights.
 
+Indexed CPU devices such as `cpu:0` resolve to `cpu`. The `meta` device cannot store weights, so `WeightModel.load` raises `unsupported_target` before reading the snapshot. Use `cpu` or an available accelerator.
+
 The supported API consists of `WeightModel` and `execute_program`. The runner records comparisons without automatic candidate selection.
 
 ## Python execution permissions

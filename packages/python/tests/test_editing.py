@@ -168,6 +168,19 @@ class EditingTests(unittest.TestCase):
         if self.tmp is not None:
             self.tmp.cleanup()
 
+    def test_load_indexed_cpu(self):
+        import torch
+
+        model = WeightModel.load(self.source, device="cpu:0")
+        self.assertEqual(model.device, torch.device("cpu"))
+
+    def test_reject_meta_device(self):
+        for path in (self.source, self.root / "missing"):
+            with self.subTest(path=path):
+                with self.assertRaisesRegex(WeightlessError, "meta.*use 'cpu'") as raised:
+                    WeightModel.load(path, device="meta")
+                self.assertEqual(raised.exception.code, "unsupported_target")
+
     def test_missing_weights(self):
         from safetensors.torch import load_file, save_file
 
