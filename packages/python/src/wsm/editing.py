@@ -285,10 +285,14 @@ class WeightModel:
             with _offline():
                 tokenizer = auto_tokenizer.from_pretrained(
                     path, local_files_only=True, trust_remote_code=False)
-                model = auto_model.from_pretrained(
+                model, loading_info = auto_model.from_pretrained(
                     path, local_files_only=True, trust_remote_code=False,
-                    dtype=torch.float32, attn_implementation="eager")
-                model.to(device=requested, dtype=torch.float32)
+                    dtype=torch.float32, attn_implementation="eager", output_loading_info=True)
+            if loading_info["missing_keys"]:
+                missing = ", ".join(sorted(loading_info["missing_keys"]))
+                message = f"Local model snapshot is missing required weights: {missing}"
+                raise WeightlessError("invalid_model", message)
+            model.to(device=requested, dtype=torch.float32)
         except WeightlessError:
             raise
         except (OSError, ValueError, RuntimeError) as error:
