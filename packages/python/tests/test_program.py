@@ -204,7 +204,7 @@ class ProgramTests(unittest.TestCase):
         receipt = json.loads(result.stdout)
         self.assertNotEqual(receipt["source_snapshot_sha256"], model.source_snapshot_sha256)
 
-    def test_restored_source_rejects_stale_digest(self):
+    def test_restore_blocks_publish(self):
         from safetensors.torch import load_file, save
 
         weights = self.source / "model.safetensors"
