@@ -12,6 +12,8 @@
 
 - Reject benchmark regrades when per-case target token counts differ from the original grade.
 
+- Record the source snapshot SHA-256 in edit run receipts, cache per-file hashes between loads, and fully verify the source before checkpoint publication. Pass `wsm execute --verify-full` to also force a full scan at load.
+
 - Reject duplicate normalized benchmark cases, including copied tasks, before they can inflate trial schedules or coverage.
 
 - Reject local model snapshots with missing required weights while accepting tied aliases that can be recovered from saved tensors.

@@ -44,6 +44,12 @@ wsm execute edit.py --model /path/to/snapshot \
 
 The receipt records `case_count` and `cases_sha256` without storing prompt or target text in the case evidence. To reproduce the digest, hash the UTF-8 bytes of the normalized case list serialized with Python's `json.dumps(cases, sort_keys=True, ensure_ascii=True, separators=(",", ":"))` and prefix the hex digest with `sha256:`. Keep the original case order and use `[]` when cases are omitted.
 
+The first load hashes every file in the source snapshot, including the contents of symlinked files. WSM stores a manifest under `$XDG_CACHE_HOME/wsm/snapshots` or `~/.cache/wsm/snapshots`. Later loads reuse a file's hash when its size, nanosecond modification time, and inode match. Pass `--verify-full` to hash every file before loading.
+
+The loader reads a private copy, which needs temporary disk space for the snapshot while the model is alive. Before publishing a checkpoint, WSM hashes both the copy and the current source and requires them to match the identity captured at load. This also catches a stale cached hash if the source changes and is then restored. Keep the run output and cache outside the source snapshot.
+
+The `source_snapshot_sha256` field in `run.json` identifies the source independently of its location. To reproduce it, compute the lowercase SHA-256 of each file and build a JSON object mapping POSIX relative paths to those hex digests. Sort the keys, use ASCII escaping and compact separators, and hash the UTF-8 JSON with no trailing newline. Prefix the resulting hex digest with `sha256:`.
+
 For CUDA, pass `--device cuda` in a runtime with CUDA-enabled Torch and a GPU. The TUI opens with `wsm`; press **p** to review and execute a Python editing file using the same command. Choose an unused output directory for each run. The TUI supports Ctrl-C interruption, displays a receipt after a successful command, and shows command output on failure.
 
 ## Try a synthetic model offline
@@ -66,7 +72,7 @@ model.save("/path/to/new-checkpoint")
 reloaded = WeightModel.load("/path/to/new-checkpoint")
 ```
 
-Tensor names, shapes, slicing, and arithmetic are ordinary PyTorch. Tied tensors share storage. Model loading is offline and does not execute model repository Python. Saving writes Hugging Face safetensors and tokenizer files, checks finite tensors, reloads and compares the tensors, and publishes the directory atomically without overwriting an existing destination.
+Tensor names, shapes, slicing, and arithmetic are ordinary PyTorch. Tied tensors share storage. Model loading is offline and does not execute model repository Python. Pass `verify_full=True` to `WeightModel.load` or `execute_program` to force a full scan at load. Saving writes Hugging Face safetensors and tokenizer files, checks finite tensors, reloads and compares the tensors, verifies the original snapshot, and publishes the directory atomically without overwriting an existing destination.
 
 A snapshot must contain every required weight. Transformers can recover a missing tied alias from its saved counterpart. If required weights are still missing, `WeightModel.load` raises `WeightlessError` with code `invalid_model` and names the missing weights.
 

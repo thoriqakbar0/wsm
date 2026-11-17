@@ -19,9 +19,11 @@ import math
 import os
 import shutil
 import tempfile
+import weakref
 from collections.abc import Mapping
 from pathlib import Path
 
+from ._snapshot import _Snapshot
 from .errors import WeightlessError
 
 _OFFLINE = ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE", "HF_DATASETS_OFFLINE", "HF_HUB_DISABLE_TELEMETRY")
@@ -254,6 +256,25 @@ def _ids(tokenizer, text, label):
     return values
 
 
+def _execution_device(torch, device):
+    if type(device) is not str or device == "":
+        raise WeightlessError("unsupported_target", "Device must be a Torch device string")
+    try:
+        requested = torch.device(device)
+    except (TypeError, RuntimeError, ValueError) as error:
+        raise WeightlessError("unsupported_target", "Unsupported execution device") from error
+    if requested.type == "meta":
+        raise WeightlessError(
+            "unsupported_target",
+            "'meta' cannot store weights. Please use 'cpu' or an available accelerator.",
+        )
+    if requested.type == "cpu":
+        requested = torch.device("cpu")
+    if requested.type == "cuda" and not torch.cuda.is_available():
+        raise WeightlessError("unsupported_target", "CUDA execution is unavailable")
+    return requested
+
+
 class WeightModel:
     """Experimental handle for direct tensor edits on a local causal language model.
 
@@ -263,6 +284,8 @@ class WeightModel:
     def __init__(self, model, tokenizer):
         self.model = model
         self.tokenizer = tokenizer
+        self._source_snapshot = None
+        self._loaded_from = None
         self.model.eval()
         self.model.requires_grad_(False)
         try:
@@ -272,30 +295,43 @@ class WeightModel:
         self.weights = _Weights(self.model)
 
     @classmethod
-    def load(cls, local_path, device="cpu"):
+    def load(cls, local_path, device="cpu", *, verify_full=False):
         """Load an offline Hugging Face causal LM in float32 and eval mode.
 
-        Repository Python is not executed. Files are read only from `local_path`.
+        Use `verify_full` to hash every source file even when a manifest exists.
         """
-        torch, auto_model, auto_tokenizer = _libraries()
-        if type(device) is not str or device == "":
-            raise WeightlessError("unsupported_target", "Device must be a Torch device string")
-        try:
-            requested = torch.device(device)
-        except (TypeError, RuntimeError, ValueError) as error:
-            raise WeightlessError("unsupported_target", "Unsupported execution device") from error
-        if requested.type == "meta":
-            raise WeightlessError(
-                "unsupported_target",
-                "'meta' cannot store weights. Please use 'cpu' or an available accelerator.",
-            )
-        if requested.type == "cpu":
-            requested = torch.device("cpu")
-        if requested.type == "cuda" and not torch.cuda.is_available():
-            raise WeightlessError("unsupported_target", "CUDA execution is unavailable")
-        path = Path(local_path)
+        libraries = _libraries()
+        torch, _, _ = libraries
+        requested = _execution_device(torch, device)
+        path = Path(local_path).absolute()
         if not path.is_dir():
             raise WeightlessError("invalid_model", "Local model snapshot could not be loaded")
+        snapshot = _Snapshot.load(path, verify_full=verify_full)
+        staging = tempfile.TemporaryDirectory(prefix="wsm-source-")
+        load_path = Path(staging.name)
+        try:
+            snapshot.copy_into(load_path)
+            snapshot.check_shards(load_path)
+            loaded = cls._load_checkpoint(load_path, requested, libraries)
+            snapshot.check_metadata()
+        except BaseException:
+            staging.cleanup()
+            raise
+
+        # Keep the loader's input available for verification on every save.
+        weakref.finalize(loaded, staging.cleanup)
+        loaded._source_snapshot = snapshot
+        loaded._loaded_from = load_path
+        return loaded
+
+    @property
+    def source_snapshot_sha256(self):
+        """Content identity captured when the source snapshot was loaded."""
+        return self._source_snapshot.sha256 if self._source_snapshot is not None else None
+
+    @classmethod
+    def _load_checkpoint(cls, path, requested, libraries):
+        torch, auto_model, auto_tokenizer = libraries
         try:
             with _offline():
                 tokenizer = auto_tokenizer.from_pretrained(
@@ -376,6 +412,10 @@ class WeightModel:
         parent = destination.parent
         if not parent.is_dir():
             raise WeightlessError("invalid_model", "Checkpoint destination parent must be a directory")
+        source = self._source_snapshot
+        if source is not None and destination.resolve().is_relative_to(source.path.resolve()):
+            raise WeightlessError("invalid_model", "Checkpoint must be outside the source snapshot")
+
         if callable(getattr(self.model, "is_remote_code", None)) and self.model.is_remote_code():
             raise WeightlessError("unsupported_target", "Remote model code is unsupported")
         life = _Lifecycle(on_phase)
@@ -390,7 +430,7 @@ class WeightModel:
             self.model.save_pretrained(staged)
             self.tokenizer.save_pretrained(staged)
             _audit(staged)
-            reloaded = WeightModel.load(staged, device=str(self.device))
+            reloaded = WeightModel._load_checkpoint(staged, self.device, _libraries())
             try:
                 _compare(reloaded.model, parameters, buffers, ties)
             finally:
@@ -398,6 +438,9 @@ class WeightModel:
             _fsync_tree(staged)
             life.advance("verified")
             from ._publication import _publish
+
+            if source is not None:
+                source.verify(self._loaded_from)
             _publish(staged, destination)
             renamed = True
             life.advance("published")
