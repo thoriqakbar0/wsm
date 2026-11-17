@@ -144,3 +144,7 @@ The [Jupyter and marimo examples](examples/notebooks/README.md) include uv setup
 The supported Python API consists of `WeightModel` and `execute_program`. WSM no longer includes search, sessions, prompt harnesses, or the local Tinker bridge. It does not support existing experiment bundles.
 
 See the [architecture](docs/architecture.md) and [research limitations](docs/research.md).
+
+## Contributing
+
+Use the [contributor verification guide](CONTRIBUTING.md) to run the Python, site, and notebook checks.
