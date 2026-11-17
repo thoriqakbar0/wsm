@@ -172,13 +172,20 @@ def _run_edit(program_path, code, model, stdout_path, stderr_path):
             raise WeightlessError("invalid_program", "Program must define edit(model)")
 
         result = edit(model)
-        if inspect.iscoroutine(result):
-            result.close()
         deferred = (
             inspect.isawaitable(result) or inspect.isgenerator(result) or inspect.isasyncgen(result)
         )
-        if deferred:
-            raise WeightlessError("invalid_program", "edit(model) must run synchronously")
+        if not deferred:
+            return
+
+        error = WeightlessError("invalid_program", "edit(model) must run synchronously")
+        try:
+            if inspect.iscoroutine(result):
+                result.close()
+        except BaseException as cleanup_error:
+            # A started coroutine can run user code during close().
+            raise error from cleanup_error
+        raise error
 
 
 def _stream(path, relative):

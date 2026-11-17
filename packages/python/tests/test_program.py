@@ -137,6 +137,18 @@ class ProgramTests(unittest.TestCase):
                 "async def deferred():\n    raise RuntimeError('edit body ran')\n"
                 "def edit(model):\n    return deferred()\n"
             ),
+            "started_coroutine": (
+                "from types import coroutine\n"
+                "@coroutine\n"
+                "def suspend():\n    yield\n"
+                "async def deferred():\n"
+                "    try:\n        await suspend()\n"
+                "    finally:\n        raise KeyboardInterrupt\n"
+                "def edit(model):\n"
+                "    pending = deferred()\n"
+                "    pending.send(None)\n"
+                "    return pending\n"
+            ),
             "generator": "def edit(model):\n    raise RuntimeError('edit body ran')\n    yield\n",
             "async_generator": (
                 "async def edit(model):\n    raise RuntimeError('edit body ran')\n    yield\n"
