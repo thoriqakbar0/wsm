@@ -15,9 +15,13 @@ npm run build
 npm run preview
 ```
 
+Use the committed lockfile with `npm ci`. It resolves Rolldown 1.2.19, which fixes a native build crash on x64 CPUs without BMI2 support in 1.2.18. The `@astrojs/compiler-rs` override holds the compatible 0.5.2 patch because 0.5.3 has the same CPU regression. Remove the override once [the upstream compiler issue](https://github.com/withastro/compiler-rs/issues/220) has a fixed release.
+
 Deploy the contents of `site/dist/` to a static host at its domain root. No server adapter or credentials are required. The homepage hydrates the Textures Twist React component in the browser through `@astrojs/react`; documentation pages remain static.
 
 ## Content
+
+ui-sdk Web Components are available through `@ui-sdk/web` and `@ui-sdk/core`. The shared `DocsLayout.astro` imports the default styles once. Register components in an Astro client `<script>` by importing their entry, such as `import '@ui-sdk/web/dialog'`. See the repository's `AGENTS.md` for the installed skill and package documentation workflow.
 
 `src/content.config.ts` reads `../docs/**/*.md` directly. Edit those source documents to update the generated article pages. `src/lib/navigation.ts` defines the sidebar order. The introduction and offline quickstart are Astro pages under `src/pages/`.
 
