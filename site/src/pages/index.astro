@@ -3,6 +3,35 @@ import DocsLayout from '../layouts/DocsLayout.astro';
 import { Twist } from '../components/textures/twist';
 import { Code } from 'astro:components';
 const codeThemes = { light: 'github-light', dark: 'github-dark' } as const;
+const agentPrompt = `Use WSM in this repository to run a bounded weight-editing experiment.
+
+Model snapshot: <absolute path to local Hugging Face snapshot with tokenizer files>
+Public cases: <path to JSON prompt/target cases>
+Goal: <the behavior to investigate>
+Device: <cpu or cuda>
+Output directory: <new, unused path whose parent exists>
+Maximum candidate edits: <number>
+
+Read README.md and docs/coding.md before acting. Check the Python environment
+and install the documented editing dependencies if needed. Confirm the model
+and cases exist. Inspect tensor names and shapes before choosing an edit.
+
+Write a small, reviewable Python file defining edit(model). Explain the edit
+and review its code before execution. Run it with wsm execute, using the model,
+cases, device, and a fresh output directory for each candidate. Start each
+candidate from the original snapshot and leave that snapshot unchanged.
+Do not download models, call cloud services, or start training.
+
+Inspect each run.json for execution state and baseline/candidate evaluations.
+Report failures as failures. Compare public target-token negative log likelihood
+and report regressions. Do not claim that lower loss proves better generated
+responses or general model quality. Keep any private grading data outside the
+editing agent's process and context.
+
+Respect the candidate limit. Do not overwrite existing outputs or automatically
+promote a candidate. Report the edit files, commands, receipts, checkpoint paths,
+results, and limitations so I can reproduce the experiment. If a prerequisite
+is missing, report the blocker instead of inventing a successful result.`;
 const weights = [
   '0.240',
   '−0.180',
@@ -263,10 +292,21 @@ model.save("/path/to/new-checkpoint")`}
           values are not an experimental result.
         </figcaption>
       </figure>
-      <h3>CLI coming soon</h3>
+      <h3 id="use-with-a-coding-agent">Use WSM with a coding agent</h3>
       <p>
-        Use the Python SDK to edit and evaluate weights. The command-line
-        interface is coming soon.
+        Copy this prompt into a coding agent with terminal access to a WSM
+        source checkout. Replace the placeholders first. Use a local model
+        snapshot and public evaluation cases you are allowed to share with the
+        agent.
+      </p>
+      <div class="code-sample">
+        <Code code={agentPrompt} lang="text" themes={codeThemes} />
+      </div>
+      <p>
+        The agent writes Python and runs <code>wsm execute</code>. WSM loads the
+        model, evaluates the edit, and saves a checkpoint. The local runner uses
+        your process permissions, so use trusted code. See the
+        <a href="/docs/coding/">Python editing and CLI guide</a>.
       </p>
       <h3>Interpret the result before keeping it</h3>
       <p>
