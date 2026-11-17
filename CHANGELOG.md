@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reject invalid `wsm execute --cases` files before running the edit. The file must contain a JSON array.
+
 - Prevent stale run receipts in the TUI by rejecting existing output directories and showing receipts only after a successful command.
 
 - Reject duplicate normalized benchmark cases, including copied tasks, before they can inflate trial schedules or coverage.

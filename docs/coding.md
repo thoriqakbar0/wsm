@@ -21,7 +21,7 @@ wsm execute edit.py --model /path/to/snapshot \
   --cases examples/coding/cases.json --output runs/python-edit --device cpu
 ```
 
-`--cases` supplies public prompt/target pairs. The runner evaluates the unchanged model, executes your function, evaluates the changed model on the same cases, and saves a standalone checkpoint under `runs/python-edit/checkpoint`. `run.json` records execution state and comparison evidence. The runner does not automatically select a winner from the loss comparison. A deterministic norm edit checks mechanics; a changed loss does not establish a capability improvement.
+`--cases` requires a JSON array of public prompt/target pairs. The runner evaluates the unchanged model, executes your function, evaluates the changed model on the same cases, and saves a standalone checkpoint under `runs/python-edit/checkpoint`. `run.json` records execution state and comparison evidence. The runner does not automatically select a winner from the loss comparison. A deterministic norm edit checks mechanics; a changed loss does not establish a capability improvement.
 
 The receipt records `case_count` and `cases_sha256` without storing prompt or target text in the case evidence. To reproduce the digest, hash the UTF-8 bytes of the normalized case list serialized with Python's `json.dumps(cases, sort_keys=True, ensure_ascii=True, separators=(",", ":"))` and prefix the hex digest with `sha256:`. Keep the original case order and use `[]` when cases are omitted.
 

@@ -90,8 +90,14 @@ def main(argv=None):
                 raise WeightlessError('terminal_required', 'The TUI requires a terminal; use --help for scriptable commands')
             from .tui import launch
             return launch()
+        try:
+            cases = json.loads(args.cases.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, json.JSONDecodeError) as error:
+            raise WeightlessError('invalid_cases', f'Could not read cases file: {error}') from error
+        if not isinstance(cases, list):
+            raise WeightlessError('invalid_cases', 'Cases file must contain a JSON array')
+
         from .program import execute_program
-        cases = json.loads(args.cases.read_text())
         result = execute_program(args.program, model_path=args.model, output=args.output,
                                  device=args.device, cases=cases)
         print(json.dumps(result, allow_nan=False, indent=2))
