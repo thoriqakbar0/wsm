@@ -32,3 +32,22 @@ class CommandTests(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()) as output:
             self.assertEqual(main(['execute', 'edit.py', '--model', 'model', '--cases', '/missing/cases.json', '--output', 'output']), 1)
         self.assertIn('error', json.loads(output.getvalue()))
+
+    def test_rejects_invalid_cases_file(self):
+        temporary = self.enterContext(tempfile.TemporaryDirectory())
+        cases = Path(temporary) / 'cases.json'
+        output = Path(temporary) / 'output'
+        args = ['execute', 'edit.py', '--model', 'model', '--cases', str(cases),
+                '--output', str(output)]
+        execute = self.enterContext(patch('wsm.program.execute_program',
+                                          return_value={'state': 'published'}))
+
+        for contents in ('null', '{}', '['):
+            with self.subTest(contents=contents):
+                cases.write_text(contents, encoding='utf-8')
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(io.StringIO()):
+                    status = main(args)
+                self.assertEqual(status, 1)
+                self.assertEqual(json.loads(stderr.getvalue())['error']['code'], 'invalid_cases')
+        execute.assert_not_called()
