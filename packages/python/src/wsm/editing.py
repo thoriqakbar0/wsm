@@ -256,6 +256,25 @@ def _ids(tokenizer, text, label):
     return values
 
 
+def _execution_device(torch, device):
+    if type(device) is not str or device == "":
+        raise WeightlessError("unsupported_target", "Device must be a Torch device string")
+    try:
+        requested = torch.device(device)
+    except (TypeError, RuntimeError, ValueError) as error:
+        raise WeightlessError("unsupported_target", "Unsupported execution device") from error
+    if requested.type == "meta":
+        raise WeightlessError(
+            "unsupported_target",
+            "'meta' cannot store weights. Please use 'cpu' or an available accelerator.",
+        )
+    if requested.type == "cpu":
+        requested = torch.device("cpu")
+    if requested.type == "cuda" and not torch.cuda.is_available():
+        raise WeightlessError("unsupported_target", "CUDA execution is unavailable")
+    return requested
+
+
 class WeightModel:
     """Experimental handle for direct tensor edits on a local causal language model.
 
@@ -281,6 +300,9 @@ class WeightModel:
 
         Use `verify_full` to hash every source file even when a manifest exists.
         """
+        libraries = _libraries()
+        torch, _, _ = libraries
+        requested = _execution_device(torch, device)
         path = Path(local_path).absolute()
         if not path.is_dir():
             raise WeightlessError("invalid_model", "Local model snapshot could not be loaded")
@@ -290,7 +312,7 @@ class WeightModel:
         try:
             snapshot.copy_into(load_path)
             snapshot.check_shards(load_path)
-            loaded = cls._load_checkpoint(load_path, device)
+            loaded = cls._load_checkpoint(load_path, requested, libraries)
             snapshot.check_metadata()
         except BaseException:
             staging.cleanup()
@@ -308,23 +330,8 @@ class WeightModel:
         return self._source_snapshot.sha256 if self._source_snapshot is not None else None
 
     @classmethod
-    def _load_checkpoint(cls, path, device):
-        torch, auto_model, auto_tokenizer = _libraries()
-        if type(device) is not str or device == "":
-            raise WeightlessError("unsupported_target", "Device must be a Torch device string")
-        try:
-            requested = torch.device(device)
-        except (TypeError, RuntimeError, ValueError) as error:
-            raise WeightlessError("unsupported_target", "Unsupported execution device") from error
-        if requested.type == "meta":
-            raise WeightlessError(
-                "unsupported_target",
-                "'meta' cannot store weights. Please use 'cpu' or an available accelerator.",
-            )
-        if requested.type == "cpu":
-            requested = torch.device("cpu")
-        if requested.type == "cuda" and not torch.cuda.is_available():
-            raise WeightlessError("unsupported_target", "CUDA execution is unavailable")
+    def _load_checkpoint(cls, path, requested, libraries):
+        torch, auto_model, auto_tokenizer = libraries
         try:
             with _offline():
                 tokenizer = auto_tokenizer.from_pretrained(
@@ -423,7 +430,7 @@ class WeightModel:
             self.model.save_pretrained(staged)
             self.tokenizer.save_pretrained(staged)
             _audit(staged)
-            reloaded = WeightModel._load_checkpoint(staged, str(self.device))
+            reloaded = WeightModel._load_checkpoint(staged, self.device, _libraries())
             try:
                 _compare(reloaded.model, parameters, buffers, ties)
             finally:
