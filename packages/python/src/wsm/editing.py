@@ -19,6 +19,7 @@ import math
 import os
 import shutil
 import tempfile
+import weakref
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -265,6 +266,7 @@ class WeightModel:
         self.model = model
         self.tokenizer = tokenizer
         self._source_snapshot = None
+        self._loaded_from = None
         self.model.eval()
         self.model.requires_grad_(False)
         try:
@@ -283,10 +285,21 @@ class WeightModel:
         if not path.is_dir():
             raise WeightlessError("invalid_model", "Local model snapshot could not be loaded")
         snapshot = _Snapshot.load(path, verify_full=verify_full)
-        snapshot.check_shards()
-        loaded = cls._load_checkpoint(path, device)
-        snapshot.check_metadata()
+        staging = tempfile.TemporaryDirectory(prefix="wsm-source-")
+        load_path = Path(staging.name)
+        try:
+            snapshot.copy_into(load_path)
+            snapshot.check_shards(load_path)
+            loaded = cls._load_checkpoint(load_path, device)
+            snapshot.check_metadata()
+        except BaseException:
+            staging.cleanup()
+            raise
+
+        # Keep the loader's input available for verification on every save.
+        weakref.finalize(loaded, staging.cleanup)
         loaded._source_snapshot = snapshot
+        loaded._loaded_from = load_path
         return loaded
 
     @property
@@ -420,7 +433,7 @@ class WeightModel:
             from ._publication import _publish
 
             if source is not None:
-                source.verify()
+                source.verify(self._loaded_from)
             _publish(staged, destination)
             renamed = True
             life.advance("published")

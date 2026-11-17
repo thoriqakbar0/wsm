@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import stat
 import tempfile
 from typing import NamedTuple
@@ -132,12 +133,22 @@ class _Snapshot:
         if _inventory(self.path) != self.inventory:
             raise _changed(self.path)
 
-    def check_shards(self) -> None:
+    def copy_into(self, destination: Path) -> None:
+        try:
+            for name in self.inventory:
+                target = destination / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(self.path / name, target)
+        except OSError as error:
+            message = f"Could not copy source snapshot: {self.path}"
+            raise WeightlessError("invalid_model", message) from error
+
+    def check_shards(self, directory: Path) -> None:
         for name in _WEIGHT_INDEXES:
             if name not in self.inventory:
                 continue
             try:
-                index = json.loads((self.path / name).read_text(encoding="utf-8"))
+                index = json.loads((directory / name).read_text(encoding="utf-8"))
                 shards = index["weight_map"].values()
             except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
                 raise WeightlessError("invalid_model", f"Invalid checkpoint index: {name}") from error
@@ -146,6 +157,6 @@ class _Snapshot:
                 message = f"Checkpoint index refers outside the source snapshot: {name}"
                 raise WeightlessError("invalid_model", message)
 
-    def verify(self) -> None:
-        if self.scan(self.path).sha256 != self.sha256:
+    def verify(self, loaded_from: Path) -> None:
+        if self.scan(loaded_from).sha256 != self.sha256 or self.scan(self.path).sha256 != self.sha256:
             raise _changed(self.path)

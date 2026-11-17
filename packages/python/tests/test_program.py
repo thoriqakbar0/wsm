@@ -204,6 +204,37 @@ class ProgramTests(unittest.TestCase):
         receipt = json.loads(result.stdout)
         self.assertNotEqual(receipt["source_snapshot_sha256"], model.source_snapshot_sha256)
 
+    def test_restored_source_rejects_stale_digest(self):
+        from safetensors.torch import load_file, save
+
+        weights = self.source / "model.safetensors"
+        restored = self.root / "restored.safetensors"
+        restored.write_bytes(weights.read_bytes())
+        original = weights.stat()
+        baseline = WeightModel.load(self.source).source_snapshot_sha256
+
+        tensors = load_file(weights)
+        tensors["transformer.ln_f.weight"][0] = 123.0
+        replacement = save(tensors, metadata={"format": "pt"})
+        self.assertEqual(len(replacement), original.st_size)
+        weights.write_bytes(replacement)
+        os.utime(weights, ns=(original.st_atime_ns, original.st_mtime_ns))
+
+        program = _write(
+            self.root / "edit.py",
+            "import os\n\ndef edit(model):\n"
+            "    assert model.weights['transformer.ln_f.weight'][0].item() == 123.0\n"
+            f"    os.replace({str(restored)!r}, {str(weights)!r})\n",
+        )
+        output = self.root / "run"
+        with self.assertRaisesRegex(WeightlessError, "Source snapshot changed"):
+            execute_program(program, model_path=self.source, output=output)
+
+        receipt = json.loads((output / "run.json").read_text())
+        self.assertEqual(receipt["source_snapshot_sha256"], baseline)
+        self.assertEqual(receipt["state"], "failure")
+        self.assertFalse((output / "checkpoint").exists())
+
     def _run_cli(self, source, output, *options):
         program = _write(self.root / "edit.py", source)
         cases = _write(self.root / "cases.json", json.dumps(CASES))
