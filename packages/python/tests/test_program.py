@@ -146,7 +146,7 @@ class BoundaryTests(unittest.TestCase):
 
 
 class ProgramTests(unittest.TestCase):
-    def test_same_path_can_have_a_new_identity(self):
+    def test_identity_tracks_bytes(self):
         program = _write(self.root / "edit.py", "def edit(model):\n    pass\n")
         first = execute_program(program, model_path=self.source, output=self.root / "first")
         _write(self.source / "extra.txt", "new snapshot bytes")
@@ -184,7 +184,8 @@ class ProgramTests(unittest.TestCase):
         journal = json.loads((output / "run.json").read_text())
         self.assertEqual(journal["state"], "failure")
         self.assertNotIn("published", journal["phases"])
-        self.assertEqual({entry.name for entry in output.iterdir()}, {"run.json", "stdout.txt", "stderr.txt"})
+        artifacts = {entry.name for entry in output.iterdir()}
+        self.assertEqual(artifacts, {"run.json", "stdout.txt", "stderr.txt"})
 
     def test_force_hashes_matching_metadata(self):
         marker = _write(self.source / "extra.txt", "before")
