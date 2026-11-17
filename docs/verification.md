@@ -1,6 +1,6 @@
 # Verification
 
-Run `bash scripts/verify.sh` for editing, execution, CLI, and terminal tests. Model tests require the editing dependencies and tokenizers. Run `python3 scripts/package_smoke.py` to build and install a wheel outside the source tree and check its public API and CLI.
+Run `bash scripts/verify.sh` for editing, execution, CLI, and terminal tests. Model tests require the editing dependencies and tokenizers. Run `python3 scripts/package_smoke.py` to build and install a wheel outside the source tree and check its public API and CLI. Pass the wheel path to smoke-test an existing build, as Python CI does.
 
 The model tests create a tiny local model, edit its tensors, save and reload checkpoints, and check evaluation and publication failures. No model downloads or credentials are needed.
 
