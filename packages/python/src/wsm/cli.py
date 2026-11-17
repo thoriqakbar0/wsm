@@ -18,6 +18,11 @@ def parser():
     execute.add_argument('--output', type=Path, required=True)
     execute.add_argument('--cases', type=Path, required=True)
     execute.add_argument('--device', default='cpu')
+
+    execute.add_argument(
+        '--verify-full', action='store_true', help='Hash every source snapshot file before loading'
+    )
+
     commands.add_parser('tui', help='Open the Python editing terminal')
     trial = commands.add_parser("trial", help="Run or watch an experimental Modal coding trial")
     trial_commands = trial.add_subparsers(dest="trial_command", required=True)
@@ -98,8 +103,10 @@ def main(argv=None):
             raise WeightlessError('invalid_cases', 'Cases file must contain a JSON array')
 
         from .program import execute_program
-        result = execute_program(args.program, model_path=args.model, output=args.output,
-                                 device=args.device, cases=cases)
+        result = execute_program(
+            args.program, model_path=args.model, output=args.output,
+            device=args.device, cases=cases, verify_full=args.verify_full,
+        )
         print(json.dumps(result, allow_nan=False, indent=2))
         return 0 if result.get('state') == 'published' else 1
     except KeyboardInterrupt:

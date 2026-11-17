@@ -29,6 +29,10 @@ before and after the edit. A successful run records both evaluations in
 Inspect the receipt for a `published` state. See the
 [Python editing guide](coding.md) for the edit contract and receipt states.
 
+Pass `--verify-full` to hash every source snapshot file before loading.
+The receipt records `source_snapshot_sha256`, and WSM fully verifies the
+snapshot before publishing. Keep the output directory outside the source snapshot.
+
 ## Open the editing terminal
 
 Run `wsm tui` in an interactive terminal. Running `wsm` without a subcommand

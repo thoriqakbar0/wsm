@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_editing import _files, _stack, write_tiny_model
@@ -20,6 +21,50 @@ CASES = [{"prompt": "a b", "target": "c"}, {"prompt": "a", "target": "b"}]
 def _write(path, text):
     path.write_text(text)
     return path
+
+
+class SnapshotManifestTests(unittest.TestCase):
+    def test_rehashes_only_changed_files(self):
+        from wsm._snapshot import _Snapshot
+
+        root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        source = root / "source"
+        source.mkdir()
+        weights = _write(root / "blob", "before")
+        (source / "weights").symlink_to(weights)
+        config = _write(source / "config", "config")
+        cache = root / "cache"
+        self.enterContext(patch.dict(os.environ, {"XDG_CACHE_HOME": str(cache)}))
+
+        hash_file = self.enterContext(patch("hashlib.file_digest", wraps=hashlib.file_digest))
+        first = _Snapshot.load(source, verify_full=False)
+        self.assertEqual(hash_file.call_count, 2)
+
+        hash_file.reset_mock()
+        unchanged = _Snapshot.load(source, verify_full=False)
+        self.assertEqual(hash_file.call_count, 0)
+        self.assertEqual(first.sha256, unchanged.sha256)
+
+        original = weights.stat()
+        replacement = _write(root / "replacement", "after!")
+        os.utime(replacement, ns=(original.st_atime_ns, original.st_mtime_ns))
+        replacement.replace(weights)
+        changed = _Snapshot.load(source, verify_full=False)
+        self.assertEqual(hash_file.call_count, 1)
+        self.assertNotEqual(changed.sha256, first.sha256)
+
+        hash_file.reset_mock()
+        full = _Snapshot.load(source, verify_full=True)
+        self.assertEqual(hash_file.call_count, 2)
+        self.assertEqual(full.sha256, changed.sha256)
+
+        config.unlink()
+        removed = _Snapshot.load(source, verify_full=False)
+        file_digest = hashlib.sha256(b"after!").hexdigest()
+        canonical = ('{"weights":"' + file_digest + '"}').encode()
+        self.assertEqual(removed.sha256, "sha256:" + hashlib.sha256(canonical).hexdigest())
+        manifest, = (cache / "wsm" / "snapshots").glob("*.json")
+        self.assertEqual(set(json.loads(manifest.read_text())["files"]), {"weights"})
 
 
 class BoundaryTests(unittest.TestCase):
@@ -101,13 +146,75 @@ class BoundaryTests(unittest.TestCase):
 
 
 class ProgramTests(unittest.TestCase):
-    def _run_cli(self, source, output):
+    def test_same_path_can_have_a_new_identity(self):
+        program = _write(self.root / "edit.py", "def edit(model):\n    pass\n")
+        first = execute_program(program, model_path=self.source, output=self.root / "first")
+        _write(self.source / "extra.txt", "new snapshot bytes")
+        second = execute_program(program, model_path=self.source, output=self.root / "second")
+
+        self.assertRegex(first.get("source_snapshot_sha256", ""), r"^sha256:[0-9a-f]{64}$")
+        self.assertEqual(first["model"], second["model"])
+        self.assertNotEqual(first["source_snapshot_sha256"], second["source_snapshot_sha256"])
+
+    def test_index_requires_tracked_weights(self):
+        from safetensors import safe_open
+
+        weights = self.source / "model.safetensors"
+        with safe_open(weights, framework="pt") as source:
+            shards = {key: "../weights.safetensors" for key in source.keys()}
+        index = {"metadata": {}, "weight_map": shards}
+        weights.rename(self.root / "weights.safetensors")
+        _write(self.source / "model.safetensors.index.json", json.dumps(index))
+
+        with self.assertRaisesRegex(WeightlessError, "outside the source snapshot"):
+            WeightModel.load(self.source)
+
+    def test_source_edit_blocks_publication(self):
+        marker = _write(self.source / "extra.txt", "before")
+        program = _write(
+            self.root / "edit.py",
+            "from pathlib import Path\n\ndef edit(model):\n"
+            f"    Path({str(marker)!r}).write_text('after!')\n",
+        )
+        output = self.root / "run"
+        with self.assertRaisesRegex(WeightlessError, "Source snapshot changed") as caught:
+            execute_program(program, model_path=self.source, output=output)
+
+        self.assertEqual(caught.exception.code, "source_snapshot_changed")
+        journal = json.loads((output / "run.json").read_text())
+        self.assertEqual(journal["state"], "failure")
+        self.assertNotIn("published", journal["phases"])
+        self.assertEqual({entry.name for entry in output.iterdir()}, {"run.json", "stdout.txt", "stderr.txt"})
+
+    def test_force_hashes_matching_metadata(self):
+        marker = _write(self.source / "extra.txt", "before")
+        model = WeightModel.load(self.source)
+        original = marker.stat()
+        marker.write_text("after!")
+        os.utime(marker, ns=(original.st_atime_ns, original.st_mtime_ns))
+
+        destination = self.root / "stale"
+        with self.assertRaisesRegex(WeightlessError, "Source snapshot changed"):
+            WeightModel.load(self.source).save(destination)
+        self.assertFalse(destination.exists())
+
+        result = self._run_cli("def edit(model):\n    pass\n", "full", "--verify-full")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        receipt = json.loads(result.stdout)
+        self.assertNotEqual(receipt["source_snapshot_sha256"], model.source_snapshot_sha256)
+
+    def _run_cli(self, source, output, *options):
         program = _write(self.root / "edit.py", source)
         cases = _write(self.root / "cases.json", json.dumps(CASES))
+        command = [
+            sys.executable, "-m", "wsm", "execute", str(program),
+            "--model", str(self.source),
+            "--cases", str(cases),
+            "--output", output,
+            *options,
+        ]
         return subprocess.run(
-            [sys.executable, "-m", "wsm", "execute", str(program),
-             "--model", str(self.root / "source"), "--cases", str(cases), "--output", output],
-            cwd=self.root, capture_output=True, text=True,
+            command, cwd=self.root, capture_output=True, text=True,
             env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1] / "src")})
 
     def test_relative_output_stays_at_requested_location_after_chdir(self):
@@ -151,6 +258,7 @@ class ProgramTests(unittest.TestCase):
             self.skipTest("torch, transformers, and tokenizers unavailable")
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
+        self.enterContext(patch.dict(os.environ, {"XDG_CACHE_HOME": str(self.root / "cache")}))
         self.source = write_tiny_model(self.root / "source")
 
     def tearDown(self):

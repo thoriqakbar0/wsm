@@ -25,11 +25,11 @@ from .errors import WeightlessError
 from .editing import WeightModel, _Lifecycle, _cases
 
 
-def execute_program(program_path, *, model_path, output, device="cpu", cases=None):
+def execute_program(program_path, *, model_path, output, device="cpu", cases=None, verify_full=False):
     """Run a trusted `edit(model)` file and return its publication receipt.
 
-    The receipt includes source and case SHA-256 digests and the baseline and
-    candidate evaluations. Nothing in the receipt accepts or rejects the edit.
+    The receipt includes SHA-256 digests for the program, source snapshot, and
+    evaluation cases, along with the baseline and candidate evaluations.
     `output` is created exclusively. An existing output path is left unchanged.
     """
     program_path = _existing_file(program_path, "invalid_program", "Program file could not be read")
@@ -38,6 +38,8 @@ def execute_program(program_path, *, model_path, output, device="cpu", cases=Non
     if type(device) is not str or device == "":
         raise WeightlessError("unsupported_target", "Device must be a Torch device string")
     normalized = _cases(cases)
+    if output.resolve().is_relative_to(model_path.resolve()):
+        raise WeightlessError("invalid_model", "Run output must be outside the source snapshot")
     case_json = json.dumps(normalized, sort_keys=True, separators=(",", ":"))
     cases_digest = "sha256:" + hashlib.sha256(case_json.encode("utf-8")).hexdigest()
     source = _read_source(program_path)
@@ -56,6 +58,7 @@ def execute_program(program_path, *, model_path, output, device="cpu", cases=Non
         "program": str(program_path),
         "source_sha256": digest,
         "model": str(model_path),
+        "source_snapshot_sha256": None,
         "device": device,
         "case_count": len(normalized),
         "cases_sha256": cases_digest,
@@ -78,7 +81,8 @@ def execute_program(program_path, *, model_path, output, device="cpu", cases=Non
         life = _Lifecycle(record)
         life.advance("running")
         code = compile(text, str(program_path), "exec")
-        model = WeightModel.load(model_path, device=device)
+        model = WeightModel.load(model_path, device=device, verify_full=verify_full)
+        receipt["source_snapshot_sha256"] = model.source_snapshot_sha256
         receipt["baseline"] = model.evaluate(normalized)
         _write_json(journal, receipt)
         stdout_path = output / "stdout.txt"
