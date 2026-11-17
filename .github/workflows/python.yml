@@ -45,6 +45,8 @@ jobs:
   editing:
     name: CPU editing / Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    env:
+      WSM_REQUIRE_MODEL_TESTS: '1'
     strategy:
       fail-fast: false
       matrix:

@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+from types import ModuleType
 import unittest
 from unittest.mock import patch
 
@@ -27,6 +28,8 @@ def _stack():
         from tokenizers.models import WordLevel
         from tokenizers.pre_tokenizers import Whitespace
     except ImportError:
+        if os.environ.get("WSM_REQUIRE_MODEL_TESTS") == "1":
+            raise
         return None
     return {
         "torch": torch,
@@ -79,6 +82,17 @@ def _manual_nll(model, tokenizer, prompt, target):
 
 
 class ImportTests(unittest.TestCase):
+    def test_required_gpt2_import(self):
+        transformers = ModuleType("transformers")
+        transformers.GPT2Config = object()
+        modules = {"torch": ModuleType("torch"), "transformers": transformers}
+        with (
+            patch.dict(sys.modules, modules),
+            patch.dict(os.environ, {"WSM_REQUIRE_MODEL_TESTS": "1"}),
+        ):
+            with self.assertRaisesRegex(ImportError, "GPT2LMHeadModel"):
+                _stack()
+
     def test_missing_editing_package(self):
         packages = ("torch", "transformers", "safetensors")
         available = {name: module_from_spec(ModuleSpec(name, loader=None)) for name in packages}
