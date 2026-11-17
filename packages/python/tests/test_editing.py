@@ -9,6 +9,7 @@ import sys
 import tempfile
 import textwrap
 import unittest
+from unittest.mock import patch
 
 from wsm import WeightModel
 from wsm.errors import WeightlessError
@@ -76,6 +77,16 @@ def _manual_nll(model, tokenizer, prompt, target):
 
 
 class ImportTests(unittest.TestCase):
+    def test_missing_editing_package(self):
+        for package in ("torch", "transformers", "safetensors"):
+            with self.subTest(package=package), patch.dict(sys.modules, {package: None}):
+                with self.assertRaises(WeightlessError) as caught:
+                    WeightModel.load(ROOT)
+
+                self.assertEqual(caught.exception.code, "unsupported_target")
+                self.assertIn(package, str(caught.exception))
+                self.assertIn("pip install 'wsm[editing]'", str(caught.exception))
+
     def test_package_import_does_not_load_torch(self):
         script = textwrap.dedent("""
             import importlib.abc

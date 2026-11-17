@@ -15,6 +15,8 @@ Install the model dependencies to load a local snapshot:
 pip install 'wsm[editing]'
 ```
 
+`WeightModel.load()` names any missing required editing package and prints this install command.
+
 ```python
 from wsm import WeightModel
 
