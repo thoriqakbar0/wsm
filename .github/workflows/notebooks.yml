@@ -1,0 +1,55 @@
+name: Notebooks
+
+on:
+  pull_request:
+    paths:
+      - 'examples/notebooks/**'
+      - 'packages/python/**'
+      - 'scripts/**'
+      - 'docs/design/trial-verification.json'
+      - '.github/workflows/notebooks.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'examples/notebooks/**'
+      - 'packages/python/**'
+      - 'scripts/**'
+      - 'docs/design/trial-verification.json'
+      - '.github/workflows/notebooks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    env:
+      WSM_NOTEBOOK_LIVE: '0'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install uv
+      - name: Install locked notebook dependencies
+        run: uv sync --project examples/notebooks --locked
+      - name: Execute Jupyter notebook
+        run: |
+          uv run --project examples/notebooks --offline --no-sync python - <<'PY'
+          from pathlib import Path
+
+          import nbformat
+          from nbclient import NotebookClient
+
+          path = Path("examples/notebooks/wsm_trial.ipynb")
+          notebook = nbformat.read(path, as_version=4)
+          nbformat.validate(notebook)
+          NotebookClient(notebook, timeout=60, kernel_name="python3").execute(cwd=str(Path.cwd()))
+          print("Jupyter offline execution passed")
+          PY
+      - name: Check and execute marimo notebook
+        run: |
+          uv run --project examples/notebooks --offline --no-sync marimo check examples/notebooks/wsm_trial_marimo.py
+          uv run --project examples/notebooks --offline --no-sync marimo export html examples/notebooks/wsm_trial_marimo.py \
+            --output "$RUNNER_TEMP/wsm-trial-marimo.html" --no-include-code

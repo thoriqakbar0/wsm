@@ -94,6 +94,9 @@ Add `--follow` during a trial. Use `wsm trial weights` on a recorded safetensors
 
 ## Verify without cloud access
 
+The GitHub Actions Notebooks workflow runs these checks with Python 3.12 and the
+notebook lockfile. It keeps live mode disabled for both notebooks.
+
 Execute every Jupyter cell with its default offline mode:
 
 ```sh
