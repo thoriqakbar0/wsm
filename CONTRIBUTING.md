@@ -19,9 +19,11 @@ uv build packages/python --wheel
 
 The script runs the Python test suite and builds and installs a wheel in a
 temporary directory to check its public API and CLI.
-[Python CI](.github/workflows/python.yml) runs unittest discovery and builds
-the wheel on Ubuntu for changes under `packages/python/` or `scripts/`, or
-to the Python workflow. The installed-wheel smoke test is a local check.
+[Python CI](.github/workflows/python.yml) runs the Python suite and packaging
+regression tests, builds a wheel, and smoke-tests that wheel on Ubuntu. It runs
+for changes under `packages/python/` or `scripts/`, or to the Python workflow.
+Pass a built wheel path to `python3 scripts/package_smoke.py` to smoke-test that
+artifact instead of building a new wheel.
 
 ## Documentation site
 
