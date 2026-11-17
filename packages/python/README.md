@@ -9,6 +9,10 @@ pip install wsm
 wsm --help
 ```
 
+To save the checkpoint in this example, use Linux with a C library that
+exposes `renameat2` and an output filesystem that supports `RENAME_NOREPLACE`.
+Choose an unused destination whose parent directory exists.
+
 Install the model dependencies to load a local snapshot:
 
 ```sh

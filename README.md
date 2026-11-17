@@ -25,6 +25,10 @@ python -c 'from wsm import WeightModel, execute_program'
 
 The core package has no third-party runtime dependencies. Model editing and experimental agent trials require optional dependencies.
 
+To save a checkpoint, use Linux with a C library that exposes `renameat2` and an
+output filesystem that supports `RENAME_NOREPLACE`. Check the
+[checkpoint requirements](docs/coding.md#checkpoint-requirements) before running an edit that saves.
+
 ## Modify weights with Python
 
 Install the optional model dependencies:
