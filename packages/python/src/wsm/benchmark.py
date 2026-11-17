@@ -564,7 +564,10 @@ def regrade(directory, trial_id):
             for phase in ("baseline", "final"):
                 old, new = previous["grades"][kind][phase], grades[kind][phase]
                 if len(old["cases"]) != len(new["cases"]) or any(
-                    abs(a["target_nll"] - b["target_nll"]) > tolerance
+                    a["target_tokens"] != b["target_tokens"]
+                    or abs(a["target_nll"] - b["target_nll"]) > tolerance
                     for a, b in zip(old["cases"], new["cases"], strict=True)):
-                    raise ValueError("Independent regrade differs beyond frozen numeric tolerance")
+                    raise ValueError(
+                        "Independent regrade differs in case count, target token count, or NLL beyond tolerance"
+                    )
         return {"regraded": True, "matches": True, "outcome_unchanged": True}
