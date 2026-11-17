@@ -93,6 +93,29 @@ class ProtocolTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicate"):
             preflight(self.path)
 
+    def test_copied_task_is_rejected(self):
+        config = read(self.path)
+        copied_task = dict(config["tasks"][0], id="copied-task")
+        config["tasks"].append(copied_task)
+        self.path.write_text(json.dumps(config))
+
+        with self.assertRaisesRegex(ValueError, "Normalized duplicate in benchmark public cases"):
+            preflight(self.path)
+
+    def test_repeated_cases_are_rejected(self):
+        original = self.path.read_text()
+        for kind in ("public", "private"):
+            with self.subTest(kind=kind):
+                self.path.write_text(original)
+                path = self.root / f"duplicate-{kind}.json"
+                path.write_text(json.dumps([
+                    {"prompt": "caf\u00e9", "target": kind},
+                    {"prompt": " cafe\u0301 ", "target": f" {kind} "},
+                ]))
+                self.update(lambda c: c["tasks"][0][kind].update(path=str(path), sha256=digest(path)))
+                with self.assertRaisesRegex(ValueError, f"Normalized duplicate.*{kind}"):
+                    preflight(self.path)
+
     def test_rejects_invalid_limits_nonfinite_prices_and_unknown_fields(self):
         original = self.path.read_text()
         for mutate in (lambda c: c["limits"].update(turns=True),
