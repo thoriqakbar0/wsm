@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Name missing model editing dependencies and show how to install the `editing` extra.
+
 - Prevent stale run receipts in the TUI by rejecting existing output directories and showing receipts only after a successful command.
 
 - Reject benchmark regrades when per-case target token counts differ from the original grade.
