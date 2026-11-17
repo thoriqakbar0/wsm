@@ -72,6 +72,9 @@ class BoundaryTests(unittest.TestCase):
             self.assertEqual(journal["state"], "failure")
             self.assertEqual(journal["phases"], ["ready", "running", "failure"])
             self.assertEqual(journal["error"]["type"], "SyntaxError")
+            self.assertEqual(journal["case_count"], 0)
+            empty_cases_digest = hashlib.sha256(b"[]").hexdigest()
+            self.assertEqual(journal.get("cases_sha256"), "sha256:" + empty_cases_digest)
             self.assertIsNone(journal["baseline"])
             self.assertIsNone(journal["checkpoint"])
             self.assertNotIn("published", journal["phases"])
@@ -162,10 +165,22 @@ class ProgramTests(unittest.TestCase):
         source_files = _files(self.source)
         output = self.root / "run"
         result = execute_program(program, model_path=self.source, output=output, device="cpu", cases=cases)
-        journal = json.loads((output / "run.json").read_text())
+
+        receipt_text = (output / "run.json").read_text()
+        journal = json.loads(receipt_text)
         self.assertEqual(result["state"], "published")
         self.assertEqual(result["phases"], ["ready", "running", "staging", "verified", "published"])
         self.assertEqual(journal, result)
+
+        self.assertEqual(journal["case_count"], 2)
+
+        normalized_cases = b'[{"prompt":"a b","target":"c"},{"prompt":"a","target":"b"}]'
+        expected_digest = "sha256:" + hashlib.sha256(normalized_cases).hexdigest()
+        self.assertEqual(journal.get("cases_sha256"), expected_digest)
+
+        self.assertNotIn('"prompt"', receipt_text)
+        self.assertNotIn('"target"', receipt_text)
+
         self.assertEqual(result["baseline"], baseline)
         self.assertEqual(result["source_sha256"], "sha256:" + hashlib.sha256(program.read_bytes()).hexdigest())
         self.assertNotIn("accepted", result)

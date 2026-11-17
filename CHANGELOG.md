@@ -6,6 +6,8 @@
 
 - Reject local model snapshots with missing required weights while accepting tied aliases that can be recovered from saved tensors.
 
+- Record a SHA-256 digest of the normalized evaluation cases in each program run receipt.
+
 - Add a copyable coding-agent prompt to the README and website for bounded local weight-editing experiments, with reproducible evaluation and explicit execution limits.
 
 - Update the site's locked Rolldown patch and hold the Astro compiler at 0.5.2 to fix build crashes on older x64 CPUs without BMI2 support.

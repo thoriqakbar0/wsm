@@ -28,8 +28,8 @@ from .editing import WeightModel, _Lifecycle, _cases
 def execute_program(program_path, *, model_path, output, device="cpu", cases=None):
     """Run a trusted `edit(model)` file and return its publication receipt.
 
-    The receipt includes the source sha256, the baseline evaluation, and the
-    candidate evaluation. Nothing in the receipt accepts or rejects the edit.
+    The receipt includes source and case SHA-256 digests and the baseline and
+    candidate evaluations. Nothing in the receipt accepts or rejects the edit.
     `output` is created exclusively. An existing output path is left unchanged.
     """
     program_path = _existing_file(program_path, "invalid_program", "Program file could not be read")
@@ -38,6 +38,8 @@ def execute_program(program_path, *, model_path, output, device="cpu", cases=Non
     if type(device) is not str or device == "":
         raise WeightlessError("unsupported_target", "Device must be a Torch device string")
     normalized = _cases(cases)
+    case_json = json.dumps(normalized, sort_keys=True, separators=(",", ":"))
+    cases_digest = "sha256:" + hashlib.sha256(case_json.encode("utf-8")).hexdigest()
     source = _read_source(program_path)
     digest = "sha256:" + hashlib.sha256(source).hexdigest()
     try:
@@ -56,6 +58,7 @@ def execute_program(program_path, *, model_path, output, device="cpu", cases=Non
         "model": str(model_path),
         "device": device,
         "case_count": len(normalized),
+        "cases_sha256": cases_digest,
         "baseline": None,
         "candidate": None,
         "checkpoint": None,
