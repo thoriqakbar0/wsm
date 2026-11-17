@@ -4,6 +4,10 @@
 
 - Add a copyable coding-agent prompt to the README and website for bounded local weight-editing experiments, with reproducible evaluation and explicit execution limits.
 
+- Update the site's locked Rolldown patch and hold the Astro compiler at 0.5.2 to fix build crashes on older x64 CPUs without BMI2 support.
+
+- Set up ui-sdk Web Components in the Astro site with default styles and installed agent guidance.
+
 - Clarify the README and website direction: prioritize a reproducible edit-and-evaluate workflow, with easier checkpoint comparison and recovery planned next.
 
 - Add a standalone interactive HTML walkthrough of the benchmark and checkpoint transfer guards.

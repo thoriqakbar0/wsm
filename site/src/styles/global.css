@@ -1,3 +1,5 @@
+@layer ui-sdk;
+
 :root {
   --surface: #fff;
   --sidebar: #f8f9fc;
