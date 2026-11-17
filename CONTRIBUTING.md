@@ -72,6 +72,8 @@ PY
 )
 ```
 
-The Python and Site workflows do not run these notebook checks. See the
+[Notebooks CI](.github/workflows/notebooks.yml) runs Jupyter and marimo with
+live mode disabled. It runs for changes to the notebook examples, Python package,
+scripts, retained trial receipt, or notebook workflow. See the
 [notebook guide](examples/notebooks/README.md) for interpretation and launch
 instructions.
