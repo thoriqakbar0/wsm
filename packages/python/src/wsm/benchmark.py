@@ -294,13 +294,13 @@ def load_protocol(path):
             repeated = arm == "agent" or arm == "scripted" and stochastic
             for repetition in range(config["repetitions"] if repeated else 1):
                 schedule.append(TrialSpec(f"{task['id']}.{arm}.{repetition:04d}", task["id"], arm, repetition))
-    seen = {}
+    seen = set()
     for kind, cases in partitions:
         for case in cases:
             key = tuple(unicodedata.normalize("NFC", case[k]).strip() for k in ("prompt", "target"))
-            if key in seen and (seen[key] != kind or kind == "regression"):
-                raise ValueError("Normalized duplicate across benchmark partitions")
-            seen[key] = kind
+            if key in seen:
+                raise ValueError(f"Normalized duplicate in benchmark {kind} cases")
+            seen.add(key)
     package = Path(__file__).parent.resolve()
     image_files = {p.resolve() for root in (Path(model["path"]), package)
                    for p in root.rglob("*") if p.is_file()}

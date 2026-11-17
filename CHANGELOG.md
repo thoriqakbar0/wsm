@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reject duplicate normalized benchmark cases, including copied tasks, before they can inflate trial schedules or coverage.
+
 - Add a copyable coding-agent prompt to the README and website for bounded local weight-editing experiments, with reproducible evaluation and explicit execution limits.
 
 - Update the site's locked Rolldown patch and hold the Astro compiler at 0.5.2 to fix build crashes on older x64 CPUs without BMI2 support.
