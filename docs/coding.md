@@ -41,6 +41,8 @@ reloaded = WeightModel.load("/path/to/new-checkpoint")
 
 Tensor names, shapes, slicing, and arithmetic are ordinary PyTorch. Tied tensors share storage. Model loading is offline and does not execute model repository Python. Saving writes Hugging Face safetensors and tokenizer files, checks finite tensors, reloads and compares the tensors, and publishes the directory atomically without overwriting an existing destination.
 
+A snapshot must contain every required weight. Transformers can recover a missing tied alias from its saved counterpart. If required weights are still missing, `WeightModel.load` raises `WeightlessError` with code `invalid_model` and names the missing weights.
+
 The supported API consists of `WeightModel` and `execute_program`. The runner records comparisons without automatic candidate selection.
 
 ## Python execution permissions

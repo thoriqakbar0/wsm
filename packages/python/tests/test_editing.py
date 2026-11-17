@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -135,6 +136,20 @@ class EditingTests(unittest.TestCase):
     def tearDown(self):
         if self.tmp is not None:
             self.tmp.cleanup()
+
+    def test_missing_weights(self):
+        from safetensors.torch import load_file, save_file
+
+        checkpoint = self.source / "model.safetensors"
+        tensors = load_file(checkpoint)
+        for missing in ("transformer.h.0.attn.c_attn.weight", "transformer.wte.weight"):
+            with self.subTest(missing=missing):
+                checkpoint.unlink()
+                remaining = {name: tensor for name, tensor in tensors.items() if name != missing}
+                save_file(remaining, checkpoint, metadata={"format": "pt"})
+                with self.assertRaisesRegex(WeightlessError, re.escape(missing)) as raised:
+                    WeightModel.load(self.source)
+                self.assertEqual(raised.exception.code, "invalid_model")
 
     def test_inplace_slice_edits_tied_parameter_storage(self):
         import torch
