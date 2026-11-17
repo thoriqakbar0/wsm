@@ -38,24 +38,24 @@ def execute(screen):
         raise FileExistsError("Output directory must be unused")
 
     device = prompt(screen, "Torch device", default="cpu")
-    command = [sys.executable, "-m", "wsm", "execute", str(program), "--model", str(model),
-               "--cases", str(cases), "--output", str(output), "--device", device]
+    command = [
+        sys.executable, "-m", "wsm", "execute", str(program), "--model", str(model),
+        "--cases", str(cases), "--output", str(output), "--device", device,
+    ]
+
     process = None
     with tempfile.TemporaryFile(mode="w+b") as log:
         try:
-            process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=log,
-                                       stderr=subprocess.STDOUT, start_new_session=True)
+            process = subprocess.Popen(
+                command, stdin=subprocess.DEVNULL, stdout=log,
+                stderr=subprocess.STDOUT, start_new_session=True,
+            )
             screen.timeout(100)
             while process.poll() is None:
                 screen.erase()
                 put(screen, 1, "WSM / execute Python", attr=curses.A_BOLD)
                 put(screen, 3, str(program))
-                state = "starting"
-                try:
-                    state = json.loads((output / "run.json").read_text()).get("state", state)
-                except (OSError, ValueError):
-                    pass
-                put(screen, 5, "State  " + state)
+                put(screen, 5, "State  running")
                 put(screen, 7, "Output  " + str(output))
                 put(screen, 9, "Ctrl-C interrupts execution. Publication is recorded in run.json.")
                 screen.refresh()
@@ -73,6 +73,12 @@ def execute(screen):
         log.seek(0, 2)
         log.seek(max(0, log.tell() - 16000))
         text = log.read(16000).decode('utf-8', errors='replace')
+
+    exit_code = process.returncode if process is not None else None
+    if exit_code != 0:
+        show_result(screen, "Python execution error", {"exit_code": exit_code, "process_output": text})
+        return None
+
     try:
         result = json.loads((output / "run.json").read_text())
     except (OSError, ValueError):

@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Reject existing output directories in the TUI before a previous run's receipt can appear as the result of a new run.
+- Prevent stale run receipts in the TUI by rejecting existing output directories and showing receipts only after a successful command.
 
 - Reject duplicate normalized benchmark cases, including copied tasks, before they can inflate trial schedules or coverage.
 
