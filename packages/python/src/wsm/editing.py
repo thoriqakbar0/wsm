@@ -13,6 +13,7 @@ published.
 """
 
 import contextlib
+import importlib.util
 import json
 import math
 import os
@@ -87,6 +88,13 @@ class _Weights(Mapping):
 
 
 def _libraries():
+    for package in ("torch", "transformers", "safetensors"):
+        if importlib.util.find_spec(package) is None:
+            raise WeightlessError(
+                "unsupported_target",
+                f"Missing editing dependency '{package}'. Run: pip install 'wsm[editing]'",
+            )
+
     try:
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer

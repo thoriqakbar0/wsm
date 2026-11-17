@@ -1,5 +1,7 @@
 """Live tensor edits, teacher-forced loss, and verified checkpoint publication."""
 import hashlib
+from importlib.machinery import ModuleSpec
+from importlib.util import module_from_spec
 import json
 import os
 from pathlib import Path
@@ -90,6 +92,20 @@ class ImportTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(ImportError, "GPT2LMHeadModel"):
                 _stack()
+
+    def test_missing_editing_package(self):
+        packages = ("torch", "transformers", "safetensors")
+        available = {name: module_from_spec(ModuleSpec(name, loader=None)) for name in packages}
+
+        for package in packages:
+            modules = {**available, package: None}
+            with self.subTest(package=package), patch.dict(sys.modules, modules):
+                with self.assertRaises(WeightlessError) as caught:
+                    WeightModel.load(ROOT)
+
+                self.assertEqual(caught.exception.code, "unsupported_target")
+                self.assertIn(package, str(caught.exception))
+                self.assertIn("pip install 'wsm[editing]'", str(caught.exception))
 
     def test_package_import_does_not_load_torch(self):
         script = textwrap.dedent("""
