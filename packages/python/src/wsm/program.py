@@ -16,6 +16,7 @@ interrupted.
 import contextlib
 import copy
 import hashlib
+import inspect
 import json
 import os
 from pathlib import Path
@@ -158,14 +159,26 @@ def _read_source(path):
 
 
 def _run_edit(program_path, code, model, stdout_path, stderr_path):
-    with stdout_path.open("w", encoding="utf-8") as stdout, stderr_path.open("w", encoding="utf-8") as stderr:
-        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-            namespace = {"__file__": str(program_path), "__name__": "<run_path>"}
-            exec(code, namespace)
-            edit = namespace.get("edit")
-            if not callable(edit):
-                raise WeightlessError("invalid_program", "Program must define edit(model)")
-            edit(model)
+    with (
+        stdout_path.open("w", encoding="utf-8") as stdout,
+        stderr_path.open("w", encoding="utf-8") as stderr,
+        contextlib.redirect_stdout(stdout),
+        contextlib.redirect_stderr(stderr),
+    ):
+        namespace = {"__file__": str(program_path), "__name__": "<run_path>"}
+        exec(code, namespace)
+        edit = namespace.get("edit")
+        if not callable(edit):
+            raise WeightlessError("invalid_program", "Program must define edit(model)")
+
+        result = edit(model)
+        if inspect.iscoroutine(result):
+            result.close()
+        deferred = (
+            inspect.isawaitable(result) or inspect.isgenerator(result) or inspect.isasyncgen(result)
+        )
+        if deferred:
+            raise WeightlessError("invalid_program", "edit(model) must run synchronously")
 
 
 def _stream(path, relative):

@@ -130,6 +130,35 @@ class ProgramTests(unittest.TestCase):
         self.assertEqual(json.loads(result.stderr.splitlines()[-1])["error"]["type"], "SystemExit")
         self.assertFalse((output / "checkpoint").exists())
 
+    def test_cli_rejects_deferred_edits(self):
+        programs = {
+            "coroutine": "async def edit(model):\n    raise RuntimeError('edit body ran')\n",
+            "returned_coroutine": (
+                "async def deferred():\n    raise RuntimeError('edit body ran')\n"
+                "def edit(model):\n    return deferred()\n"
+            ),
+            "generator": "def edit(model):\n    raise RuntimeError('edit body ran')\n    yield\n",
+            "async_generator": (
+                "async def edit(model):\n    raise RuntimeError('edit body ran')\n    yield\n"
+            ),
+        }
+        for name, source in programs.items():
+            with self.subTest(edit=name):
+                result = self._run_cli(source, name)
+                output = self.root / name
+                journal = json.loads((output / "run.json").read_text())
+                self.assertEqual((result.returncode, journal["state"]), (1, "failure"))
+                self.assertEqual(journal["phases"], ["ready", "running", "failure"])
+                self.assertIsNone(journal["candidate"])
+                self.assertIsNone(journal["checkpoint"])
+                self.assertFalse((output / "checkpoint").exists())
+
+                error = json.loads(result.stderr.splitlines()[-1])["error"]
+                self.assertEqual(error["code"], "invalid_program")
+                self.assertIn("must run synchronously", journal["error"]["message"])
+                self.assertNotIn("was never awaited", journal["stderr"]["text"])
+                self.assertNotIn("was never awaited", result.stderr)
+
     def test_executes_the_captured_source_when_file_changes_during_loading(self):
         from unittest.mock import patch
         program = _write(self.root / "edit.py", textwrap_edit())

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reject deferred Python edits with a failure receipt before publishing a checkpoint.
+
 - Accept indexed CPU devices in `WeightModel.load` and reject `meta` before loading weights.
 
 - Reject invalid `wsm execute --cases` files before running the edit. The file must contain a JSON array.

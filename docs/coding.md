@@ -1,6 +1,6 @@
 # Modify weights with Python
 
-Write a Python file that defines `edit(model)`. The model exposes named PyTorch tensors through `model.weights`.
+Write a Python file that defines a synchronous `edit(model)`. The model exposes named PyTorch tensors through `model.weights`. If the edit returns an awaitable, generator, or async generator, execution records a failure in `run.json` without publishing a checkpoint.
 
 ```python
 # edit.py
