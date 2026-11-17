@@ -27,6 +27,12 @@ The receipt records `case_count` and `cases_sha256` without storing prompt or ta
 
 For CUDA, pass `--device cuda` in a runtime with CUDA-enabled Torch and a GPU. The TUI opens with `wsm`; press **p** to review and execute a Python editing file using the same command. Choose an unused output directory for each run. The TUI supports Ctrl-C interruption, displays a receipt after a successful command, and shows command output on failure.
 
+## Try a synthetic model offline
+
+From a repository checkout, follow the [download-free SDK quickstart](../README.md#modify-weights-with-python).
+It creates a tiny GPT-2 model and tokenizer locally, evaluates a tensor edit,
+and verifies that the edited tensor survives a save and reload.
+
 ## Use the SDK directly
 
 ```python

@@ -33,21 +33,49 @@ Install the optional model dependencies:
 uv pip install -e 'packages/python[editing]'
 ```
 
-Use a local Hugging Face causal-language-model snapshot with its tokenizer files. WSM loads it without downloading files or executing model repository Python. Replace the paths below with your snapshot and an unused checkpoint destination whose parent directory exists.
+From the repository root, generate a tiny random GPT-2 model and tokenizer.
+Once the dependencies are installed, this walkthrough runs without model downloads
+or cloud services. Use Linux and a checkpoint filesystem that supports
+`renameat2(RENAME_NOREPLACE)`.
 
-```python
-from wsm import WeightModel
-
-model = WeightModel.load("/path/to/local/snapshot")
-cases = [{"prompt": "Say hello.", "target": "Hello!"}]
-before = model.evaluate(cases)
-model.weights["model.norm.weight"][:16].mul_(0.95)
-after = model.evaluate(cases)
-print({"baseline": before, "candidate": after})
-model.save("/path/to/new-checkpoint")
+```sh
+mkdir -p runs
+demo_dir=$(mktemp -d runs/sdk-demo.XXXXXX)
+python scripts/benchmark_fixture.py --output "$demo_dir/fixture"
 ```
 
-The example requires a tensor named `model.norm.weight`. Inspect `model.weights` for your model's names and shapes before choosing an edit. Scaling this slice demonstrates the API, not an improvement in model quality. Evaluation reports target-token negative log likelihood, not generated responses.
+In the same shell, evaluate the model, scale a named tensor, then save and
+reload the edited checkpoint.
+
+```sh
+python - "$demo_dir" <<'PYTHON'
+import json
+from pathlib import Path
+import sys
+
+from wsm import WeightModel
+
+demo = Path(sys.argv[1])
+fixture = demo / "fixture"
+cases = json.loads((fixture / "public.json").read_text())
+model = WeightModel.load(fixture / "model")
+before = model.evaluate(cases)
+tensor = "transformer.ln_f.weight"
+original = model.weights[tensor].clone()
+model.weights[tensor].mul_(0.95)
+after = model.evaluate(cases)
+checkpoint = demo / "checkpoint"
+model.save(checkpoint)
+reloaded = WeightModel.load(checkpoint)
+assert not reloaded.weights[tensor].equal(original)
+assert reloaded.weights[tensor].equal(model.weights[tensor])
+print({"baseline": before, "candidate": after, "checkpoint": str(checkpoint)})
+PYTHON
+```
+
+The output includes both evaluations and the path to the reloaded checkpoint.
+Evaluation measures target-token negative log likelihood. The synthetic model
+demonstrates the editing and save workflow.
 
 Python editing files run with your process permissions and are not sandboxed. Read [Modify weights with Python](docs/coding.md) for API details, execution permissions, and the Modal demonstration.
 
