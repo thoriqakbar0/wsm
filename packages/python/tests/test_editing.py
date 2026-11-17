@@ -1,5 +1,7 @@
 """Live tensor edits, teacher-forced loss, and verified checkpoint publication."""
 import hashlib
+from importlib.machinery import ModuleSpec
+from importlib.util import module_from_spec
 import json
 import os
 from pathlib import Path
@@ -78,8 +80,12 @@ def _manual_nll(model, tokenizer, prompt, target):
 
 class ImportTests(unittest.TestCase):
     def test_missing_editing_package(self):
-        for package in ("torch", "transformers", "safetensors"):
-            with self.subTest(package=package), patch.dict(sys.modules, {package: None}):
+        packages = ("torch", "transformers", "safetensors")
+        available = {name: module_from_spec(ModuleSpec(name, loader=None)) for name in packages}
+
+        for package in packages:
+            modules = {**available, package: None}
+            with self.subTest(package=package), patch.dict(sys.modules, modules):
                 with self.assertRaises(WeightlessError) as caught:
                     WeightModel.load(ROOT)
 
