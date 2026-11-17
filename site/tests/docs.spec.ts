@@ -1,4 +1,37 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+
+test('copy the homepage agent prompt verbatim from the README', async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const readme = readFileSync(
+    new URL('../../README.md', import.meta.url),
+    'utf8',
+  );
+  const prompt = readme.split('```text\n')[1].split('\n```')[0];
+
+  await page.goto('/');
+  const sample = page
+    .locator('.code-sample')
+    .filter({ hasText: prompt.slice(0, 60) });
+
+  await sample.getByRole('button', { name: 'Copy code', exact: true }).click();
+  await expect
+    .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(prompt);
+
+  await page.locator('#use-with-a-coding-agent').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'test-results/agent-prompt-desktop.png' });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('#use-with-a-coding-agent').scrollIntoViewIfNeeded();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+  await page.screenshot({ path: 'test-results/agent-prompt-mobile.png' });
+});
 
 test('link previews use production URLs and a loadable social image', async ({
   page,

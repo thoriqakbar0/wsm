@@ -55,6 +55,44 @@ Python editing files run with your process permissions and are not sandboxed. Re
 
 Use the [Python editing guide](docs/coding.md) for trusted editing files and the [benchmark guide](docs/benchmark.md) for experimental evaluation campaigns.
 
+## Use WSM with a coding agent
+
+Copy this prompt into a coding agent with terminal access to this checkout. Replace the placeholders first. Use a local model snapshot and public evaluation cases you are allowed to share with the agent.
+
+```text
+Use WSM in this repository to run a bounded weight-editing experiment.
+
+Model snapshot: <absolute path to local Hugging Face snapshot with tokenizer files>
+Public cases: <path to JSON prompt/target cases>
+Goal: <the behavior to investigate>
+Device: <cpu or cuda>
+Output directory: <new, unused path whose parent exists>
+Maximum candidate edits: <number>
+
+Read README.md and docs/coding.md before acting. Check the Python environment
+and install the documented editing dependencies if needed. Confirm the model
+and cases exist. Inspect tensor names and shapes before choosing an edit.
+
+Write a small, reviewable Python file defining edit(model). Explain the edit
+and review its code before execution. Run it with wsm execute, using the model,
+cases, device, and a fresh output directory for each candidate. Start each
+candidate from the original snapshot and leave that snapshot unchanged.
+Do not download models, call cloud services, or start training.
+
+Inspect each run.json for execution state and baseline/candidate evaluations.
+Report failures as failures. Compare public target-token negative log likelihood
+and report regressions. Do not claim that lower loss proves better generated
+responses or general model quality. Keep any private grading data outside the
+editing agent's process and context.
+
+Respect the candidate limit. Do not overwrite existing outputs or automatically
+promote a candidate. Report the edit files, commands, receipts, checkpoint paths,
+results, and limitations so I can reproduce the experiment. If a prerequisite
+is missing, report the blocker instead of inventing a successful result.
+```
+
+The agent writes and runs Python. WSM loads the target model, exposes its weights, evaluates the edit, and saves a checkpoint. The local runner executes Python with your process permissions, so use trusted code. See the [Python execution permissions](docs/coding.md#python-execution-permissions).
+
 ## Repeatable evaluation benchmark
 
 The experimental [benchmark workflow](docs/benchmark.md) compares unchanged weights, a frozen scripted edit, and an editing policy without student training. It retains independent task and regression grades, accounts for incomplete trials, and rebuilds reports offline. Start with the synthetic local fixture to check mechanics without cloud calls. Synthetic results do not establish editing efficacy.

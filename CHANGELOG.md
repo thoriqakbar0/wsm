@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a copyable coding-agent prompt to the README and website for bounded local weight-editing experiments, with reproducible evaluation and explicit execution limits.
+
 - Clarify the README and website direction: prioritize a reproducible edit-and-evaluate workflow, with easier checkpoint comparison and recovery planned next.
 
 - Add a standalone interactive HTML walkthrough of the benchmark and checkpoint transfer guards.
